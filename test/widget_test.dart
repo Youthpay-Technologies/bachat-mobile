@@ -299,7 +299,13 @@ void main() {
     );
     expect(carousel.controller!.offset, 0);
     expect(
-      tester.widget<IconButton>(find.byTooltip('Previous goal')).onPressed,
+      tester
+          .widget<IconButton>(
+            find.byWidgetPredicate(
+              (w) => w is IconButton && w.tooltip == 'Previous goal',
+            ),
+          )
+          .onPressed,
       isNull,
     );
     await tester.tap(find.byTooltip('Next goal'));
