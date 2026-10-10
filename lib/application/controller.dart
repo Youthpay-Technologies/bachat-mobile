@@ -43,7 +43,11 @@ class AppController extends ChangeNotifier {
   bool get approved => links.any((l) => l.approved && l.teenId == profile?.id);
   bool get needsApproval => profile?.role == UserRole.teen && !approved;
   List<FamilyLink> get children => links.where((l) => l.approved).toList();
-  String? get viewingId => isParent ? selectedChildId : profile?.id;
+  String? get viewingId => isParent
+      ? (children.any((link) => link.teenId == selectedChildId)
+            ? selectedChildId
+            : null)
+      : profile?.id;
   String get viewingName => isParent
       ? children
                 .where((l) => l.teenId == selectedChildId)

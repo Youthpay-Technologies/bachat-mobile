@@ -55,6 +55,9 @@ void main() {
       expect(await c.claimCode('wrong'), isFalse);
       expect(await c.claimCode(code), isTrue);
       expect(c.children, isEmpty);
+      expect(c.entries, isEmpty);
+      expect(c.budgets, isEmpty);
+      expect(c.goals, isEmpty);
       await c.startDemo(UserRole.teen);
       await c.decideLink(c.links.single, true);
       expect(c.approved, isTrue);
