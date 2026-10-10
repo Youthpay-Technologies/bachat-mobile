@@ -18,7 +18,7 @@ class AppGate extends ConsumerWidget {
     }
     if (!c.signedIn) return const WelcomeScreen();
     if (c.profile == null && c.syncing) {
-      return const Scaffold(body:Center(child:CircularProgressIndicator()));
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     if (c.profile == null) return const ProfileScreen();
     if (c.needsApproval) {
