@@ -145,10 +145,6 @@ class _EntryFormState extends State<EntryForm> {
                     : () async {
                         final selected = await showDatePicker(
                           context: context,
-                          sheetAnimationStyle:
-                              MediaQuery.disableAnimationsOf(context)
-                              ? AnimationStyle.noAnimation
-                              : null,
                           initialDate: date,
                           firstDate: DateTime(2000),
                           lastDate: DateTime.now(),

@@ -1260,6 +1260,9 @@ Future<void> accountSheet(
 Future<void> appearanceSheet(BuildContext context, AppController c) =>
     showModalBottomSheet<void>(
       context: context,
+      sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+          ? AnimationStyle.noAnimation
+          : null,
       showDragHandle: true,
       useSafeArea: true,
       builder: (sheetContext) => SheetBody(
