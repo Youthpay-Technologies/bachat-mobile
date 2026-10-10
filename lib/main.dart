@@ -1,39 +1,51 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'application/controller.dart';
+import 'data/database.dart';
+import 'data/repository.dart';
 import 'design/theme.dart';
-import 'design/components.dart';
+import 'presentation/app.dart';
 
-void main() => runApp(const ProviderScope(child: BachatApp()));
-
-class BachatApp extends StatelessWidget {
-  const BachatApp({super.key});
-  @override
-  Widget build(BuildContext context) => MaterialApp(
-    title: 'Bachat',
-    debugShowCheckedModeBanner: false,
-    theme: BachatTheme.build(Brightness.light),
-    darkTheme: BachatTheme.build(Brightness.dark),
-    home: const Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              BachatMark(large: true),
-              SizedBox(height: 48),
-              Text(
-                'A little clarity.\nA better money habit.',
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.w600),
-              ),
-              SizedBox(height: 16),
-              Text(
-                'Bachat helps teens track spending and save with the support of their parents.',
-              ),
-            ],
-          ),
-        ),
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  const url = String.fromEnvironment('SUPABASE_URL');
+  const key = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
+  SupabaseClient? cloud;
+  if (url.isNotEmpty && key.isNotEmpty) {
+    await Supabase.initialize(
+      url: url,
+      publishableKey: key,
+      authOptions: const FlutterAuthClientOptions(
+        localStorage: SecureSessionStorage(),
       ),
+    );
+    cloud = Supabase.instance.client;
+  }
+  final controller = AppController(
+    BachatRepository(await openDatabase(), cloud),
+  );
+  await controller.initialize();
+  runApp(
+    ProviderScope(
+      overrides: [controllerProvider.overrideWith((ref) => controller)],
+      child: const BachatApp(),
     ),
   );
+}
+
+class BachatApp extends ConsumerWidget {
+  const BachatApp({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.watch(controllerProvider);
+    return MaterialApp(
+      title: 'Bachat',
+      debugShowCheckedModeBanner: false,
+      theme: BachatTheme.build(Brightness.light),
+      darkTheme: BachatTheme.build(Brightness.dark),
+      themeMode: controller.themeMode,
+      home: const AppGate(),
+    );
+  }
 }
