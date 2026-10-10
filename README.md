@@ -1,27 +1,70 @@
-# Bachat Mobile
+# Bachat
 
-A standalone Flutter app for Android and iOS with a soft gray and green interface inspired by the supplied reference. DM Sans, restrained rounded surfaces, clear actions and distinct teen/parent journeys.
+Bachat helps teens understand their spending, build realistic budgets, and save toward things that matter. Parents can follow their child's progress through a shared, read-only view while teens stay in control of their records.
 
-Run with Flutter **3.47.7 / Dart 3.13.5**:
+This repository contains the standalone Flutter mobile app for Android and iOS. The initial release focuses on everyday money habits in English, using Pakistani rupees (PKR).
+
+## What you can do
+
+- Record, edit, and delete expenses and income, with exact paisa amounts.
+- Review monthly spending and category totals on the dashboard.
+- Search activity, filter by date or category, and sort by date or amount.
+- Set monthly category budgets and reuse missing categories from last month's plan.
+- Create savings goals, add savings, and track progress toward each target.
+- Explore separate teen and parent journeys, including mutual family approval.
+- Switch between light, dark, and system appearance.
+
+The learning tab is coming soon. Automatic bank, SMS, and Gmail imports are planned for later.
+
+## Current development experience
+
+The app currently opens without authentication. Continue as **Ayesha**, a 16-year-old teen, or **Sana**, her parent. Switch profiles from the home header or **You** to explore both journeys.
+
+Both profiles share persistent sample records stored locally. Changes survive app restarts and profile switches; settings includes a confirmed reset. Parent views cannot edit transactions, budgets, or goals. Family linking and approval can be explored locally, but do not verify real identities.
+
+Authentication and cloud synchronization are deferred. Supabase migrations and adapters are retained for future integration; the current startup does not initialize Supabase or upload sample records. Recorded net flow is not a bank balance.
+
+## Get started
+
+Use Flutter **3.47.7** with Dart **3.13.5**, matching CI. Install Android tooling for Android development, or Xcode on macOS for iOS.
+
+```sh
+flutter pub get
+flutter devices
+flutter run -d <device-id>
+```
+
+For a browser preview:
+
+```sh
+flutter run -d chrome --web-port=8080
+```
+
+In the original Windows workspace, helper scripts use the prepared local toolchain:
 
 ```powershell
 . ./scripts/env.ps1
 ./scripts/dev.ps1
 ```
 
-Preview: http://127.0.0.1:8080. Choose **Skip introduction**, then continue as **Ayesha** (teen, 16) or **Sana** (parent). Switch profiles from the home header or **You**. Both share one persistent local demo family. No sign-in, environment configuration or internet connection is required after installation. Reset sample data from settings with confirmation.
+The helper preview runs at http://127.0.0.1:8080. No sign-in or Supabase environment configuration is needed for the current local experience.
 
-On other machines:
+## Project structure
 
-```sh
-flutter pub get
-flutter run -d chrome --web-port=8080
-flutter run -d <android-device-id>
-```
+| Directory | Purpose |
+| --- | --- |
+| `lib/domain` | Money models, calculations, and activity filtering |
+| `lib/application` | App state, profile journeys, and business rules |
+| `lib/data` | Local persistence and future backend adapters |
+| `lib/design` | Shared theme and interface components |
+| `lib/presentation` | Screens, navigation, forms, and sheets |
+| `test` | Domain, repository, controller, and widget checks |
+| `supabase` | Migrations and backend integration resources |
+| `docs` | Product decisions, architecture, design, and verification |
 
-Included: onboarding, spending dashboard, searchable transactions with date/category filters and sorting, exact paisa arithmetic, expense/income editing and deletion, monthly category budgets with optional previous-month reuse, savings goals with quick additions, parent read-only dashboard, local mutual family approval, appearance settings and a coming-soon learning tab. Data persists in Sembast/IndexedDB across restarts and persona changes.
+The app uses Riverpod for state management and Sembast / IndexedDB for local persistence. Financial amounts are stored as integer minor units to avoid floating-point rounding errors.
 
-Authentication and cloud synchronization are deferred. Existing Supabase migrations and adapters remain available for future integration, but the demo startup never initializes Supabase and never uploads demo data. Historical backend instructions describe that future integration, not prerequisites for this demo.
+## Check and build
 
 ```sh
 dart format --output=none --set-exit-if-changed lib test
@@ -31,7 +74,10 @@ flutter build web --release
 flutter build apk --debug
 ```
 
-Private repository: https://github.com/saim-x/bachat-mobile. See [current demo decisions](docs/DEMO-EXPERIENCE.md). iOS signing and device validation require the team's Mac. Automatic imports and learning content remain deferred. Recorded net flow is not a bank balance.
+Android and web builds are verified locally. iOS signing and device testing require the team's Mac and Apple development setup.
 
-Interface polish: profile/appearance bottom sheets, contextual badges, multi-goal carousel, retained tab/search state, clear-filter recovery, save/delete feedback, real startup skeleton and reduced-motion-aware navigation. No persistent demo or storage banners appear in the product.
+## Contributing
 
+Work on a focused branch, commit each coherent change, and use a pull request for review and merging. Run the checks relevant to the change. Keep credentials, signing keys, personal records, and generated build files out of version control.
+
+See [the working agreement](AGENTS.md), [product brief](docs/PRODUCT-BRIEF.md), [design system](docs/DESIGN.md), and [verification notes](docs/VERIFICATION.md).
