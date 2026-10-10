@@ -35,14 +35,14 @@ void main() {
     await tester.scrollUntilVisible(find.text('Skip introduction'), 300);
     await tester.tap(find.text('Skip introduction'));
     await tester.pumpAndSettle();
-    expect(find.text('Continue with Google'), findsOneWidget);
-    expect(find.textContaining('A parent must approve'), findsOneWidget);
+    expect(find.text('Explore as Ayesha'), findsOneWidget);
+    expect(find.textContaining('Teen demo'), findsOneWidget);
   });
   testWidgets('teen dashboard and all tabs render', (tester) async {
     final c = await controller();
     c.startPreview(UserRole.teen);
     await mount(tester, c);
-    expect(find.textContaining('PREVIEW'), findsOneWidget);
+    expect(find.textContaining('Demo ·'), findsOneWidget);
     expect(find.text('Rs 3,665'), findsOneWidget);
     await tester.tap(find.text('Activity').last);
     await tester.pumpAndSettle();

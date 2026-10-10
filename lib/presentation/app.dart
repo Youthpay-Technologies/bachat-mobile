@@ -315,77 +315,38 @@ class HomePage extends ConsumerWidget {
       onRefresh: c.refresh,
       child: PageBody(
         children: [
-          Row(
-            children: [
-              const Expanded(child: BachatMark()),
-              IconButton(
-                onPressed: c.syncing ? null : c.refresh,
-                tooltip: 'Records saved on this device',
-                icon: const Icon(Icons.sync),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-          Text(
-            'Hello, ${c.profile!.name.split(' ').first}.',
-            style: t.headlineMedium,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            c.isParent
-                ? 'Support their habits. Celebrate their progress.'
-                : 'Your money, with a little more intention.',
-          ),
+          Row(children: [
+            CircleAvatar(radius: 24, backgroundColor: Theme.of(context).colorScheme.primaryContainer, child: Text(c.profile!.name.substring(0, 1), style: t.titleLarge)),
+            const SizedBox(width: 12),
+            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Good to see you', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)), Text(c.profile!.name, style: t.titleMedium)])),
+            const Tooltip(message: 'Saved on this device', child: Padding(padding: EdgeInsets.all(12), child: Icon(Icons.check_circle_outline))),
+          ]),
           const SizedBox(height: 28),
           ChildPicker(c),
           if (c.isParent && c.children.isEmpty)
             const FamilyPage(embedded: true)
           else ...[
-            Surface(
-              tinted: true,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${DateFormat.MMMM().format(DateTime.now())} spending${c.isParent ? ' · ${c.viewingName}' : ''}',
-                    style: t.labelLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(money(summary.spentMinor), style: t.displaySmall),
-                  const SizedBox(height: 24),
-                  const Divider(),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 36,
-                    runSpacing: 16,
-                    children: [
-                      _Metric('Money in', money(summary.incomeMinor)),
-                      _Metric(
-                        'Net flow',
-                        money(summary.incomeMinor - summary.spentMinor),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Based on recorded entries, not a bank balance.',
-                    style: t.bodySmall,
-                  ),
-                ],
-              ),
-            ),
-            if (!c.isParent)
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: FilledButton.icon(
-                    onPressed: () => entryForm(context, c),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add a transaction'),
-                  ),
-                ),
-              ),
+            Center(child: Column(children: [
+              Text('${DateFormat.MMMM().format(DateTime.now())} spending', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
+              const SizedBox(height: 8),
+              Text(money(summary.spentMinor), style: t.displaySmall, textAlign: TextAlign.center),
+              const SizedBox(height: 12),
+              Chip(avatar: const Icon(Icons.check, size: 16), label: const Text('Saved on this device'), side: BorderSide.none),
+              const SizedBox(height: 12),
+              Text('Recorded expenses · PKR', style: t.bodySmall),
+            ])),
+            const SizedBox(height: 24),
+            Wrap(spacing: 10, runSpacing: 10, alignment: WrapAlignment.center, children: [
+              if (!c.isParent) FilledButton.icon(onPressed: () => entryForm(context, c), icon: const Icon(Icons.add), label: const Text('Add a transaction')),
+              OutlinedButton.icon(onPressed: onActivity, icon: const Icon(Icons.receipt_long_outlined), label: const Text('Activity')),
+              OutlinedButton.icon(onPressed: onPlan, icon: const Icon(Icons.savings_outlined), label: const Text('Your plan')),
+            ]),
+            const SectionHeading('Your money at a glance'),
+            Surface(child: Wrap(spacing: 32, runSpacing: 16, children: [
+              _Metric('Money in', money(summary.incomeMinor)),
+              _Metric('Net flow', money(summary.incomeMinor - summary.spentMinor)),
+              Text('Based on recorded entries, not a bank balance.', style: t.bodySmall),
+            ])),
             const SectionHeading('Where it went'),
             if (summary.byCategory.isEmpty)
               const EmptyState(
@@ -523,7 +484,7 @@ class EntryTile extends StatelessWidget {
                   entry.direction == EntryDirection.income
                       ? Icons.south_west
                       : categoryIcon(entry.category),
-                  color: Theme.of(context).colorScheme.primary,
+                  color: Theme.of(context).brightness == Brightness.light ? const Color(0xFF216D2C) : Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(width: 12),
