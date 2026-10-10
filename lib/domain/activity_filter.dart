@@ -29,6 +29,16 @@ class ActivityFilter {
     EntryDirection? direction,
     DateTime? now,
   }) {
+    if (period == ActivityPeriod.custom &&
+        (from == null ||
+            through == null ||
+            DateTime(
+              from!.year,
+              from!.month,
+              from!.day,
+            ).isAfter(DateTime(through!.year, through!.month, through!.day)))) {
+      throw const FormatException('Choose a valid date range.');
+    }
     final today = now ?? DateTime.now();
     final start = switch (period) {
       ActivityPeriod.all => null,

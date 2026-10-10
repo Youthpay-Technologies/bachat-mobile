@@ -37,11 +37,12 @@ class _ActivityFilterSheetState extends State<ActivityFilterSheet> {
     period = widget.initial.period;
     order = widget.initial.order;
     category = widget.initial.category;
-    if (widget.initial.from != null && widget.initial.through != null)
+    if (widget.initial.from != null && widget.initial.through != null) {
       dates = DateTimeRange(
         start: widget.initial.from!,
         end: widget.initial.through!,
       );
+    }
   }
 
   @override
@@ -93,11 +94,12 @@ class _ActivityFilterSheetState extends State<ActivityFilterSheet> {
               lastDate: DateTime.now(),
               initialDateRange: dates,
             );
-            if (selected != null && mounted)
+            if (selected != null && mounted) {
               setState(() {
                 dates = selected;
                 error = null;
               });
+            }
           },
         ),
       ],

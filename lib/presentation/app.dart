@@ -612,13 +612,16 @@ class _ActivityState extends ConsumerState<ActivityPage> {
               tooltip: 'Filter activity',
               icon: Badge(
                 isLabelVisible: options.activeCount > 0,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                textColor: Theme.of(context).colorScheme.onPrimaryContainer,
                 label: Text('${options.activeCount}'),
                 child: const Icon(Icons.tune_rounded),
               ),
               onPressed: () async {
                 final selected = await activityFilterSheet(context, options);
-                if (selected != null && mounted)
+                if (selected != null && mounted) {
                   setState(() => options = selected);
+                }
               },
             ),
           ],
@@ -658,6 +661,26 @@ class _ActivityState extends ConsumerState<ActivityPage> {
             ),
           ],
         ),
+        if (options.activeCount > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _activitySummary(options),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Clear advanced filters',
+                  onPressed: () =>
+                      setState(() => options = const ActivityFilter()),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
+            ),
+          ),
         const SizedBox(height: 20),
         if (!c.isParent)
           OutlinedButton.icon(
@@ -716,13 +739,33 @@ class _ActivityState extends ConsumerState<ActivityPage> {
   }
 }
 
+String _activitySummary(ActivityFilter options) => [
+  if (options.period != ActivityPeriod.all)
+    switch (options.period) {
+      ActivityPeriod.thisMonth => 'This month',
+      ActivityPeriod.lastMonth => 'Last month',
+      ActivityPeriod.custom =>
+        '${DateFormat.yMMMd().format(options.from!)} – ${DateFormat.yMMMd().format(options.through!)}',
+      ActivityPeriod.all => 'All time',
+    },
+  if (options.category != null) options.category!,
+  if (options.order != ActivityOrder.newest)
+    switch (options.order) {
+      ActivityOrder.oldest => 'Oldest first',
+      ActivityOrder.highest => 'Amount: high to low',
+      ActivityOrder.lowest => 'Amount: low to high',
+      ActivityOrder.newest => 'Newest first',
+    },
+].join(' · ');
+
 bool _sameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
 String _dateLabel(DateTime date) {
   final now = DateTime.now();
   if (_sameDay(date, now)) return 'Today';
-  if (_sameDay(date, DateTime(now.year, now.month, now.day - 1)))
+  if (_sameDay(date, DateTime(now.year, now.month, now.day - 1))) {
     return 'Yesterday';
+  }
   return DateFormat.yMMMd().format(date);
 }
 
@@ -850,18 +893,20 @@ class _ReuseBudgetsButtonState extends State<ReuseBudgetsButton> {
                   });
                   try {
                     final count = await widget.c.reusePreviousBudgets();
-                    if (context.mounted)
+                    if (context.mounted) {
                       showFeedback(
                         context,
                         count == 1 ? 'Budget reused' : '$count budgets reused',
                       );
+                    }
                   } catch (e) {
-                    if (mounted)
+                    if (mounted) {
                       setState(
                         () => error = e is FormatException
                             ? e.message
                             : 'Unable to reuse budgets. Try again.',
                       );
+                    }
                   } finally {
                     if (mounted) setState(() => busy = false);
                   }

@@ -173,7 +173,7 @@ class _EntryFormState extends State<EntryForm> {
             onPressed: saving
                 ? null
                 : () async {
-                    if (!form.currentState!.validate()) return;
+                    if (saving || !form.currentState!.validate()) return;
                     setState(() => saving = true);
                     try {
                       await widget.c.saveEntry(
@@ -364,6 +364,7 @@ class _PlanFormState extends State<PlanForm> {
       ? 0
       : parseMoney(saved.text);
   Future<void> save({bool deleted = false}) async {
+    if (saving) return;
     if (!deleted && !form.currentState!.validate()) return;
     setState(() => saving = true);
     try {
@@ -611,8 +612,9 @@ class _AddSavingsSheetState extends State<AddSavingsSheet> {
             final invalid = validateAmount(value);
             if (invalid != null) return invalid;
             if (parseMoney(value!) >
-                widget.goal.targetMinor - widget.goal.savedMinor)
+                widget.goal.targetMinor - widget.goal.savedMinor) {
               return 'This exceeds the remaining goal amount.';
+            }
             return null;
           },
           onFieldSubmitted: (_) {
@@ -639,6 +641,7 @@ class _AddSavingsSheetState extends State<AddSavingsSheet> {
     ],
   );
   Future<void> save() async {
+    if (saving) return;
     if (!form.currentState!.validate()) return;
     setState(() {
       saving = true;
@@ -648,13 +651,14 @@ class _AddSavingsSheetState extends State<AddSavingsSheet> {
       await widget.c.addSavings(widget.goal.id, parseMoney(amount.text));
       if (mounted) Navigator.pop(context, 'Savings added');
     } catch (e) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           saving = false;
           error = e is FormatException
               ? e.message
               : 'Unable to add savings. Try again.';
         });
+      }
     }
   }
 }

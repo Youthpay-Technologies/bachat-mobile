@@ -413,8 +413,9 @@ class AppController extends ChangeNotifier {
     final goal = allGoals
         .where((g) => g.id == goalId && g.ownerId == profile!.id && !g.deleted)
         .firstOrNull;
-    if (goal == null)
+    if (goal == null) {
       throw const FormatException('This goal is no longer available.');
+    }
     if (goal.savedMinor >= goal.targetMinor) {
       throw const FormatException('This goal has already reached its target.');
     }
