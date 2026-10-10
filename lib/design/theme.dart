@@ -114,6 +114,13 @@ abstract final class BachatTheme {
         elevation: 0,
         height: 74,
         indicatorColor: scheme.primary,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? scheme.onPrimary
+                : scheme.onSurfaceVariant,
+          ),
+        ),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
