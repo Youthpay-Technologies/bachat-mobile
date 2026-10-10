@@ -84,11 +84,23 @@ class AppController extends ChangeNotifier {
 
   void _restoreDemo(Map<String, dynamic> saved) {
     preview = true;
-    profile = Profile.fromJson(Map<String, dynamic>.from(saved['profile'] as Map));
-    links = (saved['links'] as List).map((j) => FamilyLink.fromJson(Map<String, dynamic>.from(j as Map))).toList();
-    allEntries = (saved['entries'] as List).map((j) => MoneyEntry.fromJson(Map<String, dynamic>.from(j as Map))).toList();
-    allBudgets = (saved['budgets'] as List).map((j) => CategoryBudget.fromJson(Map<String, dynamic>.from(j as Map))).toList();
-    allGoals = (saved['goals'] as List).map((j) => SavingsGoal.fromJson(Map<String, dynamic>.from(j as Map))).toList();
+    profile = Profile.fromJson(
+      Map<String, dynamic>.from(saved['profile'] as Map),
+    );
+    links = (saved['links'] as List)
+        .map((j) => FamilyLink.fromJson(Map<String, dynamic>.from(j as Map)))
+        .toList();
+    allEntries = (saved['entries'] as List)
+        .map((j) => MoneyEntry.fromJson(Map<String, dynamic>.from(j as Map)))
+        .toList();
+    allBudgets = (saved['budgets'] as List)
+        .map(
+          (j) => CategoryBudget.fromJson(Map<String, dynamic>.from(j as Map)),
+        )
+        .toList();
+    allGoals = (saved['goals'] as List)
+        .map((j) => SavingsGoal.fromJson(Map<String, dynamic>.from(j as Map)))
+        .toList();
     selectedChildId = saved['selected_child'] as String?;
     familyCode = saved['family_code'] as String?;
   }
@@ -409,13 +421,28 @@ class AppController extends ChangeNotifier {
   });
   Future<bool> claimCode(String code) => run(() async {
     if (preview) {
-      if (!isParent || familyCode == null || code.trim().toUpperCase() != familyCode) {
-        throw const FormatException('Enter the code generated in the teen demo.');
+      if (!isParent ||
+          familyCode == null ||
+          code.trim().toUpperCase() != familyCode) {
+        throw const FormatException(
+          'Enter the code generated in the teen demo.',
+        );
       }
       if (links.any((l) => l.approved || l.status == 'pending')) {
-        throw const FormatException('This family is already connected or awaiting confirmation.');
+        throw const FormatException(
+          'This family is already connected or awaiting confirmation.',
+        );
       }
-      links = [const FamilyLink(id: 'preview-link', teenId: 'preview-teen', parentId: 'preview-parent', status: 'pending', teenName: 'Ayesha', parentName: 'Sana')];
+      links = [
+        const FamilyLink(
+          id: 'preview-link',
+          teenId: 'preview-teen',
+          parentId: 'preview-parent',
+          status: 'pending',
+          teenName: 'Ayesha',
+          parentName: 'Sana',
+        ),
+      ];
       familyCode = null;
       await repository.save(demoKey, snapshot());
       return;
@@ -438,8 +465,22 @@ class AppController extends ChangeNotifier {
   });
   Future<void> decideLink(FamilyLink link, bool approve) => run(() async {
     if (preview) {
-      if (isParent || link.status != 'pending') throw const FormatException('Only the teen can confirm a pending parent.');
-      links = approve ? [FamilyLink(id: link.id, teenId: link.teenId, parentId: link.parentId, status: 'approved', teenName: link.teenName, parentName: link.parentName)] : [];
+      if (isParent || link.status != 'pending')
+        throw const FormatException(
+          'Only the teen can confirm a pending parent.',
+        );
+      links = approve
+          ? [
+              FamilyLink(
+                id: link.id,
+                teenId: link.teenId,
+                parentId: link.parentId,
+                status: 'approved',
+                teenName: link.teenName,
+                parentName: link.parentName,
+              ),
+            ]
+          : [];
       await repository.save(demoKey, snapshot());
       return;
     }
@@ -475,7 +516,8 @@ class AppController extends ChangeNotifier {
   void selectChild(String id) {
     selectedChildId = id;
     notifyListeners();
-    if (accountId != null) unawaited(repository.save(preview ? demoKey : accountId!, snapshot()));
+    if (accountId != null)
+      unawaited(repository.save(preview ? demoKey : accountId!, snapshot()));
   }
 
   Future<void> setTheme(String value) async {
@@ -517,7 +559,12 @@ class AppController extends ChangeNotifier {
 
   void startPreview(UserRole role) {
     if (preview) {
-      profile = Profile(id: role == UserRole.teen ? 'preview-teen' : 'preview-parent', name: role == UserRole.teen ? 'Ayesha' : 'Sana', role: role, age: role == UserRole.teen ? 16 : null);
+      profile = Profile(
+        id: role == UserRole.teen ? 'preview-teen' : 'preview-parent',
+        name: role == UserRole.teen ? 'Ayesha' : 'Sana',
+        role: role,
+        age: role == UserRole.teen ? 16 : null,
+      );
       selectedChildId = 'preview-teen';
       error = null;
       notifyListeners();

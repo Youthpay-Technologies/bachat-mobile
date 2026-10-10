@@ -67,20 +67,39 @@ class Surface extends StatelessWidget {
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(26),
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.035), blurRadius: 18, offset: const Offset(4, 6)), BoxShadow(color: Colors.white.withValues(alpha: Theme.of(context).brightness == Brightness.light ? 0.75 : 0.025), blurRadius: 12, offset: const Offset(-4, -4))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 18,
+            offset: const Offset(4, 6),
+          ),
+          BoxShadow(
+            color: Colors.white.withValues(
+              alpha: Theme.of(context).brightness == Brightness.light
+                  ? 0.75
+                  : 0.025,
+            ),
+            blurRadius: 12,
+            offset: const Offset(-4, -4),
+          ),
+        ],
       ),
       child: Material(
-      color: tinted ? colors.primaryContainer : colors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(26),
-        side: BorderSide(color: Theme.of(context).brightness == Brightness.light ? Colors.white : colors.outlineVariant),
+        color: tinted ? colors.primaryContainer : colors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(26),
+          side: BorderSide(
+            color: Theme.of(context).brightness == Brightness.light
+                ? Colors.white
+                : colors.outlineVariant,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: SizedBox(
+          width: double.infinity,
+          child: Padding(padding: padding, child: child),
+        ),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: SizedBox(
-        width: double.infinity,
-        child: Padding(padding: padding, child: child),
-      ),
-    ),
     );
   }
 }

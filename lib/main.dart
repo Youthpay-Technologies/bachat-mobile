@@ -8,7 +8,9 @@ import 'presentation/app.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final controller = AppController(BachatRepository(await openDatabase(), null));
+  final controller = AppController(
+    BachatRepository(await openDatabase(), null),
+  );
   await controller.initialize();
   runApp(
     ProviderScope(

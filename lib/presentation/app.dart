@@ -184,11 +184,17 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
                 child: FilledButton.icon(
                   onPressed: c.busy ? null : () => c.startDemo(role),
                   icon: const Icon(Icons.arrow_forward_rounded),
-                  label: Text(role == UserRole.teen ? 'Explore as Ayesha' : 'Explore as Sana'),
+                  label: Text(
+                    role == UserRole.teen
+                        ? 'Explore as Ayesha'
+                        : 'Explore as Sana',
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('Demo users only. Changes stay on this device. You can switch between teen and parent anytime.'),
+              const Text(
+                'Demo users only. Changes stay on this device. You can switch between teen and parent anytime.',
+              ),
             ],
             AppError(c),
           ],
@@ -247,30 +253,36 @@ class _ShellState extends ConsumerState<DashboardShell> {
       ),
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
-        child: ClipRRect(borderRadius: BorderRadius.circular(36), child: NavigationBar(
-        selectedIndex: tab,
-        onDestinationSelected: (value) => setState(() => tab = value),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.grid_view_outlined),
-            selectedIcon: Icon(Icons.grid_view_rounded),
-            label: 'Home',
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(36),
+          child: NavigationBar(
+            selectedIndex: tab,
+            onDestinationSelected: (value) => setState(() => tab = value),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.grid_view_outlined),
+                selectedIcon: Icon(Icons.grid_view_rounded),
+                label: 'Home',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.receipt_long_outlined),
+                label: 'Activity',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.savings_outlined),
+                label: 'Plan',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.auto_stories_outlined),
+                label: 'Learn',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                label: 'You',
+              ),
+            ],
           ),
-          NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            label: 'Activity',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.savings_outlined),
-            label: 'Plan',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.auto_stories_outlined),
-            label: 'Learn',
-          ),
-          NavigationDestination(icon: Icon(Icons.person_outline), label: 'You'),
-        ],
-      )),
+        ),
       ),
     );
   }
@@ -315,38 +327,113 @@ class HomePage extends ConsumerWidget {
       onRefresh: c.refresh,
       child: PageBody(
         children: [
-          Row(children: [
-            CircleAvatar(radius: 24, backgroundColor: Theme.of(context).colorScheme.primaryContainer, child: Text(c.profile!.name.substring(0, 1), style: t.titleLarge)),
-            const SizedBox(width: 12),
-            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text('Good to see you', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)), Text(c.profile!.name, style: t.titleMedium)])),
-            const Tooltip(message: 'Saved on this device', child: Padding(padding: EdgeInsets.all(12), child: Icon(Icons.check_circle_outline))),
-          ]),
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: Text(
+                  c.profile!.name.substring(0, 1),
+                  style: t.titleLarge,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Good to see you',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(c.profile!.name, style: t.titleMedium),
+                  ],
+                ),
+              ),
+              const Tooltip(
+                message: 'Saved on this device',
+                child: Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Icon(Icons.check_circle_outline),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 28),
           ChildPicker(c),
           if (c.isParent && c.children.isEmpty)
             const FamilyPage(embedded: true)
           else ...[
-            Center(child: Column(children: [
-              Text('${DateFormat.MMMM().format(DateTime.now())} spending', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
-              const SizedBox(height: 8),
-              Text(money(summary.spentMinor), style: t.displaySmall, textAlign: TextAlign.center),
-              const SizedBox(height: 12),
-              Chip(avatar: const Icon(Icons.check, size: 16), label: const Text('Saved on this device'), side: BorderSide.none),
-              const SizedBox(height: 12),
-              Text('Recorded expenses · PKR', style: t.bodySmall),
-            ])),
+            Center(
+              child: Column(
+                children: [
+                  Text(
+                    '${DateFormat.MMMM().format(DateTime.now())} spending',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    money(summary.spentMinor),
+                    style: t.displaySmall,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 12),
+                  Chip(
+                    avatar: const Icon(Icons.check, size: 16),
+                    label: const Text('Saved on this device'),
+                    side: BorderSide.none,
+                  ),
+                  const SizedBox(height: 12),
+                  Text('Recorded expenses · PKR', style: t.bodySmall),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
-            Wrap(spacing: 10, runSpacing: 10, alignment: WrapAlignment.center, children: [
-              if (!c.isParent) FilledButton.icon(onPressed: () => entryForm(context, c), icon: const Icon(Icons.add), label: const Text('Add a transaction')),
-              OutlinedButton.icon(onPressed: onActivity, icon: const Icon(Icons.receipt_long_outlined), label: const Text('Activity')),
-              OutlinedButton.icon(onPressed: onPlan, icon: const Icon(Icons.savings_outlined), label: const Text('Your plan')),
-            ]),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              alignment: WrapAlignment.center,
+              children: [
+                if (!c.isParent)
+                  FilledButton.icon(
+                    onPressed: () => entryForm(context, c),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add a transaction'),
+                  ),
+                OutlinedButton.icon(
+                  onPressed: onActivity,
+                  icon: const Icon(Icons.receipt_long_outlined),
+                  label: const Text('Activity'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: onPlan,
+                  icon: const Icon(Icons.savings_outlined),
+                  label: const Text('Your plan'),
+                ),
+              ],
+            ),
             const SectionHeading('Your money at a glance'),
-            Surface(child: Wrap(spacing: 32, runSpacing: 16, children: [
-              _Metric('Money in', money(summary.incomeMinor)),
-              _Metric('Net flow', money(summary.incomeMinor - summary.spentMinor)),
-              Text('Based on recorded entries, not a bank balance.', style: t.bodySmall),
-            ])),
+            Surface(
+              child: Wrap(
+                spacing: 32,
+                runSpacing: 16,
+                children: [
+                  _Metric('Money in', money(summary.incomeMinor)),
+                  _Metric(
+                    'Net flow',
+                    money(summary.incomeMinor - summary.spentMinor),
+                  ),
+                  Text(
+                    'Based on recorded entries, not a bank balance.',
+                    style: t.bodySmall,
+                  ),
+                ],
+              ),
+            ),
             const SectionHeading('Where it went'),
             if (summary.byCategory.isEmpty)
               const EmptyState(
@@ -484,7 +571,9 @@ class EntryTile extends StatelessWidget {
                   entry.direction == EntryDirection.income
                       ? Icons.south_west
                       : categoryIcon(entry.category),
-                  color: Theme.of(context).brightness == Brightness.light ? const Color(0xFF216D2C) : Theme.of(context).colorScheme.primary,
+                  color: Theme.of(context).brightness == Brightness.light
+                      ? const Color(0xFF216D2C)
+                      : Theme.of(context).colorScheme.primary,
                 ),
               ),
               const SizedBox(width: 12),
@@ -955,7 +1044,12 @@ class _FamilyState extends ConsumerState<FamilyPage> {
         label: const Text('Check for updates'),
       ),
       if (widget.locked)
-        OutlinedButton.icon(onPressed: () => c.startDemo(c.isParent ? UserRole.teen : UserRole.parent), icon: const Icon(Icons.swap_horiz), label: const Text('Switch demo user')),
+        OutlinedButton.icon(
+          onPressed: () =>
+              c.startDemo(c.isParent ? UserRole.teen : UserRole.parent),
+          icon: const Icon(Icons.swap_horiz),
+          label: const Text('Switch demo user'),
+        ),
     ];
     return widget.embedded
         ? Column(
@@ -1039,14 +1133,24 @@ class SettingsPage extends ConsumerWidget {
         ),
         const SizedBox(height: 24),
         FilledButton.icon(
-          onPressed: () => c.startDemo(c.isParent ? UserRole.teen : UserRole.parent),
+          onPressed: () =>
+              c.startDemo(c.isParent ? UserRole.teen : UserRole.parent),
           icon: const Icon(Icons.swap_horiz),
-          label: Text(c.isParent ? 'Switch to Ayesha · Teen' : 'Switch to Sana · Parent'),
+          label: Text(
+            c.isParent ? 'Switch to Ayesha · Teen' : 'Switch to Sana · Parent',
+          ),
         ),
         const SizedBox(height: 12),
         OutlinedButton.icon(
           onPressed: () async {
-            if (await confirmAction(context, title: 'Reset demo data?', body: 'This replaces your local demo changes with the original sample transactions, budget, goal and family connection.', action: 'Reset demo')) await c.resetDemo();
+            if (await confirmAction(
+              context,
+              title: 'Reset demo data?',
+              body:
+                  'This replaces your local demo changes with the original sample transactions, budget, goal and family connection.',
+              action: 'Reset demo',
+            ))
+              await c.resetDemo();
           },
           icon: const Icon(Icons.restart_alt),
           label: const Text('Reset demo data'),

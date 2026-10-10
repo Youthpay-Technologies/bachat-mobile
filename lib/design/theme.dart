@@ -109,9 +109,24 @@ abstract final class BachatTheme {
         indicatorColor: scheme.primary,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
-      progressIndicatorTheme: ProgressIndicatorThemeData(color: dark ? scheme.primary : const Color(0xFF22852E), linearTrackColor: scheme.outlineVariant, borderRadius: BorderRadius.circular(12)),
-      textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: dark ? scheme.primary : const Color(0xFF216D2C), minimumSize: const Size(48,48))),
-      outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(foregroundColor: scheme.onSurface, minimumSize: const Size(48,52), shape: const StadiumBorder())),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: dark ? scheme.primary : const Color(0xFF22852E),
+        linearTrackColor: scheme.outlineVariant,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: dark ? scheme.primary : const Color(0xFF216D2C),
+          minimumSize: const Size(48, 48),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: scheme.onSurface,
+          minimumSize: const Size(48, 52),
+          shape: const StadiumBorder(),
+        ),
+      ),
       dividerTheme: DividerThemeData(
         color: scheme.outlineVariant,
         thickness: 1,
