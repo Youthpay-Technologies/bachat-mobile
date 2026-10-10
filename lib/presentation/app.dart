@@ -13,11 +13,11 @@ class AppGate extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final c = ref.watch(controllerProvider);
     if (!c.ready) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const DashboardSkeleton();
     }
     if (!c.signedIn) return const WelcomeScreen();
     if (c.profile == null && c.syncing) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const DashboardSkeleton();
     }
     if (c.profile == null) return const WelcomeScreen();
     if (c.needsApproval) {
@@ -174,9 +174,7 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
               ),
               const SizedBox(height: 20),
               Text(
-                role == UserRole.teen
-                    ? 'Ayesha, 16 · Teen'
-                    : 'Sana · Parent',
+                role == UserRole.teen ? 'Ayesha, 16 · Teen' : 'Sana · Parent',
               ),
               const SizedBox(height: 20),
               SizedBox(
@@ -191,7 +189,6 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
                   ),
                 ),
               ),
-
             ],
             AppError(c),
           ],
@@ -211,22 +208,24 @@ class _ShellState extends ConsumerState<DashboardShell> {
   int tab = 0;
   @override
   Widget build(BuildContext context) {
-    final c = ref.watch(controllerProvider);
     return Scaffold(
       body: SafeArea(
         child: Column(
           children: [
             Expanded(
-              child: switch (tab) {
-                0 => HomePage(
-                  onActivity: () => setState(() => tab = 1),
-                  onPlan: () => setState(() => tab = 2),
-                ),
-                1 => const ActivityPage(),
-                2 => const PlanPage(),
-                3 => const LearnPage(),
-                _ => const SettingsPage(),
-              },
+              child: IndexedStack(
+                index: tab,
+                children: [
+                  HomePage(
+                    onActivity: () => setState(() => tab = 1),
+                    onPlan: () => setState(() => tab = 2),
+                  ),
+                  const ActivityPage(),
+                  const PlanPage(),
+                  const LearnPage(),
+                  const SettingsPage(),
+                ],
+              ),
             ),
           ],
         ),
@@ -237,6 +236,9 @@ class _ShellState extends ConsumerState<DashboardShell> {
           borderRadius: BorderRadius.circular(36),
           child: NavigationBar(
             selectedIndex: tab,
+            animationDuration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 150),
             onDestinationSelected: (value) => setState(() => tab = value),
             destinations: const [
               NavigationDestination(
@@ -278,9 +280,7 @@ class ChildPicker extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 24),
           child: DropdownButtonFormField<String>(
             initialValue: c.selectedChildId,
-            decoration: const InputDecoration(
-              labelText: 'Child',
-            ),
+            decoration: const InputDecoration(labelText: 'Child'),
             items: c.children
                 .map(
                   (l) => DropdownMenuItem(
@@ -332,7 +332,11 @@ class HomePage extends ConsumerWidget {
                   ],
                 ),
               ),
-              IconButton(onPressed: () => accountSheet(context, c), tooltip: 'Switch profile', icon: const Icon(Icons.swap_horiz_rounded)),
+              IconButton(
+                onPressed: () => accountSheet(context, c),
+                tooltip: 'Switch profile',
+                icon: const Icon(Icons.swap_horiz_rounded),
+              ),
             ],
           ),
           const SizedBox(height: 40),
@@ -356,7 +360,6 @@ class HomePage extends ConsumerWidget {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
-
                 ],
               ),
             ),
@@ -395,11 +398,10 @@ class HomePage extends ConsumerWidget {
                     'Net flow',
                     money(summary.incomeMinor - summary.spentMinor),
                   ),
-
                 ],
               ),
             ),
-            const SectionHeading('Where it went'),
+            const SectionHeading('Spending breakdown'),
             if (summary.byCategory.isEmpty)
               const EmptyState(
                 icon: Icons.pie_chart_outline,
@@ -475,7 +477,7 @@ class HomePage extends ConsumerWidget {
                     'Create a goal in Plan and take it one small step at a time.',
               )
             else
-              GoalCard(c.goals.first, c),
+              GoalCarousel(c),
           ],
           AppError(c),
         ],
@@ -763,6 +765,15 @@ class GoalCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 20),
+        StatusBadge(
+          goal.progress == 1
+              ? 'Complete'
+              : '${(goal.progress * 100).round()}% saved',
+          icon: goal.progress == 1
+              ? Icons.check_rounded
+              : Icons.savings_outlined,
+        ),
+        const SizedBox(height: 16),
         Text('${money(goal.savedMinor)} of ${money(goal.targetMinor)}'),
         const SizedBox(height: 12),
         LinearProgressIndicator(
@@ -773,8 +784,8 @@ class GoalCard extends StatelessWidget {
         const SizedBox(height: 12),
         Text(
           goal.progress == 1
-              ? 'You made it. A little habit, a real achievement.'
-              : '${(goal.progress * 100).round()}% of the way there · ${money(goal.targetMinor - goal.savedMinor)} to go',
+              ? 'Goal reached'
+              : '${money(goal.targetMinor - goal.savedMinor)} to go',
         ),
       ],
     ),
@@ -786,37 +797,112 @@ class LearnPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => PageBody(
     children: [
-      const BachatMark(),
-      const SizedBox(height: 48),
-      const Icon(Icons.auto_stories_outlined, size: 52),
+      Text('Learn', style: Theme.of(context).textTheme.headlineLarge),
+      const SizedBox(height: 72),
+      const Icon(Icons.auto_stories_outlined, size: 64),
+      const SizedBox(height: 32),
+      const StatusBadge('Coming soon', icon: Icons.schedule_rounded),
       const SizedBox(height: 24),
       Text(
-        'Good habits.\nA little more know-how.',
+        'A little knowledge.\nBetter money habits.',
         style: Theme.of(context).textTheme.headlineLarge,
       ),
-      const SizedBox(height: 18),
+      const SizedBox(height: 16),
       const Text(
-        'A space to learn about spending, saving, and making thoughtful money choices.',
-      ),
-      const SizedBox(height: 32),
-      const Surface(
-        tinted: true,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'COMING SOON',
-              style: TextStyle(fontWeight: FontWeight.w700, letterSpacing: 1.5),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'We’re putting the first lessons together. For now, every entry and savings goal is a small step forward.',
-            ),
-          ],
-        ),
+        'Short lessons on spending, saving and making your money go further.',
       ),
     ],
   );
+}
+
+class GoalCarousel extends StatefulWidget {
+  const GoalCarousel(this.c, {super.key});
+  final AppController c;
+  @override
+  State<GoalCarousel> createState() => _GoalCarouselState();
+}
+
+class _GoalCarouselState extends State<GoalCarousel> {
+  final scroll = ScrollController();
+  @override
+  void dispose() {
+    scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final goals = widget.c.goals;
+    if (goals.length == 1) return GoalCard(goals.single, widget.c);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth * .88;
+        void move(int direction) {
+          final offset = (scroll.offset + direction * (width + 16)).clamp(
+            0.0,
+            scroll.position.maxScrollExtent,
+          );
+          if (MediaQuery.disableAnimationsOf(context)) {
+            scroll.jumpTo(offset);
+          } else {
+            scroll.animateTo(
+              offset,
+              duration: const Duration(milliseconds: 150),
+              curve: Curves.easeOut,
+            );
+          }
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SingleChildScrollView(
+              controller: scroll,
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var i = 0; i < goals.length; i++)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(end: 16),
+                      child: SizedBox(
+                        width: width,
+                        child: Semantics(
+                          label: 'Savings goal ${i + 1} of ${goals.length}',
+                          child: GoalCard(goals[i], widget.c),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${goals.length} goals',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Previous goal',
+                  onPressed: () => move(-1),
+                  icon: const Icon(Icons.chevron_left),
+                ),
+                IconButton(
+                  tooltip: 'Next goal',
+                  onPressed: () => move(1),
+                  icon: const Icon(Icons.chevron_right),
+                ),
+              ],
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
 
 class FamilyPage extends ConsumerStatefulWidget {
@@ -1023,59 +1109,151 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
-    return PageBody(children: [
-      Text('You', style: t.headlineLarge),
-      const SizedBox(height: 32),
-      Surface(child: ListTile(contentPadding: EdgeInsets.zero,
-        leading: CircleAvatar(child: Text(c.profile!.name.substring(0, 1))),
-        title: Text(c.profile!.name, style: t.titleLarge),
-        subtitle: Text(c.isParent ? 'Parent' : 'Teen · 16'),
-        trailing: const Icon(Icons.unfold_more_rounded),
-        onTap: () => accountSheet(context, c))),
-      const SectionHeading('Preferences'),
-      Surface(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8), child: Column(children: [
-        ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.contrast_rounded), title: const Text('Appearance'), subtitle: Text(switch(c.theme) {'light' => 'Light', 'dark' => 'Dark', _ => 'System'}), trailing: const Icon(Icons.chevron_right), onTap: () => appearanceSheet(context, c)),
-        ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.people_outline), title: const Text('Family connections'), trailing: const Icon(Icons.chevron_right), onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => Scaffold(appBar: AppBar(title: const Text('Family')), body: const SafeArea(child: FamilyPage()))))),
-        const ListTile(contentPadding: EdgeInsets.zero, leading: Icon(Icons.language_outlined), title: Text('English'), trailing: Text('PKR')),
-      ])),
-      const SizedBox(height: 32),
-      TextButton.icon(onPressed: () async {
-        if (await confirmAction(context, title: 'Reset sample data?', body: 'Your changes will be replaced with the original transactions, budgets, goals and family connection.', action: 'Reset data')) await c.resetDemo();
-      }, icon: const Icon(Icons.restart_alt), label: const Text('Reset sample data')),
-      AppError(c),
-      const SizedBox(height: 32),
-      Text('Bachat by YouthPay', style: t.bodySmall),
-    ]);
+    return PageBody(
+      children: [
+        Text('You', style: t.headlineLarge),
+        const SizedBox(height: 32),
+        Surface(
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: CircleAvatar(child: Text(c.profile!.name.substring(0, 1))),
+            title: Text(c.profile!.name, style: t.titleLarge),
+            subtitle: Text(c.isParent ? 'Parent' : 'Teen · 16'),
+            trailing: const Icon(Icons.unfold_more_rounded),
+            onTap: () => accountSheet(context, c),
+          ),
+        ),
+        const SectionHeading('Preferences'),
+        Surface(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: Column(
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.contrast_rounded),
+                title: const Text('Appearance'),
+                subtitle: Text(switch (c.theme) {
+                  'light' => 'Light',
+                  'dark' => 'Dark',
+                  _ => 'System',
+                }),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => appearanceSheet(context, c),
+              ),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.people_outline),
+                title: const Text('Family connections'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => Scaffold(
+                      appBar: AppBar(title: const Text('Family')),
+                      body: const SafeArea(child: FamilyPage()),
+                    ),
+                  ),
+                ),
+              ),
+              const ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.language_outlined),
+                title: Text('English'),
+                trailing: Text('PKR'),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 32),
+        TextButton.icon(
+          onPressed: () async {
+            if (await confirmAction(
+              context,
+              title: 'Reset sample data?',
+              body:
+                  'Your changes will be replaced with the original transactions, budgets, goals and family connection.',
+              action: 'Reset data',
+            ))
+              await c.resetDemo();
+          },
+          icon: const Icon(Icons.restart_alt),
+          label: const Text('Reset sample data'),
+        ),
+        AppError(c),
+        const SizedBox(height: 32),
+        Text('Bachat by YouthPay', style: t.bodySmall),
+      ],
+    );
   }
 }
 
-Future<void> accountSheet(BuildContext context, AppController c) => showModalBottomSheet<void>(
-  context: context, showDragHandle: true, useSafeArea: true, isScrollControlled: true,
-  builder: (sheetContext) => SheetBody(children: [
-    Text('Switch profile', style: Theme.of(context).textTheme.headlineMedium),
-    const SizedBox(height: 24),
-    ...UserRole.values.map((role) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Surface(
-      child: ListTile(contentPadding: EdgeInsets.zero,
-        leading: CircleAvatar(child: Text(role == UserRole.teen ? 'A' : 'S')),
-        title: Text(role == UserRole.teen ? 'Ayesha' : 'Sana'), subtitle: Text(role == UserRole.teen ? 'Teen · 16' : 'Parent'),
-        trailing: c.profile!.role == role ? const Icon(Icons.check_circle_outline) : const Icon(Icons.chevron_right),
-        onTap: () async { Navigator.pop(sheetContext); await c.startDemo(role); },
-      )))),
-  ]),
+Future<void> accountSheet(
+  BuildContext context,
+  AppController c,
+) => showModalBottomSheet<void>(
+  context: context,
+  showDragHandle: true,
+  useSafeArea: true,
+  isScrollControlled: true,
+  builder: (sheetContext) => SheetBody(
+    children: [
+      Text('Switch profile', style: Theme.of(context).textTheme.headlineMedium),
+      const SizedBox(height: 24),
+      ...UserRole.values.map(
+        (role) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Surface(
+            child: ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: CircleAvatar(
+                child: Text(role == UserRole.teen ? 'A' : 'S'),
+              ),
+              title: Text(role == UserRole.teen ? 'Ayesha' : 'Sana'),
+              subtitle: Text(role == UserRole.teen ? 'Teen · 16' : 'Parent'),
+              trailing: c.profile!.role == role
+                  ? const Icon(Icons.check_circle_outline)
+                  : const Icon(Icons.chevron_right),
+              onTap: () async {
+                Navigator.pop(sheetContext);
+                await c.startDemo(role);
+              },
+            ),
+          ),
+        ),
+      ),
+    ],
+  ),
 );
 
-Future<void> appearanceSheet(BuildContext context, AppController c) => showModalBottomSheet<void>(
-  context: context, showDragHandle: true, useSafeArea: true,
-  builder: (sheetContext) => SheetBody(children: [
-    Text('Appearance', style: Theme.of(context).textTheme.headlineMedium),
-    const SizedBox(height: 24),
-    ...{'system':'System', 'light':'Light', 'dark':'Dark'}.entries.map((entry) => ListTile(
-      title: Text(entry.value), leading: Icon(switch(entry.key) {'light'=>Icons.light_mode_outlined,'dark'=>Icons.dark_mode_outlined,_=>Icons.brightness_auto_outlined}),
-      trailing: c.theme == entry.key ? const Icon(Icons.check_circle_outline) : null,
-      onTap: () async { Navigator.pop(sheetContext); await c.setTheme(entry.key); },
-    )),
-  ]),
-);
+Future<void> appearanceSheet(BuildContext context, AppController c) =>
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      builder: (sheetContext) => SheetBody(
+        children: [
+          Text('Appearance', style: Theme.of(context).textTheme.headlineMedium),
+          const SizedBox(height: 24),
+          ...{'system': 'System', 'light': 'Light', 'dark': 'Dark'}.entries.map(
+            (entry) => ListTile(
+              title: Text(entry.value),
+              leading: Icon(switch (entry.key) {
+                'light' => Icons.light_mode_outlined,
+                'dark' => Icons.dark_mode_outlined,
+                _ => Icons.brightness_auto_outlined,
+              }),
+              trailing: c.theme == entry.key
+                  ? const Icon(Icons.check_circle_outline)
+                  : null,
+              onTap: () async {
+                Navigator.pop(sheetContext);
+                await c.setTheme(entry.key);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
 
 class RoleChoices extends StatelessWidget {
   const RoleChoices({super.key, required this.value, required this.onChanged});

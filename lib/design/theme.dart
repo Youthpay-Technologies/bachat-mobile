@@ -29,19 +29,26 @@ abstract final class BachatTheme {
       fontFamily: 'DM Sans',
     );
     return base.copyWith(
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: canvas,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+      ),
       scaffoldBackgroundColor: canvas,
       textTheme: base.textTheme.copyWith(
         displaySmall: TextStyle(
           fontFamily: 'DM Sans',
-          fontSize: 40,
+          fontSize: 44,
           fontWeight: FontWeight.w700,
           height: 1.1,
-          letterSpacing: -1.2,
+          letterSpacing: -1.4,
           color: text,
           fontFeatures: const [FontFeature.tabularFigures()],
         ),
         headlineLarge: TextStyle(
-          fontSize: 32,
+          fontSize: 30,
           fontWeight: FontWeight.w700,
           height: 1.2,
           letterSpacing: -0.7,

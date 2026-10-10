@@ -11,13 +11,13 @@ Future<void> main() async {
   final controller = AppController(
     BachatRepository(await openDatabase(), null),
   );
-  await controller.initialize();
   runApp(
     ProviderScope(
       overrides: [controllerProvider.overrideWith((ref) => controller)],
       child: const BachatApp(),
     ),
   );
+  await controller.initialize();
 }
 
 class BachatApp extends ConsumerWidget {
