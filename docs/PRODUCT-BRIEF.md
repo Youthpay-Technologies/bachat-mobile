@@ -1,26 +1,46 @@
-# Product discovery
+# Bachat Mobile product brief
 
-## Confirmed by the owner
+## Confirmed scope
 
-Bachat is an expense-tracking mobile app for teens and parents. It will be implemented in a new Flutter project, with redesigned minimal UI, proper onboarding, separate role journeys, relevant dashboards and tabs, and a coming-soon learning module. Source control must use a new private GitHub repository with frequent commits and merged PRs. The requested design reference is https://github.com/jakubkrehel/skills.
+A Flutter app for Android and iOS, with distinct teen and parent journeys. Launch language is English and currency is PKR. Core features are onboarding, Google sign-in through Supabase, teen expense tracking, budgets, savings goals, parent linking and approval, child dashboards, settings, and a coming-soon learning screen.
 
-## Decisions pending owner answers
+Gmail, automatic bank/SMS import, squads, rewards, and parent personal spending are deferred to keep this release focused. Manual expense and income entry is included.
 
-1. Release scope: Gmail import, squads, rewards, and parent personal spending.
-2. Teen age range and whether parent approval is required before app use.
-3. Sign-in providers and account recovery.
-4. Teen consent rules, parent permissions, and multiple-child support.
-5. Branding, colors, fonts, mascot, themes, and reference apps.
-6. Existing or separate Supabase environment; offline behavior and sync scope.
-7. Launch languages, currencies, and import methods.
-8. GitHub owner and repository name.
-9. Flutter state-management preferences and macOS access for iOS builds.
+## Accounts and family access
 
-## Proposed release structure (not approved or implemented)
+- Teens are 13 through 18 inclusive.
+- A teen signs in, sets up a profile, and generates a short-lived family code.
+- A parent signs in, enters the code, and explicitly approves the teen.
+- The teen sees the named parent and confirms or declines.
+- Only mutual confirmation enables the teen's main app and parent reading.
+- Parents can link multiple children.
+- Parents may read each approved child's transactions, budgets, and savings goals. Only the teen edits them.
+- Removing the last approved parent returns the teen to the approval screen.
+- Server authorization enforces the relationship; a local role flag is never sufficient.
 
-Teen: Home, Activity, Plan (budgets/goals), Learn (coming soon), Profile.
-Parent: Family, Child activity/insights, Reports, Profile; personal spending if requested.
+## Offline behavior
 
-Onboarding: introduction, role selection, account access, profile, role-specific setup, optional family linking, completion. The exact order depends on the chosen authentication and consent model.
+The app must remain usable offline after account setup and a verified approval. Local changes queue for synchronization. Previously cached approval is not proof that server access remains approved: refresh on reconnect, enforce server policies for every cloud operation, and clear restricted views if access has ended. First-time sign-in and family approval require a connection.
 
-Suggested technical baseline: Flutter stable, feature-oriented architecture, Riverpod, go_router, an offline local database, and Supabase repositories. Final choices await product decisions and toolchain verification.
+## Branding
+
+Warm cream surfaces, navy text, restrained green accents, DM Sans, subtle motion, light/dark themes. Reuse the existing YouthPay/YP mark with Bachat naming initially; the logo may change later.
+
+## Architecture decisions
+
+- Flutter stable, Riverpod, go_router.
+- Separate domain, repository, application state, and presentation layers.
+- Local database and durable sync queue scoped by authenticated account.
+- Exact money represented as integer paisa.
+- New Supabase architecture, including profiles, family approval, transactions, budgets, goals, and preferences. Do not apply unreviewed migrations to the old web app's production schema.
+- Google OAuth and native callback/deep links.
+- Minimal feature set with complete empty, loading, error, and offline states.
+
+## Delivery
+
+Private repository: https://github.com/saim-x/bachat-mobile
+Frequent coherent commits; feature branches; PRs; merge after relevant verification. Team members with Macs will finish native iOS device/signing verification. Report it separately from Android and Flutter tests.
+
+## External dependency
+
+Supabase MCP was not connected at discovery. Prepare migrations and adapters locally; apply them only after account/project access is verified. Google OAuth provider configuration also needs the project credentials and registered callbacks.
