@@ -111,7 +111,7 @@ class SectionHeading extends StatelessWidget {
   final VoidCallback? onAction;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 28, bottom: 14),
+    padding: const EdgeInsets.only(top: 36, bottom: 18),
     child: LayoutBuilder(
       builder: (context, constraints) {
         final heading = Text(
@@ -207,22 +207,41 @@ Future<bool> confirmAction(
     false;
 
 class StatusBadge extends StatelessWidget {
-  const StatusBadge(this.label, {super.key, this.icon});
+  const StatusBadge(this.label, {super.key, this.icon, this.danger = false});
+  final bool danger;
   final String label;
   final IconData? icon;
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
     decoration: BoxDecoration(
-      color: Theme.of(context).colorScheme.primaryContainer,
+      color: danger
+          ? Theme.of(context).colorScheme.errorContainer
+          : Theme.of(context).colorScheme.primaryContainer,
       borderRadius: BorderRadius.circular(20),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (icon != null) ...[Icon(icon, size: 16), const SizedBox(width: 6)],
+        if (icon != null) ...[
+          Icon(
+            icon,
+            size: 16,
+            color: danger
+                ? Theme.of(context).colorScheme.onErrorContainer
+                : Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
+          const SizedBox(width: 6),
+        ],
         Flexible(
-          child: Text(label, style: Theme.of(context).textTheme.labelMedium),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: danger
+                  ? Theme.of(context).colorScheme.onErrorContainer
+                  : Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+          ),
         ),
       ],
     ),

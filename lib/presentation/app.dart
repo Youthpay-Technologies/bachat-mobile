@@ -83,16 +83,16 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
             const SizedBox(height: 52),
             Text(
               step == 0
-                  ? 'Small steps.\nBetter money habits.'
+                  ? 'Make money\nmake sense.'
                   : step == 1
-                  ? 'A little support.\nA lot of independence.'
-                  : 'Make room for\nyour money goals.',
+                  ? 'Grow together.\nStay independent.'
+                  : 'Your money.\nYour way.',
               style: t.displaySmall,
             ),
             const SizedBox(height: 18),
             Text(
               step == 0
-                  ? 'Know where your money goes. Build a budget that fits your day. Save for something that matters.'
+                  ? 'Track the everyday. Make a plan. Save for something good.'
                   : step == 1
                   ? 'Teens track their own money. Parents stay in the loop, with access both of you approve.'
                   : 'Track spending, build a budget and save for what matters.',
@@ -280,7 +280,7 @@ class ChildPicker extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 24),
           child: DropdownButtonFormField<String>(
             initialValue: c.selectedChildId,
-            decoration: const InputDecoration(labelText: 'Child'),
+            decoration: const InputDecoration(labelText: 'Child · Read only'),
             items: c.children
                 .map(
                   (l) => DropdownMenuItem(
@@ -364,29 +364,15 @@ class HomePage extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 32),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              alignment: WrapAlignment.center,
-              children: [
-                if (!c.isParent)
-                  FilledButton.icon(
-                    onPressed: () => entryForm(context, c),
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add transaction'),
-                  ),
-                OutlinedButton.icon(
-                  onPressed: onActivity,
-                  icon: const Icon(Icons.receipt_long_outlined),
-                  label: const Text('Activity'),
+            if (!c.isParent)
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => entryForm(context, c),
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('Add transaction'),
                 ),
-                OutlinedButton.icon(
-                  onPressed: onPlan,
-                  icon: const Icon(Icons.savings_outlined),
-                  label: const Text('Your plan'),
-                ),
-              ],
-            ),
+              ),
             const SectionHeading('Overview'),
             Surface(
               child: Wrap(
@@ -581,6 +567,13 @@ class ActivityPage extends ConsumerStatefulWidget {
 }
 
 class _ActivityState extends ConsumerState<ActivityPage> {
+  final search = TextEditingController();
+  @override
+  void dispose() {
+    search.dispose();
+    super.dispose();
+  }
+
   String query = '';
   String filter = 'All';
   @override
@@ -602,10 +595,21 @@ class _ActivityState extends ConsumerState<ActivityPage> {
         const SizedBox(height: 24),
         ChildPicker(c),
         TextField(
+          controller: search,
           onChanged: (v) => setState(() => query = v),
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'Search transactions',
-            prefixIcon: Icon(Icons.search),
+            prefixIcon: const Icon(Icons.search),
+            suffixIcon: query.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'Clear search',
+                    icon: const Icon(Icons.close),
+                    onPressed: () {
+                      search.clear();
+                      setState(() => query = '');
+                    },
+                  ),
           ),
         ),
         const SizedBox(height: 16),
@@ -630,10 +634,26 @@ class _ActivityState extends ConsumerState<ActivityPage> {
           ),
         const SizedBox(height: 16),
         if (entries.isEmpty)
-          const EmptyState(
+          EmptyState(
             icon: Icons.receipt_long_outlined,
-            title: 'No transactions here yet',
-            body: 'Try another search, or add your first transaction.',
+            title: query.isNotEmpty || filter != 'All'
+                ? 'No matches'
+                : 'No transactions yet',
+            body: query.isNotEmpty || filter != 'All'
+                ? 'Try a different search or clear your filters.'
+                : c.isParent
+                ? 'Shared transactions will appear here.'
+                : 'Add your first expense or income.',
+            action: query.isNotEmpty || filter != 'All'
+                ? 'Clear filters'
+                : null,
+            onAction: () {
+              search.clear();
+              setState(() {
+                query = '';
+                filter = 'All';
+              });
+            },
           )
         else
           Surface(
@@ -692,6 +712,14 @@ class PlanPage extends ConsumerWidget {
                     ],
                   ),
                   Text('${money(spent)} of ${money(b.limitMinor)}'),
+                  if (spent > b.limitMinor) ...[
+                    const SizedBox(height: 12),
+                    const StatusBadge(
+                      'Over budget',
+                      icon: Icons.warning_amber_rounded,
+                      danger: true,
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   LinearProgressIndicator(
                     value: (spent / b.limitMinor).clamp(0, 1),
@@ -1173,8 +1201,9 @@ class SettingsPage extends ConsumerWidget {
               body:
                   'Your changes will be replaced with the original transactions, budgets, goals and family connection.',
               action: 'Reset data',
-            ))
+            )) {
               await c.resetDemo();
+            }
           },
           icon: const Icon(Icons.restart_alt),
           label: const Text('Reset sample data'),
