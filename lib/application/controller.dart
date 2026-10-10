@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:uuid/uuid.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -416,7 +417,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> generateCode() => run(() async {
     if (preview) {
-      familyCode = 'BCHT-7A29C8D1';
+      familyCode = 'BCHT-${const Uuid().v4().substring(0, 8).toUpperCase()}';
       await repository.save(demoKey, snapshot());
       return;
     }
