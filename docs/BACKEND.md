@@ -1,3 +1,5 @@
+> Current release update: authentication is deferred. The app uses persistent, offline Ayesha/Sana demo personas with shared family data. See [demo experience](DEMO-EXPERIENCE.md). Cloud/OAuth descriptions below are retained for future integration.
+
 # Backend setup
 
 ## Deployed development environment

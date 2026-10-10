@@ -100,6 +100,13 @@ abstract final class BachatTheme {
           borderRadius: BorderRadius.circular(28),
           borderSide: BorderSide(color: scheme.outline),
         ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(28),
+          borderSide: BorderSide(
+            color: dark ? scheme.primary : const Color(0xFF216D2C),
+            width: 2,
+          ),
+        ),
         labelStyle: TextStyle(color: scheme.onSurfaceVariant),
       ),
       navigationBarTheme: NavigationBarThemeData(
