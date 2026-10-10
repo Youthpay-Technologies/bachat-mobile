@@ -12,6 +12,9 @@ Future<void> entryForm(
 }) async {
   final result = await showModalBottomSheet<String>(
     context: context,
+    sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+        ? AnimationStyle.noAnimation
+        : null,
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
@@ -142,6 +145,10 @@ class _EntryFormState extends State<EntryForm> {
                     : () async {
                         final selected = await showDatePicker(
                           context: context,
+                          sheetAnimationStyle:
+                              MediaQuery.disableAnimationsOf(context)
+                              ? AnimationStyle.noAnimation
+                              : null,
                           initialDate: date,
                           firstDate: DateTime(2000),
                           lastDate: DateTime.now(),
@@ -282,6 +289,9 @@ Future<void> budgetForm(
 }) async {
   final result = await showModalBottomSheet<String>(
     context: context,
+    sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+        ? AnimationStyle.noAnimation
+        : null,
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
@@ -297,6 +307,9 @@ Future<void> goalForm(
 }) async {
   final result = await showModalBottomSheet<String>(
     context: context,
+    sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+        ? AnimationStyle.noAnimation
+        : null,
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,

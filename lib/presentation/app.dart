@@ -1221,6 +1221,9 @@ Future<void> accountSheet(
   AppController c,
 ) => showModalBottomSheet<void>(
   context: context,
+  sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+      ? AnimationStyle.noAnimation
+      : null,
   showDragHandle: true,
   useSafeArea: true,
   isScrollControlled: true,

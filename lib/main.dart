@@ -31,6 +31,7 @@ class BachatApp extends ConsumerWidget {
       theme: BachatTheme.build(Brightness.light),
       darkTheme: BachatTheme.build(Brightness.dark),
       themeMode: controller.themeMode,
+      themeAnimationDuration: Duration.zero,
       home: const AppGate(),
     );
   }
