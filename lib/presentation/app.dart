@@ -175,7 +175,7 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
               const SizedBox(height: 20),
               Text(
                 role == UserRole.teen
-                    ? 'For ages 13–18. A parent must approve before you start tracking.'
+                    ? 'Ayesha, 16 · Teen demo. Track expenses, budgets and savings goals.'
                     : 'Sana · Parent demo. See Ayesha’s progress through a connected, read-only family view.',
               ),
               const SizedBox(height: 20),
@@ -877,8 +877,9 @@ class _FamilyState extends ConsumerState<FamilyPage> {
     final pending = c.links
         .where(
           (l) =>
-              l.status == 'parent_approved' &&
-              (l.expiresAt?.isAfter(DateTime.now()) ?? false),
+              (c.preview && l.status == 'pending') ||
+              (l.status == 'parent_approved' &&
+                  (l.expiresAt?.isAfter(DateTime.now()) ?? false)),
         )
         .toList();
     final content = <Widget>[
@@ -1043,13 +1044,12 @@ class _FamilyState extends ConsumerState<FamilyPage> {
         icon: const Icon(Icons.refresh),
         label: const Text('Check for updates'),
       ),
-      if (widget.locked)
-        OutlinedButton.icon(
-          onPressed: () =>
-              c.startDemo(c.isParent ? UserRole.teen : UserRole.parent),
-          icon: const Icon(Icons.swap_horiz),
-          label: const Text('Switch demo user'),
-        ),
+      OutlinedButton.icon(
+        onPressed: () =>
+            c.startDemo(c.isParent ? UserRole.teen : UserRole.parent),
+        icon: const Icon(Icons.swap_horiz),
+        label: const Text('Switch demo user'),
+      ),
     ];
     return widget.embedded
         ? Column(
@@ -1149,8 +1149,9 @@ class SettingsPage extends ConsumerWidget {
               body:
                   'This replaces your local demo changes with the original sample transactions, budget, goal and family connection.',
               action: 'Reset demo',
-            ))
+            )) {
               await c.resetDemo();
+            }
           },
           icon: const Icon(Icons.restart_alt),
           label: const Text('Reset demo data'),

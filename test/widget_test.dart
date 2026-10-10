@@ -72,7 +72,7 @@ void main() {
     final c = await controller();
     c.startPreview(UserRole.teen);
     await mount(tester, c);
-    await c.revokeLink(c.links.first);
+    await tester.runAsync(() => c.revokeLink(c.links.first));
     await tester.pumpAndSettle();
     expect(find.text('A little support to get started'), findsOneWidget);
     expect(find.text('Add a transaction'), findsNothing);

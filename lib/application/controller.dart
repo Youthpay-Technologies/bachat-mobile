@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -465,10 +464,11 @@ class AppController extends ChangeNotifier {
   });
   Future<void> decideLink(FamilyLink link, bool approve) => run(() async {
     if (preview) {
-      if (isParent || link.status != 'pending')
+      if (isParent || link.status != 'pending') {
         throw const FormatException(
           'Only the teen can confirm a pending parent.',
         );
+      }
       links = approve
           ? [
               FamilyLink(
@@ -516,8 +516,9 @@ class AppController extends ChangeNotifier {
   void selectChild(String id) {
     selectedChildId = id;
     notifyListeners();
-    if (accountId != null)
+    if (accountId != null) {
       unawaited(repository.save(preview ? demoKey : accountId!, snapshot()));
+    }
   }
 
   Future<void> setTheme(String value) async {
