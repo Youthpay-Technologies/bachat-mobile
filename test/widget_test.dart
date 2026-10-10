@@ -325,4 +325,146 @@ void main() {
     expect(find.byType(DashboardSkeleton), findsNothing);
     expect(find.text('Skip introduction'), findsOneWidget);
   });
+
+  testWidgets(
+    'activity filters apply visibly and reset without losing search',
+    (tester) async {
+      final c = await controller();
+      c.startPreview(UserRole.teen);
+      await mount(tester, c);
+      await tester.tap(find.text('Activity').last);
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Search transactions'),
+        'Readings',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Filter activity'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('All time'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Last month').last);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Apply filters'));
+      await tester.tap(find.text('Apply filters'));
+      await tester.pumpAndSettle();
+      expect(find.text('No matches'), findsOneWidget);
+      expect(find.text('Last month'), findsOneWidget);
+      await tester.tap(find.byTooltip('Clear advanced filters'));
+      await tester.pumpAndSettle();
+      expect(find.text('No matches'), findsNothing);
+      expect(find.text('Readings'), findsOneWidget);
+      expect(
+        tester
+            .widget<TextField>(
+              find.widgetWithText(TextField, 'Search transactions'),
+            )
+            .controller!
+            .text,
+        'Readings',
+      );
+    },
+  );
+  testWidgets(
+    'add savings validates the remaining amount and updates the goal',
+    (tester) async {
+      final c = await controller();
+      c.startPreview(UserRole.teen);
+      await mount(tester, c);
+      await tester.tap(find.text('Plan').last);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(
+        find.widgetWithText(OutlinedButton, 'Add savings'),
+      );
+      await tester.tap(find.widgetWithText(OutlinedButton, 'Add savings'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Amount to add'),
+        '8000',
+      );
+      await tester.ensureVisible(
+        find.widgetWithText(FilledButton, 'Add savings'),
+      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Add savings'));
+      await tester.pumpAndSettle();
+      expect(
+        find.text('This exceeds the remaining goal amount.'),
+        findsOneWidget,
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Amount to add'),
+        '125.50',
+      );
+      await tester.tap(find.widgetWithText(FilledButton, 'Add savings'));
+      await tester.pumpAndSettle();
+      expect(c.goals.single.savedMinor, 447550);
+      expect(c.entries.length, 5);
+      expect(find.text('Savings added'), findsOneWidget);
+    },
+  );
+  testWidgets('budget reuse action copies missing categories only', (
+    tester,
+  ) async {
+    final c = await controller();
+    c.startPreview(UserRole.teen);
+    final now = DateTime.now();
+    c.allBudgets.add(
+      CategoryBudget(
+        id: 'old-transport',
+        ownerId: 'preview-teen',
+        category: 'Transport',
+        limitMinor: 50000,
+        month: monthKey(DateTime(now.year, now.month - 1)),
+      ),
+    );
+    await mount(tester, c);
+    await tester.tap(find.text('Plan').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Reuse last month’s budgets'));
+    await tester.pumpAndSettle();
+    expect(c.budgets.length, 2);
+    expect(find.text('Reuse last month’s budgets'), findsNothing);
+    expect(find.text('Budget reused'), findsOneWidget);
+  });
+  testWidgets(
+    'filter sheet and sorting survive narrow width at 200 percent text',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 740);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final c = await controller();
+      c.startPreview(UserRole.teen);
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [controllerProvider.overrideWith((ref) => c)],
+          child: const MaterialApp(
+            home: MediaQuery(
+              data: MediaQueryData(
+                size: Size(320, 740),
+                textScaler: TextScaler.linear(2),
+                disableAnimations: true,
+              ),
+              child: BachatApp(),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Activity').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Filter activity'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Newest first'));
+      await tester.tap(find.text('Newest first'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Amount: high to low').last);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Apply filters'));
+      await tester.tap(find.text('Apply filters'));
+      await tester.pumpAndSettle();
+      expect(find.text('Amount: high to low'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 }
