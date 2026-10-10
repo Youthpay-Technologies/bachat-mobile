@@ -9,7 +9,7 @@ Run with Flutter **3.47.7 / Dart 3.13.5**:
 ./scripts/dev.ps1
 ```
 
-Preview: http://127.0.0.1:8080. Choose **Skip introduction**, then explore as **Ayesha** (teen, 16) or **Sana** (parent). Switch personas from **You**. Both share one persistent local demo family. No sign-in, environment configuration or internet connection is required after installation. Reset sample data from settings with confirmation.
+Preview: http://127.0.0.1:8080. Choose **Skip introduction**, then continue as **Ayesha** (teen, 16) or **Sana** (parent). Switch profiles from the home header or **You**. Both share one persistent local demo family. No sign-in, environment configuration or internet connection is required after installation. Reset sample data from settings with confirmation.
 
 On other machines:
 
@@ -32,3 +32,5 @@ flutter build apk --debug
 ```
 
 Private repository: https://github.com/saim-x/bachat-mobile. See [current demo decisions](docs/DEMO-EXPERIENCE.md). iOS signing and device validation require the team's Mac. Automatic imports and learning content remain deferred. Recorded net flow is not a bank balance.
+
+Interface polish: profile/appearance bottom sheets, contextual badges, multi-goal carousel, retained tab/search state, clear-filter recovery, save/delete feedback, real startup skeleton and reduced-motion-aware navigation. No persistent demo or storage banners appear in the product.
