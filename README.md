@@ -19,7 +19,7 @@ flutter run -d chrome --web-port=8080
 flutter run -d <android-device-id>
 ```
 
-Included: onboarding, spending dashboard, searchable transactions, exact paisa arithmetic, expense/income editing and deletion, monthly category budgets, savings goals, parent read-only dashboard, local mutual family approval, appearance settings and a coming-soon learning tab. Data persists in Sembast/IndexedDB across restarts and persona changes.
+Included: onboarding, spending dashboard, searchable transactions with date/category filters and sorting, exact paisa arithmetic, expense/income editing and deletion, monthly category budgets with optional previous-month reuse, savings goals with quick additions, parent read-only dashboard, local mutual family approval, appearance settings and a coming-soon learning tab. Data persists in Sembast/IndexedDB across restarts and persona changes.
 
 Authentication and cloud synchronization are deferred. Existing Supabase migrations and adapters remain available for future integration, but the demo startup never initializes Supabase and never uploads demo data. Historical backend instructions describe that future integration, not prerequisites for this demo.
 
@@ -34,3 +34,4 @@ flutter build apk --debug
 Private repository: https://github.com/saim-x/bachat-mobile. See [current demo decisions](docs/DEMO-EXPERIENCE.md). iOS signing and device validation require the team's Mac. Automatic imports and learning content remain deferred. Recorded net flow is not a bank balance.
 
 Interface polish: profile/appearance bottom sheets, contextual badges, multi-goal carousel, retained tab/search state, clear-filter recovery, save/delete feedback, real startup skeleton and reduced-motion-aware navigation. No persistent demo or storage banners appear in the product.
+
