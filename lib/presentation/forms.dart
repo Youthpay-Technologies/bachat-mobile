@@ -10,13 +10,17 @@ Future<void> entryForm(
   AppController c, {
   MoneyEntry? existing,
 }) async {
-  await showModalBottomSheet<void>(
+  final result = await showModalBottomSheet<String>(
     context: context,
+    sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+        ? AnimationStyle.noAnimation
+        : null,
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
     builder: (_) => EntryForm(c: c, existing: existing),
   );
+  if (context.mounted && result != null) showFeedback(context, result);
 }
 
 class EntryForm extends StatefulWidget {
@@ -184,7 +188,9 @@ class _EntryFormState extends State<EntryForm> {
                           note: note.text.trim(),
                         ),
                       );
-                      if (context.mounted) Navigator.pop(context);
+                      if (context.mounted) {
+                        Navigator.pop(context, 'Transaction saved');
+                      }
                     } catch (_) {
                       if (mounted) {
                         setState(() {
@@ -215,7 +221,9 @@ class _EntryFormState extends State<EntryForm> {
                             'deleted': true,
                           }),
                         );
-                        if (context.mounted) Navigator.pop(context);
+                        if (context.mounted) {
+                          Navigator.pop(context, 'Transaction deleted');
+                        }
                       } catch (_) {
                         if (mounted) {
                           setState(
@@ -250,9 +258,10 @@ class SheetBody extends StatelessWidget {
   final List<Widget> children;
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
+    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
     padding: EdgeInsets.fromLTRB(
       24,
-      28,
+      8,
       24,
       MediaQuery.viewInsetsOf(context).bottom + 32,
     ),
@@ -274,12 +283,17 @@ Future<void> budgetForm(
   AppController c, {
   CategoryBudget? existing,
 }) async {
-  await showModalBottomSheet<void>(
+  final result = await showModalBottomSheet<String>(
     context: context,
+    sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+        ? AnimationStyle.noAnimation
+        : null,
     isScrollControlled: true,
     useSafeArea: true,
+    showDragHandle: true,
     builder: (_) => PlanForm(c: c, budget: existing, isBudget: true),
   );
+  if (context.mounted && result != null) showFeedback(context, result);
 }
 
 Future<void> goalForm(
@@ -287,12 +301,17 @@ Future<void> goalForm(
   AppController c, {
   SavingsGoal? existing,
 }) async {
-  await showModalBottomSheet<void>(
+  final result = await showModalBottomSheet<String>(
     context: context,
+    sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+        ? AnimationStyle.noAnimation
+        : null,
     isScrollControlled: true,
     useSafeArea: true,
+    showDragHandle: true,
     builder: (_) => PlanForm(c: c, goal: existing, isBudget: false),
   );
+  if (context.mounted && result != null) showFeedback(context, result);
 }
 
 class PlanForm extends StatefulWidget {
@@ -386,7 +405,12 @@ class _PlanFormState extends State<PlanForm> {
           ),
         );
       }
-      if (mounted) Navigator.pop(context);
+      if (mounted) {
+        Navigator.pop(
+          context,
+          '${widget.isBudget ? 'Budget' : 'Goal'} ${deleted ? 'removed' : 'saved'}',
+        );
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
@@ -403,16 +427,14 @@ class _PlanFormState extends State<PlanForm> {
   Widget build(BuildContext context) => SheetBody(
     children: [
       Text(
-        widget.isBudget
-            ? 'A budget that fits your day'
-            : 'Something worth saving for',
+        widget.isBudget ? 'Monthly budget' : 'Savings goal',
         style: Theme.of(context).textTheme.headlineSmall,
       ),
       const SizedBox(height: 12),
       Text(
         widget.isBudget
-            ? 'Set a limit for ${DateFormat.MMMM().format(DateTime.now())}. Choosing an existing category updates its budget.'
-            : 'Record the amount you’ve put aside. This keeps track of savings; it does not move money.',
+            ? 'Set your ${DateFormat.MMMM().format(DateTime.now())} limit.'
+            : 'Set a target and track what you put aside.',
       ),
       const SizedBox(height: 24),
       Form(
@@ -511,4 +533,16 @@ class _PlanFormState extends State<PlanForm> {
         ),
     ],
   );
+}
+
+void showFeedback(BuildContext context, String message) {
+  ScaffoldMessenger.of(context)
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 3),
+        showCloseIcon: true,
+      ),
+    );
 }

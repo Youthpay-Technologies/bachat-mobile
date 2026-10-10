@@ -111,7 +111,7 @@ class SectionHeading extends StatelessWidget {
   final VoidCallback? onAction;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 28, bottom: 14),
+    padding: const EdgeInsets.only(top: 36, bottom: 18),
     child: LayoutBuilder(
       builder: (context, constraints) {
         final heading = Text(
@@ -205,3 +205,100 @@ Future<bool> confirmAction(
       ),
     ) ??
     false;
+
+class StatusBadge extends StatelessWidget {
+  const StatusBadge(this.label, {super.key, this.icon, this.danger = false});
+  final bool danger;
+  final String label;
+  final IconData? icon;
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+    decoration: BoxDecoration(
+      color: danger
+          ? Theme.of(context).colorScheme.errorContainer
+          : Theme.of(context).colorScheme.primaryContainer,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (icon != null) ...[
+          Icon(
+            icon,
+            size: 16,
+            color: danger
+                ? Theme.of(context).colorScheme.onErrorContainer
+                : Theme.of(context).colorScheme.onPrimaryContainer,
+          ),
+          const SizedBox(width: 6),
+        ],
+        Flexible(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: danger
+                  ? Theme.of(context).colorScheme.onErrorContainer
+                  : Theme.of(context).colorScheme.onPrimaryContainer,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class DashboardSkeleton extends StatelessWidget {
+  const DashboardSkeleton({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(
+      context,
+    ).colorScheme.outlineVariant.withValues(alpha: .5);
+    Widget block(double width, double height) => Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(20),
+      ),
+    );
+    return Scaffold(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Semantics(
+            label: 'Loading Bachat',
+            liveRegion: true,
+            child: ExcludeSemantics(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        block(48, 48),
+                        const SizedBox(width: 16),
+                        block(120, 20),
+                      ],
+                    ),
+                    const SizedBox(height: 64),
+                    Center(child: block(120, 16)),
+                    const SizedBox(height: 16),
+                    Center(child: block(210, 48)),
+                    const SizedBox(height: 40),
+                    block(double.infinity, 52),
+                    const SizedBox(height: 48),
+                    block(100, 20),
+                    const SizedBox(height: 20),
+                    block(double.infinity, 120),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -7,3 +7,11 @@ Light: canvas #EEF0F4, surface #F7F8FA, text #14171C, secondary text #596171, pr
 DM Sans is bundled. Large amounts use tabular figures. Home centers recorded monthly spending, followed by explicit actions and supporting metrics. Activity, Plan, Learn, You, onboarding, forms and family settings share tokens and components. Native Material controls provide semantics, focus and selection behavior. Forms use native numeric keyboards, persistent labels and inline validation; deletion/reset require confirmation. Parent controls remain read-only in both the UI and controller. Layouts scroll and adapt to large text rather than truncating financial records.
 
 The reference does not define dark, error, loading or large-text states; these are Bachat adaptations required by the user's request for an integrated usable app. No bank transfers, payment keypad or unsupported banking action is implied.
+
+## Minimal interface polish
+
+Headings are concise, amounts use a 44px tabular display style, and section spacing is 36px above / 18px below. One primary action per screen replaces duplicate navigation actions. Repeated demo/storage notices and explanatory paragraphs are removed. Identity remains visible through names and roles; read-only child access is labeled.
+
+Profile and appearance settings open native modal sheets. Forms share drag handles, rounded sheet surfaces, keyboard-aware padding and dismissible confirmation feedback. Learning uses a compact coming-soon badge; savings and over-budget badges carry meaningful status. Multiple home goals become a horizontally scrollable carousel with visible continuation and keyboard-accessible previous/next controls. A single goal remains a card.
+
+Navigation retains each tab’s state and uses a restrained 150ms selection animation. Reduced motion disables sheet/carousel movement and selection animation; theme swaps are instantaneous. The static startup skeleton reflects actual initialization without introducing a delay or perpetual shimmer.

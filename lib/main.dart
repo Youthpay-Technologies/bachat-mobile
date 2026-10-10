@@ -11,13 +11,13 @@ Future<void> main() async {
   final controller = AppController(
     BachatRepository(await openDatabase(), null),
   );
-  await controller.initialize();
   runApp(
     ProviderScope(
       overrides: [controllerProvider.overrideWith((ref) => controller)],
       child: const BachatApp(),
     ),
   );
+  await controller.initialize();
 }
 
 class BachatApp extends ConsumerWidget {
@@ -31,6 +31,7 @@ class BachatApp extends ConsumerWidget {
       theme: BachatTheme.build(Brightness.light),
       darkTheme: BachatTheme.build(Brightness.dark),
       themeMode: controller.themeMode,
+      themeAnimationDuration: Duration.zero,
       home: const AppGate(),
     );
   }
