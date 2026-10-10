@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../application/controller.dart';
 import '../design/components.dart';
 import '../domain/models.dart';
+import '../domain/activity_filter.dart';
+import 'activity_filters.dart';
 import 'forms.dart';
 
 class AppGate extends ConsumerWidget {
@@ -576,21 +578,54 @@ class _ActivityState extends ConsumerState<ActivityPage> {
 
   String query = '';
   String filter = 'All';
+  ActivityFilter options = const ActivityFilter();
   @override
   Widget build(BuildContext context) {
     final c = ref.watch(controllerProvider);
-    final entries = c.entries
-        .where(
-          (e) =>
-              (filter == 'All' || e.direction.name == filter.toLowerCase()) &&
-              '${e.merchant} ${e.category} ${e.note}'.toLowerCase().contains(
-                query.toLowerCase(),
-              ),
-        )
-        .toList();
+    final entries = options.apply(
+      c.entries,
+      text: query,
+      direction: filter == 'All'
+          ? null
+          : EntryDirection.values.byName(filter.toLowerCase()),
+    );
+    final hasFilters =
+        query.isNotEmpty || filter != 'All' || options.activeCount > 0;
+    final days = <DateTime, List<MoneyEntry>>{};
+    for (final entry in entries) {
+      final date = entry.occurredAt;
+      days
+          .putIfAbsent(DateTime(date.year, date.month, date.day), () => [])
+          .add(entry);
+    }
     return PageBody(
       children: [
-        Text('Activity', style: Theme.of(context).textTheme.headlineLarge),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Activity',
+                style: Theme.of(context).textTheme.headlineLarge,
+              ),
+            ),
+            IconButton.outlined(
+              tooltip: 'Filter activity',
+              icon: Badge(
+                isLabelVisible: options.activeCount > 0,
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                textColor: Theme.of(context).colorScheme.onPrimaryContainer,
+                label: Text('${options.activeCount}'),
+                child: const Icon(Icons.tune_rounded),
+              ),
+              onPressed: () async {
+                final selected = await activityFilterSheet(context, options);
+                if (selected != null && mounted) {
+                  setState(() => options = selected);
+                }
+              },
+            ),
+          ],
+        ),
 
         const SizedBox(height: 24),
         ChildPicker(c),
@@ -615,16 +650,37 @@ class _ActivityState extends ConsumerState<ActivityPage> {
         const SizedBox(height: 16),
         Wrap(
           spacing: 8,
-          children: ['All', 'Expense', 'Income']
-              .map(
-                (v) => ChoiceChip(
-                  label: Text(v),
-                  selected: filter == v,
-                  onSelected: (_) => setState(() => filter = v),
-                ),
-              )
-              .toList(),
+          runSpacing: 8,
+          children: [
+            ...['All', 'Expense', 'Income'].map(
+              (value) => ChoiceChip(
+                label: Text(value),
+                selected: filter == value,
+                onSelected: (_) => setState(() => filter = value),
+              ),
+            ),
+          ],
         ),
+        if (options.activeCount > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    _activitySummary(options),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Clear advanced filters',
+                  onPressed: () =>
+                      setState(() => options = const ActivityFilter()),
+                  icon: const Icon(Icons.close_rounded),
+                ),
+              ],
+            ),
+          ),
         const SizedBox(height: 20),
         if (!c.isParent)
           OutlinedButton.icon(
@@ -636,36 +692,81 @@ class _ActivityState extends ConsumerState<ActivityPage> {
         if (entries.isEmpty)
           EmptyState(
             icon: Icons.receipt_long_outlined,
-            title: query.isNotEmpty || filter != 'All'
-                ? 'No matches'
-                : 'No transactions yet',
-            body: query.isNotEmpty || filter != 'All'
+            title: hasFilters ? 'No matches' : 'No transactions yet',
+            body: hasFilters
                 ? 'Try a different search or clear your filters.'
                 : c.isParent
                 ? 'Shared transactions will appear here.'
                 : 'Add your first expense or income.',
-            action: query.isNotEmpty || filter != 'All'
-                ? 'Clear filters'
-                : null,
+            action: hasFilters ? 'Clear filters' : null,
             onAction: () {
               search.clear();
               setState(() {
                 query = '';
                 filter = 'All';
+                options = const ActivityFilter();
               });
             },
           )
-        else
+        else if (options.groupsByDate) ...[
+          for (final day in days.entries) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 24, bottom: 12),
+              child: Text(
+                _dateLabel(day.key),
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ),
+            Surface(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: day.value
+                    .map((entry) => EntryTile(entry, c))
+                    .toList(),
+              ),
+            ),
+          ],
+        ] else
           Surface(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
-              children: entries.map((e) => EntryTile(e, c)).toList(),
+              children: entries.map((entry) => EntryTile(entry, c)).toList(),
             ),
           ),
         AppError(c),
       ],
     );
   }
+}
+
+String _activitySummary(ActivityFilter options) => [
+  if (options.period != ActivityPeriod.all)
+    switch (options.period) {
+      ActivityPeriod.thisMonth => 'This month',
+      ActivityPeriod.lastMonth => 'Last month',
+      ActivityPeriod.custom =>
+        '${DateFormat.yMMMd().format(options.from!)} – ${DateFormat.yMMMd().format(options.through!)}',
+      ActivityPeriod.all => 'All time',
+    },
+  if (options.category != null) options.category!,
+  if (options.order != ActivityOrder.newest)
+    switch (options.order) {
+      ActivityOrder.oldest => 'Oldest first',
+      ActivityOrder.highest => 'Amount: high to low',
+      ActivityOrder.lowest => 'Amount: low to high',
+      ActivityOrder.newest => 'Newest first',
+    },
+].join(' · ');
+
+bool _sameDay(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+String _dateLabel(DateTime date) {
+  final now = DateTime.now();
+  if (_sameDay(date, now)) return 'Today';
+  if (_sameDay(date, DateTime(now.year, now.month, now.day - 1))) {
+    return 'Yesterday';
+  }
+  return DateFormat.yMMMd().format(date);
 }
 
 class PlanPage extends ConsumerWidget {
@@ -692,6 +793,7 @@ class PlanPage extends ConsumerWidget {
             body:
                 'Set a monthly category limit to keep everyday spending in perspective.',
           ),
+        if (!c.isParent && c.reusableBudgets.isNotEmpty) ReuseBudgetsButton(c),
         ...c.budgets.map((b) {
           final spent = summary.byCategory[b.category] ?? 0;
           return Padding(
@@ -765,6 +867,66 @@ class PlanPage extends ConsumerWidget {
   }
 }
 
+class ReuseBudgetsButton extends StatefulWidget {
+  const ReuseBudgetsButton(this.c, {super.key});
+  final AppController c;
+  @override
+  State<ReuseBudgetsButton> createState() => _ReuseBudgetsButtonState();
+}
+
+class _ReuseBudgetsButtonState extends State<ReuseBudgetsButton> {
+  bool busy = false;
+  String? error;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 20),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        OutlinedButton.icon(
+          onPressed: busy
+              ? null
+              : () async {
+                  setState(() {
+                    busy = true;
+                    error = null;
+                  });
+                  try {
+                    final count = await widget.c.reusePreviousBudgets();
+                    if (context.mounted) {
+                      showFeedback(
+                        context,
+                        count == 1 ? 'Budget reused' : '$count budgets reused',
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      setState(
+                        () => error = e is FormatException
+                            ? e.message
+                            : 'Unable to reuse budgets. Try again.',
+                      );
+                    }
+                  } finally {
+                    if (mounted) setState(() => busy = false);
+                  }
+                },
+          icon: const Icon(Icons.history_rounded),
+          label: Text(busy ? 'Reusing…' : 'Reuse last month’s budgets'),
+        ),
+        if (error != null)
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
 class GoalCard extends StatelessWidget {
   const GoalCard(this.goal, this.c, {super.key});
   final SavingsGoal goal;
@@ -815,6 +977,17 @@ class GoalCard extends StatelessWidget {
               ? 'Goal reached'
               : '${money(goal.targetMinor - goal.savedMinor)} to go',
         ),
+        if (!c.isParent && goal.progress < 1) ...[
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => addSavingsForm(context, c, goal),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Add savings'),
+            ),
+          ),
+        ],
       ],
     ),
   );

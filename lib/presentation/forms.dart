@@ -173,7 +173,7 @@ class _EntryFormState extends State<EntryForm> {
             onPressed: saving
                 ? null
                 : () async {
-                    if (!form.currentState!.validate()) return;
+                    if (saving || !form.currentState!.validate()) return;
                     setState(() => saving = true);
                     try {
                       await widget.c.saveEntry(
@@ -364,6 +364,7 @@ class _PlanFormState extends State<PlanForm> {
       ? 0
       : parseMoney(saved.text);
   Future<void> save({bool deleted = false}) async {
+    if (saving) return;
     if (!deleted && !form.currentState!.validate()) return;
     setState(() => saving = true);
     try {
@@ -545,4 +546,119 @@ void showFeedback(BuildContext context, String message) {
         showCloseIcon: true,
       ),
     );
+}
+
+Future<void> addSavingsForm(
+  BuildContext context,
+  AppController c,
+  SavingsGoal goal,
+) async {
+  final result = await showModalBottomSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    showDragHandle: true,
+    sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+        ? AnimationStyle.noAnimation
+        : null,
+    builder: (_) => AddSavingsSheet(c: c, goal: goal),
+  );
+  if (context.mounted && result != null) showFeedback(context, result);
+}
+
+class AddSavingsSheet extends StatefulWidget {
+  const AddSavingsSheet({super.key, required this.c, required this.goal});
+  final AppController c;
+  final SavingsGoal goal;
+  @override
+  State<AddSavingsSheet> createState() => _AddSavingsSheetState();
+}
+
+class _AddSavingsSheetState extends State<AddSavingsSheet> {
+  final form = GlobalKey<FormState>();
+  final amount = TextEditingController();
+  String? error;
+  bool saving = false;
+  @override
+  void dispose() {
+    amount.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SheetBody(
+    children: [
+      Text('Add savings', style: Theme.of(context).textTheme.headlineMedium),
+      const SizedBox(height: 12),
+      Text(widget.goal.title),
+      const SizedBox(height: 24),
+      Text(
+        '${money(widget.goal.targetMinor - widget.goal.savedMinor)} to reach your goal',
+        style: Theme.of(context).textTheme.titleMedium,
+      ),
+      const SizedBox(height: 24),
+      Form(
+        key: form,
+        child: TextFormField(
+          controller: amount,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.done,
+          decoration: const InputDecoration(
+            labelText: 'Amount to add',
+            prefixText: 'Rs ',
+          ),
+          validator: (value) {
+            final invalid = validateAmount(value);
+            if (invalid != null) return invalid;
+            if (parseMoney(value!) >
+                widget.goal.targetMinor - widget.goal.savedMinor) {
+              return 'This exceeds the remaining goal amount.';
+            }
+            return null;
+          },
+          onFieldSubmitted: (_) {
+            if (!saving) save();
+          },
+        ),
+      ),
+      if (error != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Semantics(
+            liveRegion: true,
+            child: Text(
+              error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ),
+      const SizedBox(height: 28),
+      FilledButton(
+        onPressed: saving ? null : save,
+        child: Text(saving ? 'Saving…' : 'Add savings'),
+      ),
+    ],
+  );
+  Future<void> save() async {
+    if (saving) return;
+    if (!form.currentState!.validate()) return;
+    setState(() {
+      saving = true;
+      error = null;
+    });
+    try {
+      await widget.c.addSavings(widget.goal.id, parseMoney(amount.text));
+      if (mounted) Navigator.pop(context, 'Savings added');
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          saving = false;
+          error = e is FormatException
+              ? e.message
+              : 'Unable to add savings. Try again.';
+        });
+      }
+    }
+  }
 }

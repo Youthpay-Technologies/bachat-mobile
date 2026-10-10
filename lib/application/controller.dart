@@ -378,6 +378,11 @@ class AppController extends ChangeNotifier {
     if (budget.ownerId != profile!.id) {
       throw const FormatException('You can only edit your own records.');
     }
+    if (budget.limitMinor <= 0 || !categories.contains(budget.category)) {
+      throw const FormatException(
+        'Choose a category and a limit greater than zero.',
+      );
+    }
     _localRevision++;
     allBudgets.removeWhere((b) => b.id == budget.id);
     allBudgets.add(budget);
@@ -389,10 +394,81 @@ class AppController extends ChangeNotifier {
     if (goal.ownerId != profile!.id) {
       throw const FormatException('You can only edit your own records.');
     }
+    if (goal.targetMinor <= 0 ||
+        goal.savedMinor < 0 ||
+        goal.savedMinor > goal.targetMinor ||
+        goal.title.trim().isEmpty) {
+      throw const FormatException(
+        'Use a positive target and a saved amount between zero and the target.',
+      );
+    }
     _localRevision++;
     allGoals.removeWhere((g) => g.id == goal.id);
     allGoals.add(goal);
     await _persist('savings_goals', goal.toJson());
+  }
+
+  Future<void> addSavings(String goalId, int amountMinor) async {
+    _requireEdit();
+    final goal = allGoals
+        .where((g) => g.id == goalId && g.ownerId == profile!.id && !g.deleted)
+        .firstOrNull;
+    if (goal == null) {
+      throw const FormatException('This goal is no longer available.');
+    }
+    if (goal.savedMinor >= goal.targetMinor) {
+      throw const FormatException('This goal has already reached its target.');
+    }
+    if (amountMinor <= 0 || amountMinor > goal.targetMinor - goal.savedMinor) {
+      throw FormatException(
+        'Enter an amount between Rs 0.01 and ${money(goal.targetMinor - goal.savedMinor)}.',
+      );
+    }
+    await saveGoal(
+      SavingsGoal(
+        id: goal.id,
+        ownerId: goal.ownerId,
+        title: goal.title,
+        targetMinor: goal.targetMinor,
+        savedMinor: goal.savedMinor + amountMinor,
+      ),
+    );
+  }
+
+  List<CategoryBudget> get reusableBudgets {
+    final now = DateTime.now();
+    final previous = monthKey(DateTime(now.year, now.month - 1));
+    final existing = budgets.map((b) => b.category).toSet();
+    return allBudgets
+        .where(
+          (b) =>
+              b.ownerId == viewingId &&
+              !b.deleted &&
+              b.month == previous &&
+              !existing.contains(b.category),
+        )
+        .toList();
+  }
+
+  Future<int> reusePreviousBudgets() async {
+    _requireEdit();
+    final previous = reusableBudgets;
+    var copied = 0;
+    for (final budget in previous) {
+      // Recheck after each write so a repeated request cannot duplicate a category.
+      if (budgets.any((b) => b.category == budget.category)) continue;
+      await saveBudget(
+        CategoryBudget(
+          id: const Uuid().v4(),
+          ownerId: profile!.id,
+          category: budget.category,
+          limitMinor: budget.limitMinor,
+          month: monthKey(DateTime.now()),
+        ),
+      );
+      copied++;
+    }
+    return copied;
   }
 
   void _requireEdit() {
