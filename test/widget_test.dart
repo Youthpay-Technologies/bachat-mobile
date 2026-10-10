@@ -353,7 +353,13 @@ void main() {
       await tester.tap(find.byTooltip('Clear advanced filters'));
       await tester.pumpAndSettle();
       expect(find.text('No matches'), findsNothing);
-      expect(find.text('Readings'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(EntryTile),
+          matching: find.text('Readings'),
+        ),
+        findsOneWidget,
+      );
       expect(
         tester
             .widget<TextField>(
