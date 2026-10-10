@@ -457,10 +457,17 @@ class AppController extends ChangeNotifier {
   Future<void> signOut() async {
     final id = accountId;
     _generation++;
-    if (!preview) await client?.auth.signOut(scope: SignOutScope.local);
-    if (id != null) await repository.clearAccount(id);
-    _reset();
-    notifyListeners();
+    try {
+      if (!preview) await client?.auth.signOut(scope: SignOutScope.local);
+    } catch (_) {
+      // GoTrue removes the local session before requesting server revocation.
+      // Offline revocation failure must not retain this device's records.
+      if (client?.auth.currentSession != null) rethrow;
+    } finally {
+      if (id != null) await repository.clearAccount(id);
+      _reset();
+      notifyListeners();
+    }
   }
 
   void _reset() {

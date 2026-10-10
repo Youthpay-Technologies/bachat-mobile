@@ -16,7 +16,7 @@ Ratios calculated from sRGB relative luminance using WCAG contrast arithmetic. T
 ## Verified locally
 
 - Flutter analyzer: clean.
-- 18 domain, repository, controller, and widget tests cover entry validation, budgets/goals, offline queue coalescing and in-flight edits, account isolation, parent restrictions, and approval gates.
+- 19 domain, repository, controller, and widget tests cover entry validation, budgets/goals, offline queue coalescing and in-flight edits, account isolation, offline sign-out cleanup, parent restrictions, and approval gates.
 - Web release compilation passes. Debug preview runs at http://127.0.0.1:8080.
 - Chrome mobile-viewport smoke checks reached onboarding, teen dashboard, transaction form, Plan, and Learn; screenshot inspection checked the rendered teen dashboard.
 - Live Supabase transactional authorization tests pass; fixture rollback confirmed zero test profiles remain.

@@ -4,6 +4,8 @@
 
 The current workspace uses an isolated SDK under `E:/Projects/renaissance/YouthPay/.tools/flutter` with its own `pub-cache`, `android-sdk`, and `gradle-cache`. `scripts/dev.ps1` sets task-specific environment variables without changing global paths. Android Studio's bundled JDK is used for Android tooling.
 
+Dot-source `. .\scripts\env.ps1` to expose the isolated tools in your current terminal. Android SDK 36, build tools 36, NDK 28.2, and accepted licenses are installed; `flutter doctor` reports the Android toolchain healthy.
+
 Run `flutter devices`, then `scripts/dev.ps1 -Device <device-id>` to develop on a connected Android device. USB debugging and device authorization must be enabled on the phone. No emulator image is required for a physical device.
 
 App ID currently follows the scaffold: `com.getyouthpay.bachat_mobile`. Display name is Bachat. Review final identifiers before store registration. OAuth custom scheme is `com.getyouthpay.bachat://auth/callback`.
