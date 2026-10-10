@@ -73,6 +73,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> initialize() async {
     theme = await repository.loadTheme();
+    chosenRole = UserRole.values.byName(await repository.loadRole());
     if (accountId != null) await _hydrate();
     ready = true;
     notifyListeners();
@@ -170,6 +171,7 @@ class AppController extends ChangeNotifier {
 
   Future<void> signIn(UserRole role) async {
     chosenRole = role;
+    await repository.saveRole(role.name);
     await run(() async {
       if (client == null) {
         throw const FormatException(

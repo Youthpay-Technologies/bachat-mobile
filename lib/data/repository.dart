@@ -41,6 +41,14 @@ class BachatRepository {
     await _preferences.record('appearance').put(database, {'theme': theme});
   }
 
+  Future<String> loadRole() async =>
+      (await _preferences.record('onboarding').get(database))?['role']
+          as String? ??
+      'teen';
+  Future<void> saveRole(String role) async {
+    await _preferences.record('onboarding').put(database, {'role': role});
+  }
+
   Future<void> queue(
     String account,
     String table,
