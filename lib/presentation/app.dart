@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../application/controller.dart';
 import '../design/components.dart';
 import '../domain/models.dart';
+import '../domain/activity_filter.dart';
+import 'activity_filters.dart';
 import 'forms.dart';
 
 class AppGate extends ConsumerWidget {
@@ -576,18 +578,19 @@ class _ActivityState extends ConsumerState<ActivityPage> {
 
   String query = '';
   String filter = 'All';
+  ActivityFilter options = const ActivityFilter();
   @override
   Widget build(BuildContext context) {
     final c = ref.watch(controllerProvider);
-    final entries = c.entries
-        .where(
-          (e) =>
-              (filter == 'All' || e.direction.name == filter.toLowerCase()) &&
-              '${e.merchant} ${e.category} ${e.note}'.toLowerCase().contains(
-                query.toLowerCase(),
-              ),
-        )
-        .toList();
+    final entries = options.apply(
+      c.entries,
+      text: query,
+      direction: filter == 'All'
+          ? null
+          : EntryDirection.values.byName(filter.toLowerCase()),
+    );
+    final hasFilters =
+        query.isNotEmpty || filter != 'All' || options.activeCount > 0;
     return PageBody(
       children: [
         Text('Activity', style: Theme.of(context).textTheme.headlineLarge),
@@ -615,15 +618,29 @@ class _ActivityState extends ConsumerState<ActivityPage> {
         const SizedBox(height: 16),
         Wrap(
           spacing: 8,
-          children: ['All', 'Expense', 'Income']
-              .map(
-                (v) => ChoiceChip(
-                  label: Text(v),
-                  selected: filter == v,
-                  onSelected: (_) => setState(() => filter = v),
-                ),
-              )
-              .toList(),
+          runSpacing: 8,
+          children: [
+            ...['All', 'Expense', 'Income'].map(
+              (value) => ChoiceChip(
+                label: Text(value),
+                selected: filter == value,
+                onSelected: (_) => setState(() => filter = value),
+              ),
+            ),
+            ActionChip(
+              avatar: const Icon(Icons.tune_rounded, size: 18),
+              label: Text(
+                options.activeCount == 0
+                    ? 'Filters'
+                    : 'Filters · ${options.activeCount}',
+              ),
+              onPressed: () async {
+                final selected = await activityFilterSheet(context, options);
+                if (selected != null && mounted)
+                  setState(() => options = selected);
+              },
+            ),
+          ],
         ),
         const SizedBox(height: 20),
         if (!c.isParent)
@@ -636,36 +653,58 @@ class _ActivityState extends ConsumerState<ActivityPage> {
         if (entries.isEmpty)
           EmptyState(
             icon: Icons.receipt_long_outlined,
-            title: query.isNotEmpty || filter != 'All'
-                ? 'No matches'
-                : 'No transactions yet',
-            body: query.isNotEmpty || filter != 'All'
+            title: hasFilters ? 'No matches' : 'No transactions yet',
+            body: hasFilters
                 ? 'Try a different search or clear your filters.'
                 : c.isParent
                 ? 'Shared transactions will appear here.'
                 : 'Add your first expense or income.',
-            action: query.isNotEmpty || filter != 'All'
-                ? 'Clear filters'
-                : null,
+            action: hasFilters ? 'Clear filters' : null,
             onAction: () {
               search.clear();
               setState(() {
                 query = '';
                 filter = 'All';
+                options = const ActivityFilter();
               });
             },
           )
-        else
-          Surface(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: entries.map((e) => EntryTile(e, c)).toList(),
+        else ...[
+          for (var i = 0; i < entries.length; i++) ...[
+            if (options.groupsByDate &&
+                (i == 0 ||
+                    !_sameDay(
+                      entries[i - 1].occurredAt,
+                      entries[i].occurredAt,
+                    )))
+              Padding(
+                padding: const EdgeInsets.only(top: 24, bottom: 12),
+                child: Text(
+                  _dateLabel(entries[i].occurredAt),
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+            Surface(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: EntryTile(entries[i], c),
             ),
-          ),
+            const SizedBox(height: 8),
+          ],
+        ],
         AppError(c),
       ],
     );
   }
+}
+
+bool _sameDay(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+String _dateLabel(DateTime date) {
+  final now = DateTime.now();
+  if (_sameDay(date, now)) return 'Today';
+  if (_sameDay(date, DateTime(now.year, now.month, now.day - 1)))
+    return 'Yesterday';
+  return DateFormat.yMMMd().format(date);
 }
 
 class PlanPage extends ConsumerWidget {
