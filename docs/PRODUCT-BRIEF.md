@@ -28,7 +28,7 @@ Warm cream surfaces, navy text, restrained green accents, DM Sans, subtle motion
 
 ## Architecture decisions
 
-- Flutter stable, Riverpod, go_router.
+- Flutter stable, Riverpod, native Navigator and a guarded tab shell.
 - Separate domain, repository, application state, and presentation layers.
 - Local database and durable sync queue scoped by authenticated account.
 - Exact money represented as integer paisa.
@@ -43,4 +43,4 @@ Frequent coherent commits; feature branches; PRs; merge after relevant verificat
 
 ## External dependency
 
-Supabase MCP was not connected at discovery. Prepare migrations and adapters locally; apply them only after account/project access is verified. Google OAuth provider configuration also needs the project credentials and registered callbacks.
+The new Supabase project bachat-mobile-dev is created and the schema is deployed. Live RLS authorization tests pass. Google OAuth remains disabled until its client credentials and redirect allowlist are configured; see BACKEND.md.

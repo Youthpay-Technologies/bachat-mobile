@@ -1,0 +1,26 @@
+# Platform handoff
+
+## Windows / Android
+
+The current workspace uses an isolated SDK under `E:/Projects/renaissance/YouthPay/.tools/flutter` with its own `pub-cache`, `android-sdk`, and `gradle-cache`. `scripts/dev.ps1` sets task-specific environment variables without changing global paths. Android Studio's bundled JDK is used for Android tooling.
+
+Run `flutter devices`, then `scripts/dev.ps1 -Device <device-id>` to develop on a connected Android device. USB debugging and device authorization must be enabled on the phone. No emulator image is required for a physical device.
+
+App ID currently follows the scaffold: `com.getyouthpay.bachat_mobile`. Display name is Bachat. Review final identifiers before store registration. OAuth custom scheme is `com.getyouthpay.bachat://auth/callback`.
+
+## macOS / iOS
+
+1. Install Flutter 3.47.7 and Xcode, select its command-line tools, and run `flutter doctor`.
+2. Clone the private repository, run `flutter pub get`, and create `config/dev.local.json` from the example using public Supabase configuration.
+3. Open `ios/Runner.xcworkspace`, select your Apple development team, and confirm a unique bundle identifier.
+4. Run `flutter run -d <ios-device-id> --dart-define-from-file=config/dev.local.json`.
+5. Check Google browser sign-in and callback, session restoration, Keychain storage, parent confirmation, offline edits, reconnect, text scaling, dark theme, and keyboard behavior.
+6. Produce a signed archive with `flutter build ipa --dart-define-from-file=config/dev.local.json` once release settings are ready.
+
+No iOS compile, signing, simulator, or device check was performed on this Windows machine. Committed iOS project files are the handoff, not proof of a tested iOS release.
+
+## Before store release
+
+Configure production Google OAuth, real-device end-to-end tests, release signing, app icons, store metadata, reviewed privacy/consent copy, an account-deletion mechanism, local financial-data protection, and recovery/support procedures. Assess Apple's sign-in requirements for the final login options. Disable debug preview in all release configuration. Learning should remain explicitly coming soon.
+
+The existing YouthPay-style YP mark is used inside the app. Platform launcher assets are currently Flutter scaffold icons and must be replaced with approved Bachat artwork before distribution.

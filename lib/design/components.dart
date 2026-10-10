@@ -25,26 +25,28 @@ class BachatMark extends StatelessWidget {
         ),
       ),
       const SizedBox(width: 10),
-      Flexible(child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'bachat',
-            style: TextStyle(
-              fontSize: large ? 27 : 22,
-              fontWeight: FontWeight.w700,
-              letterSpacing: -0.8,
+      Flexible(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'bachat',
+              style: TextStyle(
+                fontSize: large ? 27 : 22,
+                fontWeight: FontWeight.w700,
+                letterSpacing: -0.8,
+              ),
             ),
-          ),
-          Text(
-            'by YouthPay',
-            style: TextStyle(
-              fontSize: 11,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            Text(
+              'by YouthPay',
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
-          ),
-        ],
-      )),
+          ],
+        ),
+      ),
     ],
   );
 }
