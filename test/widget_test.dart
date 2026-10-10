@@ -154,4 +154,43 @@ void main() {
     );
     await tester.pumpAndSettle();
   });
+  testWidgets('budgets and savings goals can be saved through their forms', (
+    tester,
+  ) async {
+    final c = await controller();
+    c.startPreview(UserRole.teen);
+    await mount(tester, c);
+    await tester.tap(find.text('Plan').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Add budget'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Monthly limit'),
+      '4500',
+    );
+    await tester.ensureVisible(find.text('Save budget'));
+    await tester.tap(find.text('Save budget'));
+    await tester.pumpAndSettle();
+    expect(c.budgets.single.limitMinor, 450000);
+    await tester.ensureVisible(find.text('New goal'));
+    await tester.tap(find.text('New goal'));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Goal name'),
+      'A bicycle',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Target amount'),
+      '20000',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Total saved so far'),
+      '2500',
+    );
+    await tester.ensureVisible(find.text('Save goal'));
+    await tester.tap(find.text('Save goal'));
+    await tester.pumpAndSettle();
+    expect(c.goals.last.title, 'A bicycle');
+    expect(c.goals.last.savedMinor, 250000);
+  });
 }
