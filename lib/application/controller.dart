@@ -415,6 +415,9 @@ class AppController extends ChangeNotifier {
         .firstOrNull;
     if (goal == null)
       throw const FormatException('This goal is no longer available.');
+    if (goal.savedMinor >= goal.targetMinor) {
+      throw const FormatException('This goal has already reached its target.');
+    }
     if (amountMinor <= 0 || amountMinor > goal.targetMinor - goal.savedMinor) {
       throw FormatException(
         'Enter an amount between Rs 0.01 and ${money(goal.targetMinor - goal.savedMinor)}.',

@@ -591,9 +591,38 @@ class _ActivityState extends ConsumerState<ActivityPage> {
     );
     final hasFilters =
         query.isNotEmpty || filter != 'All' || options.activeCount > 0;
+    final days = <DateTime, List<MoneyEntry>>{};
+    for (final entry in entries) {
+      final date = entry.occurredAt;
+      days
+          .putIfAbsent(DateTime(date.year, date.month, date.day), () => [])
+          .add(entry);
+    }
     return PageBody(
       children: [
-        Text('Activity', style: Theme.of(context).textTheme.headlineLarge),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Activity',
+                style: Theme.of(context).textTheme.headlineLarge,
+              ),
+            ),
+            IconButton.outlined(
+              tooltip: 'Filter activity',
+              icon: Badge(
+                isLabelVisible: options.activeCount > 0,
+                label: Text('${options.activeCount}'),
+                child: const Icon(Icons.tune_rounded),
+              ),
+              onPressed: () async {
+                final selected = await activityFilterSheet(context, options);
+                if (selected != null && mounted)
+                  setState(() => options = selected);
+              },
+            ),
+          ],
+        ),
 
         const SizedBox(height: 24),
         ChildPicker(c),
@@ -627,19 +656,6 @@ class _ActivityState extends ConsumerState<ActivityPage> {
                 onSelected: (_) => setState(() => filter = value),
               ),
             ),
-            ActionChip(
-              avatar: const Icon(Icons.tune_rounded, size: 18),
-              label: Text(
-                options.activeCount == 0
-                    ? 'Filters'
-                    : 'Filters · ${options.activeCount}',
-              ),
-              onPressed: () async {
-                final selected = await activityFilterSheet(context, options);
-                if (selected != null && mounted)
-                  setState(() => options = selected);
-              },
-            ),
           ],
         ),
         const SizedBox(height: 20),
@@ -669,28 +685,31 @@ class _ActivityState extends ConsumerState<ActivityPage> {
               });
             },
           )
-        else ...[
-          for (var i = 0; i < entries.length; i++) ...[
-            if (options.groupsByDate &&
-                (i == 0 ||
-                    !_sameDay(
-                      entries[i - 1].occurredAt,
-                      entries[i].occurredAt,
-                    )))
-              Padding(
-                padding: const EdgeInsets.only(top: 24, bottom: 12),
-                child: Text(
-                  _dateLabel(entries[i].occurredAt),
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
+        else if (options.groupsByDate) ...[
+          for (final day in days.entries) ...[
+            Padding(
+              padding: const EdgeInsets.only(top: 24, bottom: 12),
+              child: Text(
+                _dateLabel(day.key),
+                style: Theme.of(context).textTheme.titleSmall,
               ),
+            ),
             Surface(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: EntryTile(entries[i], c),
+              child: Column(
+                children: day.value
+                    .map((entry) => EntryTile(entry, c))
+                    .toList(),
+              ),
             ),
-            const SizedBox(height: 8),
           ],
-        ],
+        ] else
+          Surface(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: entries.map((entry) => EntryTile(entry, c)).toList(),
+            ),
+          ),
         AppError(c),
       ],
     );
@@ -731,6 +750,7 @@ class PlanPage extends ConsumerWidget {
             body:
                 'Set a monthly category limit to keep everyday spending in perspective.',
           ),
+        if (!c.isParent && c.reusableBudgets.isNotEmpty) ReuseBudgetsButton(c),
         ...c.budgets.map((b) {
           final spent = summary.byCategory[b.category] ?? 0;
           return Padding(
@@ -804,6 +824,64 @@ class PlanPage extends ConsumerWidget {
   }
 }
 
+class ReuseBudgetsButton extends StatefulWidget {
+  const ReuseBudgetsButton(this.c, {super.key});
+  final AppController c;
+  @override
+  State<ReuseBudgetsButton> createState() => _ReuseBudgetsButtonState();
+}
+
+class _ReuseBudgetsButtonState extends State<ReuseBudgetsButton> {
+  bool busy = false;
+  String? error;
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 20),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        OutlinedButton.icon(
+          onPressed: busy
+              ? null
+              : () async {
+                  setState(() {
+                    busy = true;
+                    error = null;
+                  });
+                  try {
+                    final count = await widget.c.reusePreviousBudgets();
+                    if (context.mounted)
+                      showFeedback(
+                        context,
+                        count == 1 ? 'Budget reused' : '$count budgets reused',
+                      );
+                  } catch (e) {
+                    if (mounted)
+                      setState(
+                        () => error = e is FormatException
+                            ? e.message
+                            : 'Unable to reuse budgets. Try again.',
+                      );
+                  } finally {
+                    if (mounted) setState(() => busy = false);
+                  }
+                },
+          icon: const Icon(Icons.history_rounded),
+          label: Text(busy ? 'Reusing…' : 'Reuse last month’s budgets'),
+        ),
+        if (error != null)
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+      ],
+    ),
+  );
+}
+
 class GoalCard extends StatelessWidget {
   const GoalCard(this.goal, this.c, {super.key});
   final SavingsGoal goal;
@@ -854,6 +932,17 @@ class GoalCard extends StatelessWidget {
               ? 'Goal reached'
               : '${money(goal.targetMinor - goal.savedMinor)} to go',
         ),
+        if (!c.isParent && goal.progress < 1) ...[
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => addSavingsForm(context, c, goal),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('Add savings'),
+            ),
+          ),
+        ],
       ],
     ),
   );
