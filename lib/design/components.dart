@@ -100,13 +100,13 @@ class SectionHeading extends StatelessWidget {
             constraints.maxWidth < 300) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [heading, if (button != null) button],
+            children: [heading, ?button],
           );
         }
         return Row(
           children: [
             Expanded(child: heading),
-            if (button != null) button,
+            ?button,
           ],
         );
       },

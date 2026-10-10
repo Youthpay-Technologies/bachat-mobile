@@ -35,6 +35,7 @@ class AppController extends ChangeNotifier {
   Timer? _poll;
   RealtimeChannel? _familyChannel;
   int _generation = 0;
+  int _localRevision = 0;
   String? _loadedAccount;
   SupabaseClient? get client => repository.cloud;
   String? get accountId => preview ? profile?.id : client?.auth.currentUser?.id;
@@ -220,6 +221,7 @@ class AppController extends ChangeNotifier {
     final id = accountId, cloud = client;
     if (id == null || cloud == null || preview || syncing) return;
     final generation = _generation;
+    final localRevision = _localRevision;
     syncing = true;
     notifyListeners();
     try {
@@ -288,18 +290,20 @@ class AppController extends ChangeNotifier {
           return merged.values.toList();
         }
 
-        allEntries = overlay(
-          'transactions',
-          data[0],
-        ).map(MoneyEntry.fromJson).toList();
-        allBudgets = overlay(
-          'budgets',
-          data[1],
-        ).map(CategoryBudget.fromJson).toList();
-        allGoals = overlay(
-          'savings_goals',
-          data[2],
-        ).map(SavingsGoal.fromJson).toList();
+        if (localRevision == _localRevision) {
+          allEntries = overlay(
+            'transactions',
+            data[0],
+          ).map(MoneyEntry.fromJson).toList();
+          allBudgets = overlay(
+            'budgets',
+            data[1],
+          ).map(CategoryBudget.fromJson).toList();
+          allGoals = overlay(
+            'savings_goals',
+            data[2],
+          ).map(SavingsGoal.fromJson).toList();
+        }
       }
       offline = false;
       error = null;
@@ -329,6 +333,7 @@ class AppController extends ChangeNotifier {
     if (entry.ownerId != profile!.id) {
       throw const FormatException('You can only edit your own records.');
     }
+    _localRevision++;
     allEntries.removeWhere((e) => e.id == entry.id);
     allEntries.add(entry);
     await _persist('transactions', entry.toJson());
@@ -339,6 +344,7 @@ class AppController extends ChangeNotifier {
     if (budget.ownerId != profile!.id) {
       throw const FormatException('You can only edit your own records.');
     }
+    _localRevision++;
     allBudgets.removeWhere((b) => b.id == budget.id);
     allBudgets.add(budget);
     await _persist('budgets', budget.toJson());
@@ -349,6 +355,7 @@ class AppController extends ChangeNotifier {
     if (goal.ownerId != profile!.id) {
       throw const FormatException('You can only edit your own records.');
     }
+    _localRevision++;
     allGoals.removeWhere((g) => g.id == goal.id);
     allGoals.add(goal);
     await _persist('savings_goals', goal.toJson());

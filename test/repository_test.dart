@@ -1,3 +1,8 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sembast/sembast_memory.dart';
 import 'package:bachat_mobile/data/repository.dart';
@@ -74,5 +79,45 @@ void main() {
       ),
       throwsFormatException,
     );
+  });
+  test('a newer edit remains queued while an older version uploads', () async {
+    final db = await databaseFactoryMemory.openDatabase('in-flight');
+    addTearDown(db.close);
+    final started = Completer<void>(), release = Completer<void>();
+    Map<String, dynamic>? uploaded;
+    final client = SupabaseClient(
+      'https://example.supabase.co',
+      'public-test-key',
+      httpClient: MockClient((request) async {
+        uploaded = Map<String, dynamic>.from(jsonDecode(request.body) as Map);
+        started.complete();
+        await release.future;
+        return http.Response('', 201, request: request);
+      }),
+    );
+    addTearDown(client.dispose);
+    final r = BachatRepository(db, client);
+    await r.queue(
+      'teen',
+      'transactions',
+      {'id': 'entry', 'amount_minor': 100},
+      {'version': 1},
+    );
+    final sync = r.synchronize('teen');
+    await started.future;
+    await r.queue(
+      'teen',
+      'transactions',
+      {'id': 'entry', 'amount_minor': 250},
+      {'version': 2},
+    );
+    release.complete();
+    await sync;
+    expect(uploaded!['amount_minor'], 100);
+    expect((await r.pending('teen')).single.value['row'], {
+      'id': 'entry',
+      'amount_minor': 250,
+    });
+    expect((await r.load('teen'))!['version'], 2);
   });
 }
