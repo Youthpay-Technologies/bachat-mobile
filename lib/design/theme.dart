@@ -178,6 +178,18 @@ abstract final class BachatTheme {
           borderRadius: BorderRadius.circular(BachatRadii.compact),
         ),
       ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: SegmentedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(BachatRadii.control),
+          ),
+        ),
+      ),
+      datePickerTheme: DatePickerThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BachatRadii.sheet),
+        ),
+      ),
       dialogTheme: DialogThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BachatRadii.sheet),
