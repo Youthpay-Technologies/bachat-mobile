@@ -120,4 +120,12 @@ void main() {
     });
     expect((await r.load('teen'))!['version'], 2);
   });
+  test('chosen onboarding role survives OAuth browser navigation', () async {
+    final db = await databaseFactoryMemory.openDatabase('role');
+    addTearDown(db.close);
+    final r = BachatRepository(db, null);
+    await r.saveRole('parent');
+    final reopened = BachatRepository(db, null);
+    expect(await reopened.loadRole(), 'parent');
+  });
 }
