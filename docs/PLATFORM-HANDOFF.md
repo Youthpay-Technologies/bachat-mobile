@@ -10,7 +10,7 @@ Run `flutter devices`, then `scripts/dev.ps1 -Device <device-id>` to develop on 
 
 App ID currently follows the scaffold: `com.getyouthpay.bachat_mobile`. Display name is Bachat. Review final identifiers before store registration. OAuth custom scheme is `com.getyouthpay.bachat://auth/callback`.
 
-Android debug compilation has passed in GitHub Actions. The `bachat-debug-apk` artifact is available on successful workflow runs. Builds use the development project’s public URL/key from repository variables and expose the clearly labeled debug preview. No service-role key is present. Physical-device OAuth and offline/reconnect checks are still required.
+Android debug compilation has passed in GitHub Actions and locally on Windows (arm64). The local APK is `build/app/outputs/flutter-apk/app-debug.apk`. The `bachat-debug-apk` artifact is available on successful workflow runs. Builds use the development project’s public URL/key from repository variables and expose the clearly labeled debug preview. No service-role key is present. Physical-device OAuth and offline/reconnect checks are still required.
 
 ## macOS / iOS
 
