@@ -18,6 +18,7 @@ Ratios calculated from sRGB relative luminance using WCAG contrast arithmetic. T
 - Flutter analyzer: clean.
 - 19 domain, repository, controller, and widget tests cover entry validation, budgets/goals, offline queue coalescing and in-flight edits, account isolation, offline sign-out cleanup, parent restrictions, and approval gates.
 - Web release compilation passes. Debug preview runs at http://127.0.0.1:8080.
+- Android arm64 debug APK compiled successfully on Windows at `build/app/outputs/flutter-apk/app-debug.apk`; universal debug APK builds also pass in GitHub Actions.
 - Chrome mobile-viewport smoke checks reached onboarding, teen dashboard, transaction form, Plan, and Learn; screenshot inspection checked the rendered teen dashboard.
 - Live Supabase transactional authorization tests pass; fixture rollback confirmed zero test profiles remain.
 
