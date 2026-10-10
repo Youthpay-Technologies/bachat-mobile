@@ -48,3 +48,9 @@ The updated interface uses 12px control corners, 16px cards, 20px sheets/navigat
 | Dark theme | Parent |
 |---|---|
 | ![Dark](screenshots/radius-dark.png) | ![Parent](screenshots/radius-parent.png) |
+
+The final native-control pass also verified transaction-sheet opening and date-picker opening/cancellation in Chrome with zero page errors. The transaction selector and date dialog screenshots were inspected. Android arm64 debug and web release builds both pass for the final source.
+
+| Transaction sheet | Date picker |
+|---|---|
+| ![Transaction](screenshots/radius-transaction.png) | ![Date picker](screenshots/radius-date-picker.png) |
