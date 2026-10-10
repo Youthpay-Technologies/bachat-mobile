@@ -7,7 +7,7 @@
 - Region: ap-south-1 (Mumbai)
 - URL: https://mqpcxptgmqzwylldiotr.supabase.co
 - Dashboard: https://supabase.com/dashboard/project/mqpcxptgmqzwylldiotr
-- Applied migration: `20261010092624_mobile_bootstrap.sql`
+- Applied migration: `20261010093016_mobile_bootstrap.sql`
 
 `config/dev.local.json` on the current workstation contains only the project URL, publishable client key, and debug preview flag. It is ignored by Git. Copy the example on another machine and get its publishable key from the dashboard. Public keys rely on RLS; privileged keys must never ship in Flutter.
 
@@ -39,3 +39,4 @@ Supabase advisors reported no security warnings/errors after migration. Two info
 ## Migration workflow
 
 The Supabase CLI configuration is committed for local development (`npx supabase start` requires Docker). Create future migrations with `npx supabase migration new <name>`, inspect their SQL, and deploy to the correct project. Do not modify the old web app's database. The initial migration was applied through the connected Supabase MCP tool using the committed SQL.
+
