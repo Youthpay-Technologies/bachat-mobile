@@ -32,3 +32,25 @@ Chrome at 390 x 844 verified last-month filtering, the applied-filter summary, c
 | Filter sheet | Filter recovery | Savings sheet |
 |---|---|---|
 | ![Filters](screenshots/filter-sheet.png) | ![Applied filters](screenshots/filtered-activity.png) | ![Add savings](screenshots/savings-sheet.png) |
+
+## Restrained shape refinement
+
+The updated interface uses 12px control corners, 16px cards, 20px sheets/navigation and 8px badges/selection indicators. Card shadows use one subtle elevation layer. Chrome at 390 x 844 verified all tab transitions used in this pass, filter-sheet open/reset, savings-sheet open/dismiss, appearance switching and parent switching, with zero page errors. The eight screenshots below were visually inspected. Analyzer is clean and all 36 existing tests pass, including 320px / 200% text layouts. Earlier screenshots above document previous iterations.
+
+| Home | Plan | Activity |
+|---|---|---|
+| ![Home](screenshots/radius-home.png) | ![Plan](screenshots/radius-plan.png) | ![Activity](screenshots/radius-activity.png) |
+
+| Filters | Savings | Profile |
+|---|---|---|
+| ![Filters](screenshots/radius-filters.png) | ![Savings](screenshots/radius-savings.png) | ![Profile](screenshots/radius-profile.png) |
+
+| Dark theme | Parent |
+|---|---|
+| ![Dark](screenshots/radius-dark.png) | ![Parent](screenshots/radius-parent.png) |
+
+The final native-control pass also verified transaction-sheet opening and date-picker opening/cancellation in Chrome with zero page errors. The transaction selector and date dialog screenshots were inspected. Android arm64 debug and web release builds both pass for the final source.
+
+| Transaction sheet | Date picker |
+|---|---|
+| ![Transaction](screenshots/radius-transaction.png) | ![Date picker](screenshots/radius-date-picker.png) |

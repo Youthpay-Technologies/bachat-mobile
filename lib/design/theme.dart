@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 
+abstract final class BachatRadii {
+  static const compact = 8.0;
+  static const control = 12.0;
+  static const surface = 16.0;
+  static const sheet = 20.0;
+}
+
 abstract final class BachatTheme {
   static ThemeData build(Brightness brightness) {
     final dark = brightness == Brightness.dark;
@@ -33,7 +40,9 @@ abstract final class BachatTheme {
         backgroundColor: canvas,
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(BachatRadii.sheet),
+          ),
         ),
       ),
       scaffoldBackgroundColor: canvas,
@@ -86,7 +95,7 @@ abstract final class BachatTheme {
           minimumSize: const Size(48, 54),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(BachatRadii.control),
           ),
           textStyle: const TextStyle(
             fontFamily: 'DM Sans',
@@ -100,15 +109,15 @@ abstract final class BachatTheme {
         fillColor: scheme.surface,
         contentPadding: const EdgeInsets.all(18),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(BachatRadii.control),
           borderSide: BorderSide(color: scheme.outline),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(BachatRadii.control),
           borderSide: BorderSide(color: scheme.outline),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(28),
+          borderRadius: BorderRadius.circular(BachatRadii.control),
           borderSide: BorderSide(
             color: dark ? scheme.primary : const Color(0xFF216D2C),
             width: 2,
@@ -121,6 +130,9 @@ abstract final class BachatTheme {
         elevation: 0,
         height: 74,
         indicatorColor: scheme.primary,
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BachatRadii.compact),
+        ),
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             color: states.contains(WidgetState.selected)
@@ -139,13 +151,53 @@ abstract final class BachatTheme {
         style: TextButton.styleFrom(
           foregroundColor: dark ? scheme.primary : const Color(0xFF216D2C),
           minimumSize: const Size(48, 48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(BachatRadii.control),
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: scheme.onSurface,
           minimumSize: const Size(48, 52),
-          shape: const StadiumBorder(),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(BachatRadii.control),
+          ),
+        ),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(BachatRadii.control),
+          ),
+          minimumSize: const Size(48, 48),
+        ),
+      ),
+      chipTheme: base.chipTheme.copyWith(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BachatRadii.compact),
+        ),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: SegmentedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(BachatRadii.control),
+          ),
+        ),
+      ),
+      datePickerTheme: DatePickerThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BachatRadii.sheet),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BachatRadii.sheet),
+        ),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BachatRadii.control),
         ),
       ),
       dividerTheme: DividerThemeData(
@@ -154,6 +206,9 @@ abstract final class BachatTheme {
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BachatRadii.control),
+        ),
         backgroundColor: text,
         contentTextStyle: TextStyle(color: scheme.surface),
       ),

@@ -1,6 +1,6 @@
 # Bachat design system
 
-The supplied three-phone image sets the visual direction. At an assumed 390px logical phone width, estimated tokens are 24px page padding, 26px surface corners, 28px button/input corners, soft 18px shadows, white surface rims and a floating rounded navigation surface. These estimates adapt the visual language to expense tracking rather than reproduce banking features.
+The supplied three-phone image sets the visual direction. At an assumed 390px logical phone width, retain 24px page padding and generous section spacing. Following the requested refinement, shared radii are 8px for badges/chips and navigation selection, 12px for controls/fields, 16px for cards, and 20px for sheets/dialogs and the navigation container. Cards use a single restrained 12px blur shadow at 2.5% black with a 3px vertical offset. These values adapt the reference into a cleaner expense-tracking interface.
 
 Light: canvas #EEF0F4, surface #F7F8FA, text #14171C, secondary text #596171, primary #34C642, primary text #102314, readable green #216D2C. Dark: canvas #14171C, surface #20252D, text #F3F5F7, primary #67DE70. Buttons use dark text; focus borders and meaningful icons use readable green in light mode.
 
@@ -19,3 +19,6 @@ Navigation retains each tab’s state and uses a restrained 150ms selection anim
 Activity filters live in a dismissible bottom sheet with staged choices and an explicit Apply action. The active count and a concise summary keep the current view visible; clearing advanced filters preserves search and transaction type. Date sorting groups entries by day, while amount sorting uses one ordered list. Empty results offer recovery.
 
 Savings additions use a focused amount sheet with the remaining target visible, exact paisa validation, duplicate-submit protection and completion feedback. Completed goals and parent views omit the action. Reusing previous-month budgets is optional and only appears when a missing category can be copied; existing current-month limits are preserved.
+
+
+The radius scale lives in `BachatRadii` and applies in both themes. Filled, outlined and text actions share the control radius; focus, error and enabled field borders retain the same geometry. Person avatars remain circular. Touch targets remain at least 48px for buttons; visual refinement does not reduce tap areas. Skeletons use the control radius, and glow-like surface shadows are removed.

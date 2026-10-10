@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../application/controller.dart';
 import '../design/components.dart';
+import '../design/theme.dart';
 import '../domain/models.dart';
 import '../domain/activity_filter.dart';
 import 'activity_filters.dart';
@@ -235,7 +236,7 @@ class _ShellState extends ConsumerState<DashboardShell> {
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(36),
+          borderRadius: BorderRadius.circular(BachatRadii.sheet),
           child: NavigationBar(
             selectedIndex: tab,
             animationDuration: MediaQuery.disableAnimationsOf(context)

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'theme.dart';
 
 class BachatMark extends StatelessWidget {
   const BachatMark({super.key, this.large = false});
@@ -66,28 +67,19 @@ class Surface extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
     return DecoratedBox(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(BachatRadii.surface),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.035),
-            blurRadius: 18,
-            offset: const Offset(4, 6),
-          ),
-          BoxShadow(
-            color: Colors.white.withValues(
-              alpha: Theme.of(context).brightness == Brightness.light
-                  ? 0.75
-                  : 0.025,
-            ),
+            color: Colors.black.withValues(alpha: 0.025),
             blurRadius: 12,
-            offset: const Offset(-4, -4),
+            offset: const Offset(0, 3),
           ),
         ],
       ),
       child: Material(
         color: tinted ? colors.primaryContainer : colors.surface,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(26),
+          borderRadius: BorderRadius.circular(BachatRadii.surface),
           side: BorderSide(
             color: Theme.of(context).brightness == Brightness.light
                 ? Colors.white
@@ -218,7 +210,7 @@ class StatusBadge extends StatelessWidget {
       color: danger
           ? Theme.of(context).colorScheme.errorContainer
           : Theme.of(context).colorScheme.primaryContainer,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(BachatRadii.compact),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,
@@ -260,7 +252,7 @@ class DashboardSkeleton extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(BachatRadii.control),
       ),
     );
     return Scaffold(
