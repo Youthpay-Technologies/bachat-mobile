@@ -298,6 +298,10 @@ void main() {
       ),
     );
     expect(carousel.controller!.offset, 0);
+    expect(
+      tester.widget<IconButton>(find.byTooltip('Previous goal')).onPressed,
+      isNull,
+    );
     await tester.tap(find.byTooltip('Next goal'));
     await tester.pumpAndSettle();
     expect(carousel.controller!.offset, greaterThan(0));

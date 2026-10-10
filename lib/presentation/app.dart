@@ -853,6 +853,12 @@ class GoalCarousel extends StatefulWidget {
 class _GoalCarouselState extends State<GoalCarousel> {
   final scroll = ScrollController();
   @override
+  void initState() {
+    super.initState();
+    scroll.addListener(() => setState(() {}));
+  }
+
+  @override
   void dispose() {
     scroll.dispose();
     super.dispose();
@@ -916,12 +922,18 @@ class _GoalCarouselState extends State<GoalCarousel> {
                 ),
                 IconButton(
                   tooltip: 'Previous goal',
-                  onPressed: () => move(-1),
+                  onPressed: scroll.hasClients && scroll.offset > 0
+                      ? () => move(-1)
+                      : null,
                   icon: const Icon(Icons.chevron_left),
                 ),
                 IconButton(
                   tooltip: 'Next goal',
-                  onPressed: () => move(1),
+                  onPressed:
+                      !scroll.hasClients ||
+                          scroll.offset < scroll.position.maxScrollExtent
+                      ? () => move(1)
+                      : null,
                   icon: const Icon(Icons.chevron_right),
                 ),
               ],
