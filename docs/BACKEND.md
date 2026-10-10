@@ -22,7 +22,7 @@ Google was confirmed **disabled** through `/auth/v1/settings` during setup. The 
 5. Sign in once as a teen and once as a parent with separate Google accounts. Create a code, approve it as the parent, then confirm the named parent as the teen.
 6. Verify child switching, offline edits followed by reconnect, and last-parent revocation on real devices.
 
-Android/iOS custom scheme callbacks are configured in their manifests. Production should use verified universal/app links and separate environments where appropriate.
+Android/iOS custom scheme callbacks are configured in their manifests. Supabase’s app_links integration handles these callbacks; Flutter’s default deep-link handler is disabled to prevent competing navigation. See https://docs.flutter.dev/release/breaking-changes/deep-links-flag-change. Production should use verified universal/app links and separate environments where appropriate.
 
 Official setup reference: https://supabase.com/docs/guides/auth/social-login/auth-google
 
