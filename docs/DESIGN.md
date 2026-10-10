@@ -15,3 +15,7 @@ Headings are concise, amounts use a 44px tabular display style, and section spac
 Profile and appearance settings open native modal sheets. Forms share drag handles, rounded sheet surfaces, keyboard-aware padding and dismissible confirmation feedback. Learning uses a compact coming-soon badge; savings and over-budget badges carry meaningful status. Multiple home goals become a horizontally scrollable carousel with visible continuation and keyboard-accessible previous/next controls. A single goal remains a card.
 
 Navigation retains each tab’s state and uses a restrained 150ms selection animation. Reduced motion disables sheet/carousel movement and selection animation; theme swaps are instantaneous. The static startup skeleton reflects actual initialization without introducing a delay or perpetual shimmer.
+
+Activity filters live in a dismissible bottom sheet with staged choices and an explicit Apply action. The active count and a concise summary keep the current view visible; clearing advanced filters preserves search and transaction type. Date sorting groups entries by day, while amount sorting uses one ordered list. Empty results offer recovery.
+
+Savings additions use a focused amount sheet with the remaining target visible, exact paisa validation, duplicate-submit protection and completion feedback. Completed goals and parent views omit the action. Reusing previous-month budgets is optional and only appears when a missing category can be copied; existing current-month limits are preserved.
