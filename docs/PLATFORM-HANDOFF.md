@@ -23,4 +23,4 @@ No iOS compile, signing, simulator, or device check was performed on this Window
 
 Configure production Google OAuth, real-device end-to-end tests, release signing, app icons, store metadata, reviewed privacy/consent copy, an account-deletion mechanism, local financial-data protection, and recovery/support procedures. Assess Apple's sign-in requirements for the final login options. Disable debug preview in all release configuration. Learning should remain explicitly coming soon.
 
-The existing YouthPay-style YP mark is used inside the app. Platform launcher assets are currently Flutter scaffold icons and must be replaced with approved Bachat artwork before distribution.
+The existing YouthPay-style YP mark is used inside the app. The same mark is used in generated Android, iOS, and web launcher assets. Regenerate with `flutter test tool/generate_icons_test.dart`. Review final artwork before distribution.
