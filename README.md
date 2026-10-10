@@ -1,6 +1,6 @@
 # Bachat Mobile
 
-A standalone Flutter app for Android and iOS with a soft gray and green interface inspired by the supplied reference. DM Sans, rounded surfaces, pill actions and distinct teen/parent journeys.
+A standalone Flutter app for Android and iOS with a soft gray and green interface inspired by the supplied reference. DM Sans, restrained rounded surfaces, clear actions and distinct teen/parent journeys.
 
 Run with Flutter **3.47.7 / Dart 3.13.5**:
 
