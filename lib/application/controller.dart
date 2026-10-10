@@ -278,6 +278,7 @@ class AppController extends ChangeNotifier {
         ]);
         if (generation != _generation) return;
         final pending = await repository.pending(id);
+        if (generation != _generation) return;
         List<Map<String, dynamic>> overlay(
           String table,
           List<Map<String, dynamic>> remote,
@@ -307,6 +308,7 @@ class AppController extends ChangeNotifier {
           ).map(SavingsGoal.fromJson).toList();
         }
       }
+      if (generation != _generation) return;
       offline = false;
       error = null;
       await repository.save(id, snapshot());
