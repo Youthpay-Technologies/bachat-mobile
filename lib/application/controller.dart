@@ -278,6 +278,7 @@ class AppController extends ChangeNotifier {
         ]);
         if (generation != _generation) return;
         final pending = await repository.pending(id);
+        if (generation != _generation) return;
         List<Map<String, dynamic>> overlay(
           String table,
           List<Map<String, dynamic>> remote,
@@ -307,6 +308,7 @@ class AppController extends ChangeNotifier {
           ).map(SavingsGoal.fromJson).toList();
         }
       }
+      if (generation != _generation) return;
       offline = false;
       error = null;
       await repository.save(id, snapshot());
@@ -457,10 +459,17 @@ class AppController extends ChangeNotifier {
   Future<void> signOut() async {
     final id = accountId;
     _generation++;
-    if (!preview) await client?.auth.signOut(scope: SignOutScope.local);
-    if (id != null) await repository.clearAccount(id);
-    _reset();
-    notifyListeners();
+    try {
+      if (!preview) await client?.auth.signOut(scope: SignOutScope.local);
+    } catch (_) {
+      // GoTrue removes the local session before requesting server revocation.
+      // Offline revocation failure must not retain this device's records.
+      if (client?.auth.currentSession != null) rethrow;
+    } finally {
+      if (id != null) await repository.clearAccount(id);
+      _reset();
+      notifyListeners();
+    }
   }
 
   void _reset() {

@@ -128,4 +128,58 @@ void main() {
     final reopened = BachatRepository(db, null);
     expect(await reopened.loadRole(), 'parent');
   });
+  test(
+    'sign-out clears cached financial data when remote logout is offline',
+    () async {
+      final db = await databaseFactoryMemory.openDatabase('offline-sign-out');
+      addTearDown(db.close);
+      const id = '8e04df61-f8f1-43eb-a81a-e69944346ab0';
+      String segment(Object value) =>
+          base64Url.encode(utf8.encode(jsonEncode(value))).replaceAll('=', '');
+      final token =
+          '${segment({'alg': 'HS256', 'typ': 'JWT'})}.${segment({'sub': id, 'exp': DateTime.now().millisecondsSinceEpoch ~/ 1000 + 3600})}.signature';
+      final client = SupabaseClient(
+        'https://example.supabase.co',
+        'public-test-key',
+        authOptions: const AuthClientOptions(autoRefreshToken: false),
+        httpClient: MockClient((request) async {
+          if (request.url.path.endsWith('/token')) {
+            return http.Response(
+              jsonEncode({
+                'access_token': token,
+                'refresh_token': 'test-refresh',
+                'expires_in': 3600,
+                'token_type': 'bearer',
+                'user': {
+                  'id': id,
+                  'aud': 'authenticated',
+                  'role': 'authenticated',
+                  'email': 'fixture@example.invalid',
+                  'app_metadata': {},
+                  'user_metadata': {},
+                  'created_at': '2026-01-01T00:00:00Z',
+                },
+              }),
+              200,
+              request: request,
+              headers: {'content-type': 'application/json'},
+            );
+          }
+          throw http.ClientException('Offline');
+        }),
+      );
+      addTearDown(client.dispose);
+      await client.auth.signInWithPassword(
+        email: 'fixture@example.invalid',
+        password: 'fixture-only',
+      );
+      final repository = BachatRepository(db, client);
+      await repository.save(id, {'private_record': 'fixture'});
+      final c = AppController(repository);
+      addTearDown(c.dispose);
+      await c.signOut();
+      expect(c.signedIn, isFalse);
+      expect(await repository.load(id), isNull);
+    },
+  );
 }

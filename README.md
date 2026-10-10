@@ -8,6 +8,7 @@ Flutter **3.47.7 / Dart 3.13.5** is the verified toolchain. Dependencies are loc
 
 ```powershell
 # This workspace has an isolated Flutter SDK and dependency cache.
+. .\scripts\env.ps1 # Optional: also makes flutter/dart available in this terminal.
 .\scripts\dev.ps1
 # Phone-sized preview: http://127.0.0.1:8080
 # Select Skip introduction → Preview teen / Preview parent.
