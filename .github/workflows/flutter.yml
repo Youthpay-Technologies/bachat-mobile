@@ -43,11 +43,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: false
-      - run: >-
-          flutter build apk --debug
-          --dart-define=SUPABASE_URL=${{ vars.SUPABASE_URL }}
-          --dart-define=SUPABASE_PUBLISHABLE_KEY=${{ vars.SUPABASE_PUBLISHABLE_KEY }}
-          --dart-define=ENABLE_PREVIEW=true
+      - run: flutter build apk --debug
       - uses: actions/upload-artifact@v4
         with:
           name: bachat-debug-apk
