@@ -1,6 +1,6 @@
 # Demo verification
 
-25 domain, repository, controller and widget tests passed. Coverage includes persistent shared demo records, persona restoration, reset, mutual family approval, read-only parent enforcement, access removal, exact money parsing, validated transactions/budgets/goals, narrow/large-text layouts, profile/appearance sheets, retained searches, empty-filter recovery, carousel buttons and startup skeleton. Analyzer is clean.
+36 domain, repository, controller and widget tests passed. Coverage includes persistent shared demo records, persona restoration, reset, mutual family approval, read-only parent enforcement, access removal, exact money parsing, validated transactions/budgets/goals, narrow/large-text layouts, profile/appearance sheets, retained searches, empty-filter recovery, carousel buttons startup skeleton, calendar boundaries, date/category filters, sorting, exact savings increments, savings persistence and limits, and previous-month budget reuse without overwrites. Analyzer is clean.
 
 Web release compilation and Windows Android arm64 debug APK compilation pass. Chrome at 390 × 844 verified teen and parent dashboards, Plan, Learn, persona switching, transaction save feedback, live total updates, search retention, goal creation/carousel navigation, appearance changes and parent restoration after reload, with zero page errors. Light and dark screenshots were visually inspected. Widgets cover 320px and 200% text scaling. This is targeted usability/accessibility verification, not certification of every HCI principle or an assistive-device audit.
 
@@ -23,3 +23,4 @@ Demo records stay on this device. Authentication and cloud synchronization are d
 | Activity | Goal carousel |
 |---|---|
 | ![Activity](screenshots/activity.png) | ![Goal carousel](screenshots/goals-carousel.png) |
+
