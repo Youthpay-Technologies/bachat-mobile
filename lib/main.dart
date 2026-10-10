@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'application/controller.dart';
 import 'data/database.dart';
 import 'data/repository.dart';
@@ -9,21 +8,8 @@ import 'presentation/app.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  const url = String.fromEnvironment('SUPABASE_URL');
-  const key = String.fromEnvironment('SUPABASE_PUBLISHABLE_KEY');
-  SupabaseClient? cloud;
-  if (url.isNotEmpty && key.isNotEmpty) {
-    await Supabase.initialize(
-      url: url,
-      publishableKey: key,
-      authOptions: const FlutterAuthClientOptions(
-        localStorage: SecureSessionStorage(),
-      ),
-    );
-    cloud = Supabase.instance.client;
-  }
   final controller = AppController(
-    BachatRepository(await openDatabase(), cloud),
+    BachatRepository(await openDatabase(), null),
   );
   await controller.initialize();
   runApp(

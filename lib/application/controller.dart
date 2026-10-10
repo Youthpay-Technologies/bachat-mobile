@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'package:uuid/uuid.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -44,7 +44,11 @@ class AppController extends ChangeNotifier {
   bool get approved => links.any((l) => l.approved && l.teenId == profile?.id);
   bool get needsApproval => profile?.role == UserRole.teen && !approved;
   List<FamilyLink> get children => links.where((l) => l.approved).toList();
-  String? get viewingId => isParent ? selectedChildId : profile?.id;
+  String? get viewingId => isParent
+      ? (children.any((link) => link.teenId == selectedChildId)
+            ? selectedChildId
+            : null)
+      : profile?.id;
   String get viewingName => isParent
       ? children
                 .where((l) => l.teenId == selectedChildId)
@@ -71,9 +75,57 @@ class AppController extends ChangeNotifier {
     _ => ThemeMode.system,
   };
 
+  static const demoKey = 'demo-family-v1';
+
+  Future<void> startDemo(UserRole role) async {
+    if (!preview) {
+      final saved = await repository.load(demoKey);
+      if (saved != null) _restoreDemo(saved);
+    }
+    startPreview(role);
+    await repository.save(demoKey, snapshot());
+  }
+
+  void _restoreDemo(Map<String, dynamic> saved) {
+    preview = true;
+    profile = Profile.fromJson(
+      Map<String, dynamic>.from(saved['profile'] as Map),
+    );
+    links = (saved['links'] as List)
+        .map((j) => FamilyLink.fromJson(Map<String, dynamic>.from(j as Map)))
+        .toList();
+    allEntries = (saved['entries'] as List)
+        .map((j) => MoneyEntry.fromJson(Map<String, dynamic>.from(j as Map)))
+        .toList();
+    allBudgets = (saved['budgets'] as List)
+        .map(
+          (j) => CategoryBudget.fromJson(Map<String, dynamic>.from(j as Map)),
+        )
+        .toList();
+    allGoals = (saved['goals'] as List)
+        .map((j) => SavingsGoal.fromJson(Map<String, dynamic>.from(j as Map)))
+        .toList();
+    selectedChildId = saved['selected_child'] as String?;
+    familyCode = saved['family_code'] as String?;
+  }
+
+  Future<void> resetDemo() async {
+    final role = profile?.role ?? UserRole.teen;
+    _reset();
+    startPreview(role);
+    await repository.save(demoKey, snapshot());
+  }
+
   Future<void> initialize() async {
     theme = await repository.loadTheme();
     chosenRole = UserRole.values.byName(await repository.loadRole());
+    if (client == null) {
+      final saved = await repository.load(demoKey);
+      if (saved != null) _restoreDemo(saved);
+      ready = true;
+      notifyListeners();
+      return;
+    }
     if (accountId != null) await _hydrate();
     ready = true;
     notifyListeners();
@@ -107,6 +159,7 @@ class AppController extends ChangeNotifier {
     'budgets': allBudgets.map((b) => b.toJson()).toList(),
     'goals': allGoals.map((g) => g.toJson()).toList(),
     'selected_child': selectedChildId,
+    'family_code': familyCode,
   };
   Future<void> _hydrate() async {
     final account = accountId;
@@ -167,29 +220,6 @@ class AppController extends ChangeNotifier {
       busy = false;
       notifyListeners();
     }
-  }
-
-  Future<void> signIn(UserRole role) async {
-    chosenRole = role;
-    await repository.saveRole(role.name);
-    await run(() async {
-      if (client == null) {
-        throw const FormatException(
-          'Sign-in is not configured for this build. Add the Supabase project configuration.',
-        );
-      }
-      final launched = await client!.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: kIsWeb
-            ? Uri.base.origin
-            : 'com.getyouthpay.bachat://auth/callback',
-      );
-      if (!launched) {
-        throw const FormatException(
-          'Unable to open Google sign-in. Try again.',
-        );
-      }
-    });
   }
 
   Future<bool> createProfile(String name, UserRole role, int? age) =>
@@ -379,7 +409,7 @@ class AppController extends ChangeNotifier {
       await repository.queue(id, table, row, snapshot());
       pendingCount = (await repository.pending(id)).length;
     } else {
-      await repository.save(id, snapshot());
+      await repository.save(demoKey, snapshot());
     }
     notifyListeners();
     if (!preview) unawaited(refresh());
@@ -387,16 +417,39 @@ class AppController extends ChangeNotifier {
 
   Future<void> generateCode() => run(() async {
     if (preview) {
-      familyCode = 'BCHT-7A29C8D1';
+      familyCode = 'BCHT-${const Uuid().v4().substring(0, 8).toUpperCase()}';
+      await repository.save(demoKey, snapshot());
       return;
     }
     familyCode = await client!.rpc('generate_family_code') as String;
   });
   Future<bool> claimCode(String code) => run(() async {
     if (preview) {
-      throw const FormatException(
-        'Family requests need two real signed-in accounts. Exit preview to connect a parent.',
-      );
+      if (!isParent ||
+          familyCode == null ||
+          code.trim().toUpperCase() != familyCode) {
+        throw const FormatException(
+          'Enter the code generated in the teen demo.',
+        );
+      }
+      if (links.any((l) => l.approved || l.status == 'pending')) {
+        throw const FormatException(
+          'This family is already connected or awaiting confirmation.',
+        );
+      }
+      links = [
+        const FamilyLink(
+          id: 'preview-link',
+          teenId: 'preview-teen',
+          parentId: 'preview-parent',
+          status: 'pending',
+          teenName: 'Ayesha',
+          parentName: 'Sana',
+        ),
+      ];
+      familyCode = null;
+      await repository.save(demoKey, snapshot());
+      return;
     }
     final result =
         await client!.rpc(
@@ -415,7 +468,27 @@ class AppController extends ChangeNotifier {
     await refresh();
   });
   Future<void> decideLink(FamilyLink link, bool approve) => run(() async {
-    if (preview) return;
+    if (preview) {
+      if (isParent || link.status != 'pending') {
+        throw const FormatException(
+          'Only the teen can confirm a pending parent.',
+        );
+      }
+      links = approve
+          ? [
+              FamilyLink(
+                id: link.id,
+                teenId: link.teenId,
+                parentId: link.parentId,
+                status: 'approved',
+                teenName: link.teenName,
+                parentName: link.parentName,
+              ),
+            ]
+          : [];
+      await repository.save(demoKey, snapshot());
+      return;
+    }
     final changed = await client!.rpc(
       'decide_family_link',
       params: {'p_id': link.id, 'p_approve': approve},
@@ -430,6 +503,7 @@ class AppController extends ChangeNotifier {
   Future<void> revokeLink(FamilyLink link) => run(() async {
     if (preview) {
       links.removeWhere((l) => l.id == link.id);
+      await repository.save(demoKey, snapshot());
       notifyListeners();
       return;
     }
@@ -447,7 +521,9 @@ class AppController extends ChangeNotifier {
   void selectChild(String id) {
     selectedChildId = id;
     notifyListeners();
-    if (accountId != null) unawaited(repository.save(accountId!, snapshot()));
+    if (accountId != null) {
+      unawaited(repository.save(preview ? demoKey : accountId!, snapshot()));
+    }
   }
 
   Future<void> setTheme(String value) async {
@@ -488,6 +564,18 @@ class AppController extends ChangeNotifier {
   }
 
   void startPreview(UserRole role) {
+    if (preview) {
+      profile = Profile(
+        id: role == UserRole.teen ? 'preview-teen' : 'preview-parent',
+        name: role == UserRole.teen ? 'Ayesha' : 'Sana',
+        role: role,
+        age: role == UserRole.teen ? 16 : null,
+      );
+      selectedChildId = 'preview-teen';
+      error = null;
+      notifyListeners();
+      return;
+    }
     _generation++;
     _reset();
     preview = true;

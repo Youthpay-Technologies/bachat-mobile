@@ -14,6 +14,7 @@ Future<void> entryForm(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    showDragHandle: true,
     builder: (_) => EntryForm(c: c, existing: existing),
   );
 }
@@ -65,7 +66,7 @@ class _EntryFormState extends State<EntryForm> {
           readOnly
               ? 'Transaction details'
               : widget.existing == null
-              ? 'A little entry. More clarity.'
+              ? 'Add a transaction'
               : 'Edit transaction',
           style: Theme.of(context).textTheme.headlineSmall,
         ),
@@ -93,6 +94,8 @@ class _EntryFormState extends State<EntryForm> {
               const SizedBox(height: 20),
               TextFormField(
                 controller: amount,
+                style: Theme.of(context).textTheme.headlineLarge,
+                textAlign: TextAlign.center,
                 readOnly: readOnly,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,

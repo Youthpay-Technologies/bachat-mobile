@@ -64,16 +64,41 @@ class Surface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return Material(
-      color: tinted ? colors.primaryContainer : colors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: BorderSide(color: colors.outlineVariant),
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.035),
+            blurRadius: 18,
+            offset: const Offset(4, 6),
+          ),
+          BoxShadow(
+            color: Colors.white.withValues(
+              alpha: Theme.of(context).brightness == Brightness.light
+                  ? 0.75
+                  : 0.025,
+            ),
+            blurRadius: 12,
+            offset: const Offset(-4, -4),
+          ),
+        ],
       ),
-      clipBehavior: Clip.antiAlias,
-      child: SizedBox(
-        width: double.infinity,
-        child: Padding(padding: padding, child: child),
+      child: Material(
+        color: tinted ? colors.primaryContainer : colors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(26),
+          side: BorderSide(
+            color: Theme.of(context).brightness == Brightness.light
+                ? Colors.white
+                : colors.outlineVariant,
+          ),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: SizedBox(
+          width: double.infinity,
+          child: Padding(padding: padding, child: child),
+        ),
       ),
     );
   }

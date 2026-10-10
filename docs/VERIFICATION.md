@@ -1,41 +1,17 @@
-# Verification evidence
+# Demo verification
 
-## Palette contrast
+21 domain, repository, controller and widget tests passed. Coverage includes persistent shared demo records, persona restoration, reset, mutual family approval, read-only parent enforcement, access removal, exact money parsing, validated transactions/budgets/goals, and narrow/large-text layouts. Analyzer is clean.
 
-| Actual semantic pair | Contrast |
-|---|---:|
-| Light body on canvas | 13.38:1 |
-| Light secondary on white | 5.12:1 |
-| Light button text | 7.85:1 |
-| Dark body on canvas | 15.68:1 |
-| Dark secondary on surface | 8.29:1 |
-| Dark button text | 7.94:1 |
+Web release compilation and Windows Android arm64 debug APK compilation pass. Chrome at 390 × 844 verified teen and parent dashboards, Plan, Learn, persona switching and parent restoration after reload, with zero page errors. Light and dark screenshots were visually inspected. Widgets cover 320px and 200% text scaling. This is targeted usability/accessibility verification, not certification of every HCI principle or an assistive-device audit.
 
-Ratios calculated from sRGB relative luminance using WCAG contrast arithmetic. These text pairs exceed 4.5:1. This is not a claim that every state and generated Material color has been audited.
+Measured light-theme sRGB contrast: button text #102314 on #34C642 **7.31:1**; body #14171C on #EEF0F4 **15.74:1**; secondary #596171 on #EEF0F4 **5.46:1**; readable green #216D2C on #F7F8FA **6.01:1**. Selected navigation icons use dark primary text in both themes.
 
-## Verified locally
+Demo records stay on this device. Authentication and cloud synchronization are deferred. No live login is claimed. iOS signing/device testing requires the Mac team; no physical Android test has been performed.
 
-- Flutter analyzer: clean.
-- 19 domain, repository, controller, and widget tests cover entry validation, budgets/goals, offline queue coalescing and in-flight edits, account isolation, offline sign-out cleanup, parent restrictions, and approval gates.
-- Web release compilation passes. Debug preview runs at http://127.0.0.1:8080.
-- Android arm64 debug APK compiled successfully on Windows at `build/app/outputs/flutter-apk/app-debug.apk`; universal debug APK builds also pass in GitHub Actions.
-- Chrome mobile-viewport smoke checks reached onboarding, teen dashboard, transaction form, Plan, and Learn; screenshot inspection checked the rendered teen dashboard.
-- Live Supabase transactional authorization tests pass; fixture rollback confirmed zero test profiles remain.
-
-## External or platform-specific validation
-
-- Google provider credentials and redirects are pending the owner’s setup; live Google login has not been verified.
-- iOS compile/signing/device checks require the Mac team.
-- Android debug APK compilation passed in GitHub Actions (PR #1). Physical Android device testing has not been performed.
-
-## Screenshots
-
-Captured from the running debug app in Chrome at 390 × 844. Dashboard screenshots contain clearly marked sample data.
-
-| Onboarding | Teen home | Parent home |
+| Teen | Parent | Plan |
 |---|---|---|
-| ![Onboarding](screenshots/onboarding.png) | ![Teen dashboard](screenshots/teen-home.png) | ![Parent dashboard](screenshots/parent-home.png) |
+| ![Teen](screenshots/teen-home.png) | ![Parent](screenshots/parent-home.png) | ![Plan](screenshots/plan.png) |
 
-| Budgets and goals | Learning placeholder |
-|---|---|
-| ![Planning screen](screenshots/plan.png) | ![Learning screen](screenshots/learn.png) |
+| Introduction | Learning | Dark theme |
+|---|---|---|
+| ![Introduction](screenshots/onboarding.png) | ![Learning](screenshots/learn.png) | ![Dark](screenshots/teen-dark.png) |

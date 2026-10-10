@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sembast/sembast_memory.dart';
 import 'package:bachat_mobile/main.dart';
+import 'package:bachat_mobile/presentation/app.dart';
 import 'package:bachat_mobile/application/controller.dart';
 import 'package:bachat_mobile/data/repository.dart';
 import 'package:bachat_mobile/domain/models.dart';
@@ -35,14 +36,14 @@ void main() {
     await tester.scrollUntilVisible(find.text('Skip introduction'), 300);
     await tester.tap(find.text('Skip introduction'));
     await tester.pumpAndSettle();
-    expect(find.text('Continue with Google'), findsOneWidget);
-    expect(find.textContaining('A parent must approve'), findsOneWidget);
+    expect(find.text('Explore as Ayesha'), findsOneWidget);
+    expect(find.textContaining('Teen demo'), findsOneWidget);
   });
   testWidgets('teen dashboard and all tabs render', (tester) async {
     final c = await controller();
     c.startPreview(UserRole.teen);
     await mount(tester, c);
-    expect(find.textContaining('PREVIEW'), findsOneWidget);
+    expect(find.textContaining('Demo ·'), findsOneWidget);
     expect(find.text('Rs 3,665'), findsOneWidget);
     await tester.tap(find.text('Activity').last);
     await tester.pumpAndSettle();
@@ -72,7 +73,7 @@ void main() {
     final c = await controller();
     c.startPreview(UserRole.teen);
     await mount(tester, c);
-    await c.revokeLink(c.links.first);
+    await tester.runAsync(() => c.revokeLink(c.links.first));
     await tester.pumpAndSettle();
     expect(find.text('A little support to get started'), findsOneWidget);
     expect(find.text('Add a transaction'), findsNothing);
@@ -100,6 +101,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    expect(
+      MediaQuery.textScalerOf(tester.element(find.byType(AppGate))).scale(14),
+      28,
+    );
   });
   testWidgets('transaction form validates and updates dashboard totals', (
     tester,
@@ -153,6 +158,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    expect(
+      MediaQuery.textScalerOf(tester.element(find.byType(AppGate))).scale(14),
+      28,
+    );
   });
   testWidgets('budgets and savings goals can be saved through their forms', (
     tester,
