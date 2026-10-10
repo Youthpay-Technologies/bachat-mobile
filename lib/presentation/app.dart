@@ -166,21 +166,9 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
                 ),
               ),
             ] else ...[
-              SegmentedButton<UserRole>(
-                segments: const [
-                  ButtonSegment(
-                    value: UserRole.teen,
-                    label: Text('I’m a teen'),
-                    icon: Icon(Icons.person_outline),
-                  ),
-                  ButtonSegment(
-                    value: UserRole.parent,
-                    label: Text('I’m a parent'),
-                    icon: Icon(Icons.people_outline),
-                  ),
-                ],
-                selected: {role},
-                onSelectionChanged: (v) => setState(() => role = v.first),
+              RoleChoices(
+                value: role,
+                onChanged: (value) => setState(() => role = value),
               ),
               const SizedBox(height: 20),
               Text(
@@ -272,13 +260,9 @@ class _ProfileState extends ConsumerState<ProfileScreen> {
               decoration: const InputDecoration(labelText: 'Your name'),
             ),
             const SizedBox(height: 18),
-            SegmentedButton<UserRole>(
-              segments: const [
-                ButtonSegment(value: UserRole.teen, label: Text('Teen')),
-                ButtonSegment(value: UserRole.parent, label: Text('Parent')),
-              ],
-              selected: {selected},
-              onSelectionChanged: (v) => setState(() => role = v.first),
+            RoleChoices(
+              value: selected,
+              onChanged: (value) => setState(() => role = value),
             ),
             if (selected == UserRole.teen)
               Padding(
@@ -615,27 +599,60 @@ class EntryTile extends StatelessWidget {
   final MoneyEntry entry;
   final AppController c;
   @override
-  Widget build(BuildContext context) => ListTile(
-    contentPadding: EdgeInsets.zero,
-    minVerticalPadding: 12,
-    leading: CircleAvatar(
-      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-      child: Icon(
-        entry.direction == EntryDirection.income
-            ? Icons.south_west
-            : categoryIcon(entry.category),
-        color: Theme.of(context).colorScheme.primary,
-      ),
-    ),
-    title: Text(entry.merchant),
-    subtitle: Text(
-      '${entry.category} · ${DateFormat.MMMd().format(entry.occurredAt)}',
-    ),
-    trailing: Text(
-      '${entry.direction == EntryDirection.income ? '+' : '−'}${money(entry.amountMinor)}',
-      style: Theme.of(context).textTheme.labelLarge,
-    ),
-    onTap: () => entryForm(context, c, existing: entry),
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) {
+      final compact =
+          constraints.maxWidth < 300 ||
+          MediaQuery.textScalerOf(context).scale(14) > 20;
+      final amount = Text(
+        '${entry.direction == EntryDirection.income ? '+' : '−'}${money(entry.amountMinor)}',
+        style: Theme.of(context).textTheme.labelLarge,
+      );
+      return InkWell(
+        onTap: () => entryForm(context, c, existing: entry),
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                child: Icon(
+                  entry.direction == EntryDirection.income
+                      ? Icons.south_west
+                      : categoryIcon(entry.category),
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.merchant,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${entry.category} · ${DateFormat.MMMd().format(entry.occurredAt)}',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    if (compact)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: amount,
+                      ),
+                  ],
+                ),
+              ),
+              if (!compact) ...[const SizedBox(width: 8), amount],
+            ],
+          ),
+        ),
+      );
+    },
   );
 }
 
@@ -1184,4 +1201,29 @@ class SettingsPage extends ConsumerWidget {
       ],
     );
   }
+}
+
+class RoleChoices extends StatelessWidget {
+  const RoleChoices({super.key, required this.value, required this.onChanged});
+  final UserRole value;
+  final ValueChanged<UserRole> onChanged;
+  @override
+  Widget build(BuildContext context) => Wrap(
+    spacing: 12,
+    runSpacing: 12,
+    children: UserRole.values
+        .map(
+          (role) => ChoiceChip(
+            label: Text(role == UserRole.teen ? 'I’m a teen' : 'I’m a parent'),
+            avatar: Icon(
+              role == UserRole.teen
+                  ? Icons.person_outline
+                  : Icons.people_outline,
+            ),
+            selected: value == role,
+            onSelected: (_) => onChanged(role),
+          ),
+        )
+        .toList(),
+  );
 }

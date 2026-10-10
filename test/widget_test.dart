@@ -101,4 +101,57 @@ void main() {
     );
     await tester.pumpAndSettle();
   });
+  testWidgets('transaction form validates and updates dashboard totals', (
+    tester,
+  ) async {
+    final c = await controller();
+    c.startPreview(UserRole.teen);
+    await mount(tester, c);
+    await tester.ensureVisible(find.text('Add a transaction'));
+    await tester.tap(find.text('Add a transaction'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Save transaction'));
+    await tester.tap(find.text('Save transaction'));
+    await tester.pumpAndSettle();
+    expect(find.text('Enter a name to continue.'), findsOneWidget);
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Amount'),
+      '125.50',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Where or what was it?'),
+      'School lunch',
+    );
+    await tester.ensureVisible(find.text('Save transaction'));
+    await tester.tap(find.text('Save transaction'));
+    await tester.pumpAndSettle();
+    expect(c.entries.first.merchant, 'School lunch');
+    expect(c.entries.first.amountMinor, 12550);
+    expect(find.text('Rs 3,790.50'), findsOneWidget);
+  });
+  testWidgets('teen dashboard supports narrow screen and large text', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(320, 740);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final c = await controller();
+    c.startPreview(UserRole.teen);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [controllerProvider.overrideWith((ref) => c)],
+        child: MaterialApp(
+          home: MediaQuery(
+            data: const MediaQueryData(
+              size: Size(320, 740),
+              textScaler: TextScaler.linear(2),
+            ),
+            child: const BachatApp(),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+  });
 }

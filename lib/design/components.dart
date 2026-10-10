@@ -87,14 +87,29 @@ class SectionHeading extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(top: 28, bottom: 14),
-    child: Row(
-      children: [
-        Expanded(
-          child: Text(title, style: Theme.of(context).textTheme.titleLarge),
-        ),
-        if (action != null)
-          TextButton(onPressed: onAction, child: Text(action!)),
-      ],
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final heading = Text(
+          title,
+          style: Theme.of(context).textTheme.titleLarge,
+        );
+        final button = action == null
+            ? null
+            : TextButton(onPressed: onAction, child: Text(action!));
+        if (MediaQuery.textScalerOf(context).scale(14) > 20 ||
+            constraints.maxWidth < 300) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [heading, if (button != null) button],
+          );
+        }
+        return Row(
+          children: [
+            Expanded(child: heading),
+            if (button != null) button,
+          ],
+        );
+      },
     ),
   );
 }
