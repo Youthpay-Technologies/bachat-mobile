@@ -286,7 +286,11 @@ void main() {
       ),
     );
     await mount(tester, c);
-    await tester.scrollUntilVisible(find.byTooltip('Next goal'), 300);
+    await tester.scrollUntilVisible(
+      find.byTooltip('Next goal'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     final carousel = tester.widget<SingleChildScrollView>(
       find.byWidgetPredicate(
         (w) =>

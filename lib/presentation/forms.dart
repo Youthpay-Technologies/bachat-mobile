@@ -185,8 +185,9 @@ class _EntryFormState extends State<EntryForm> {
                           note: note.text.trim(),
                         ),
                       );
-                      if (context.mounted)
+                      if (context.mounted) {
                         Navigator.pop(context, 'Transaction saved');
+                      }
                     } catch (_) {
                       if (mounted) {
                         setState(() {
@@ -217,8 +218,9 @@ class _EntryFormState extends State<EntryForm> {
                             'deleted': true,
                           }),
                         );
-                        if (context.mounted)
+                        if (context.mounted) {
                           Navigator.pop(context, 'Transaction deleted');
+                        }
                       } catch (_) {
                         if (mounted) {
                           setState(
@@ -394,11 +396,12 @@ class _PlanFormState extends State<PlanForm> {
           ),
         );
       }
-      if (mounted)
+      if (mounted) {
         Navigator.pop(
           context,
           '${widget.isBudget ? 'Budget' : 'Goal'} ${deleted ? 'removed' : 'saved'}',
         );
+      }
     } catch (e) {
       if (mounted) {
         setState(() {
