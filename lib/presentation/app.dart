@@ -95,7 +95,7 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
                   ? 'Know where your money goes. Build a budget that fits your day. Save for something that matters.'
                   : step == 1
                   ? 'Teens track their own money. Parents stay in the loop, with access both of you approve.'
-                  : 'Meet your money, your way. Explore a ready-to-use demo with no sign-in.',
+                  : 'Track spending, build a budget and save for what matters.',
               style: t.bodyLarge,
             ),
             const SizedBox(height: 36),
@@ -175,8 +175,8 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
               const SizedBox(height: 20),
               Text(
                 role == UserRole.teen
-                    ? 'Ayesha, 16 · Teen demo. Track expenses, budgets and savings goals.'
-                    : 'Sana · Parent demo. See Ayesha’s progress through a connected, read-only family view.',
+                    ? 'Ayesha, 16 · Teen'
+                    : 'Sana · Parent',
               ),
               const SizedBox(height: 20),
               SizedBox(
@@ -186,15 +186,12 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
                   icon: const Icon(Icons.arrow_forward_rounded),
                   label: Text(
                     role == UserRole.teen
-                        ? 'Explore as Ayesha'
-                        : 'Explore as Sana',
+                        ? 'Continue as Ayesha'
+                        : 'Continue as Sana',
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text(
-                'Demo users only. Changes stay on this device. You can switch between teen and parent anytime.',
-              ),
+
             ],
             AppError(c),
           ],
@@ -219,23 +216,6 @@ class _ShellState extends ConsumerState<DashboardShell> {
       body: SafeArea(
         child: Column(
           children: [
-            if (c.preview || c.offline || c.pendingCount > 0)
-              Container(
-                width: double.infinity,
-                color: Theme.of(context).colorScheme.primaryContainer,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 8,
-                ),
-                child: Text(
-                  c.preview
-                      ? 'Demo · ${c.isParent ? 'Sana / parent' : 'Ayesha / teen'} · Saved on this device'
-                      : c.pendingCount > 0
-                      ? '${c.pendingCount} changes saved on this device · waiting to sync'
-                      : 'Offline · Showing your saved records',
-                  style: Theme.of(context).textTheme.labelMedium,
-                ),
-              ),
             Expanded(
               child: switch (tab) {
                 0 => HomePage(
@@ -299,7 +279,7 @@ class ChildPicker extends StatelessWidget {
           child: DropdownButtonFormField<String>(
             initialValue: c.selectedChildId,
             decoration: const InputDecoration(
-              labelText: 'Your child · read-only view',
+              labelText: 'Child',
             ),
             items: c.children
                 .map(
@@ -352,16 +332,10 @@ class HomePage extends ConsumerWidget {
                   ],
                 ),
               ),
-              const Tooltip(
-                message: 'Saved on this device',
-                child: Padding(
-                  padding: EdgeInsets.all(12),
-                  child: Icon(Icons.check_circle_outline),
-                ),
-              ),
+              IconButton(onPressed: () => accountSheet(context, c), tooltip: 'Switch profile', icon: const Icon(Icons.swap_horiz_rounded)),
             ],
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 40),
           ChildPicker(c),
           if (c.isParent && c.children.isEmpty)
             const FamilyPage(embedded: true)
@@ -382,17 +356,11 @@ class HomePage extends ConsumerWidget {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 12),
-                  Chip(
-                    avatar: const Icon(Icons.check, size: 16),
-                    label: const Text('Saved on this device'),
-                    side: BorderSide.none,
-                  ),
-                  const SizedBox(height: 12),
-                  Text('Recorded expenses · PKR', style: t.bodySmall),
+
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
             Wrap(
               spacing: 10,
               runSpacing: 10,
@@ -402,7 +370,7 @@ class HomePage extends ConsumerWidget {
                   FilledButton.icon(
                     onPressed: () => entryForm(context, c),
                     icon: const Icon(Icons.add),
-                    label: const Text('Add a transaction'),
+                    label: const Text('Add transaction'),
                   ),
                 OutlinedButton.icon(
                   onPressed: onActivity,
@@ -416,7 +384,7 @@ class HomePage extends ConsumerWidget {
                 ),
               ],
             ),
-            const SectionHeading('Your money at a glance'),
+            const SectionHeading('Overview'),
             Surface(
               child: Wrap(
                 spacing: 32,
@@ -427,10 +395,7 @@ class HomePage extends ConsumerWidget {
                     'Net flow',
                     money(summary.incomeMinor - summary.spentMinor),
                   ),
-                  Text(
-                    'Based on recorded entries, not a bank balance.',
-                    style: t.bodySmall,
-                  ),
+
                 ],
               ),
             ),
@@ -498,7 +463,7 @@ class HomePage extends ConsumerWidget {
                 ),
               ),
             SectionHeading(
-              'Something to save for',
+              'Savings goals',
               action: 'Your plan',
               onAction: onPlan,
             ),
@@ -630,9 +595,8 @@ class _ActivityState extends ConsumerState<ActivityPage> {
         .toList();
     return PageBody(
       children: [
-        Text('Your activity', style: Theme.of(context).textTheme.headlineLarge),
-        const SizedBox(height: 8),
-        const Text('The little things add up. See them clearly.'),
+        Text('Activity', style: Theme.of(context).textTheme.headlineLarge),
+
         const SizedBox(height: 24),
         ChildPicker(c),
         TextField(
@@ -690,9 +654,8 @@ class PlanPage extends ConsumerWidget {
     final summary = MoneySummary(c.entries, DateTime.now());
     return PageBody(
       children: [
-        Text('A plan for your money', style: t.headlineLarge),
-        const SizedBox(height: 8),
-        const Text('Spend with intention. Save for what’s next.'),
+        Text('Plan', style: t.headlineLarge),
+
         const SizedBox(height: 24),
         ChildPicker(c),
         SectionHeading(
@@ -930,7 +893,7 @@ class _FamilyState extends ConsumerState<FamilyPage> {
               Text('1. Share a family code', style: t.titleMedium),
               const SizedBox(height: 12),
               const Text(
-                'Create a code, switch to Sana’s parent demo and enter it. Then switch back to Ayesha to confirm. Demo codes stay on this device.',
+                'Share a code with your parent. Confirm their request to connect.',
               ),
               const SizedBox(height: 16),
               if (c.familyCode != null) ...[
@@ -977,7 +940,7 @@ class _FamilyState extends ConsumerState<FamilyPage> {
                 const SizedBox(height: 12),
                 Text(
                   c.isParent
-                      ? 'Switch to Ayesha’s teen demo to confirm this request.'
+                      ? 'Ayesha needs to confirm this request.'
                       : 'Only confirm someone you know is your parent. They will be able to read your transactions, budgets, and goals.',
                 ),
                 if (!c.isParent)
@@ -1039,16 +1002,11 @@ class _FamilyState extends ConsumerState<FamilyPage> {
             ),
           ),
       AppError(c),
-      TextButton.icon(
-        onPressed: c.refresh,
-        icon: const Icon(Icons.refresh),
-        label: const Text('Check for updates'),
-      ),
       OutlinedButton.icon(
         onPressed: () =>
             c.startDemo(c.isParent ? UserRole.teen : UserRole.parent),
         icon: const Icon(Icons.swap_horiz),
-        label: const Text('Switch demo user'),
+        label: const Text('Switch profile'),
       ),
     ];
     return widget.embedded
@@ -1065,107 +1023,59 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
-    return PageBody(
-      children: [
-        Text('Your space', style: t.headlineLarge),
-        const SizedBox(height: 24),
-        Surface(
-          child: Row(
-            children: [
-              CircleAvatar(
-                child: Text(c.profile!.name.substring(0, 1).toUpperCase()),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(c.profile!.name, style: t.titleLarge),
-                    Text(
-                      '${c.isParent ? 'Parent' : 'Teen'} account · English · PKR',
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SectionHeading('Make yourself at home'),
-        DropdownButtonFormField<String>(
-          initialValue: c.theme,
-          decoration: const InputDecoration(labelText: 'Appearance'),
-          items: const [
-            DropdownMenuItem(
-              value: 'system',
-              child: Text('Use device setting'),
-            ),
-            DropdownMenuItem(value: 'light', child: Text('Light')),
-            DropdownMenuItem(value: 'dark', child: Text('Dark')),
-          ],
-          onChanged: (v) {
-            if (v != null) c.setTheme(v);
-          },
-        ),
-        const SizedBox(height: 20),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.people_outline),
-          title: const Text('Family connections'),
-          subtitle: const Text('Approvals and shared access'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute<void>(
-              builder: (_) => Scaffold(
-                appBar: AppBar(title: const Text('Family')),
-                body: const SafeArea(child: FamilyPage()),
-              ),
-            ),
-          ),
-        ),
-        const SectionHeading('Your data'),
-        const Text(
-          'This demo works offline. Transactions, budgets, goals and family choices are saved on this device and shared between both demo users. Authentication and cloud sync will be added later.',
-        ),
-        const SizedBox(height: 16),
-        const Text(
-          'Parents can read approved children’s records. Only teens can edit their own records. Removing the last parent pauses teen access.',
-        ),
-        const SizedBox(height: 24),
-        FilledButton.icon(
-          onPressed: () =>
-              c.startDemo(c.isParent ? UserRole.teen : UserRole.parent),
-          icon: const Icon(Icons.swap_horiz),
-          label: Text(
-            c.isParent ? 'Switch to Ayesha · Teen' : 'Switch to Sana · Parent',
-          ),
-        ),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: () async {
-            if (await confirmAction(
-              context,
-              title: 'Reset demo data?',
-              body:
-                  'This replaces your local demo changes with the original sample transactions, budget, goal and family connection.',
-              action: 'Reset demo',
-            )) {
-              await c.resetDemo();
-            }
-          },
-          icon: const Icon(Icons.restart_alt),
-          label: const Text('Reset demo data'),
-        ),
-        AppError(c),
-        const SizedBox(height: 24),
-        Text(
-          'Bachat · by YouthPay\nA little clarity. A better money habit.',
-          style: t.bodySmall,
-        ),
-      ],
-    );
+    return PageBody(children: [
+      Text('You', style: t.headlineLarge),
+      const SizedBox(height: 32),
+      Surface(child: ListTile(contentPadding: EdgeInsets.zero,
+        leading: CircleAvatar(child: Text(c.profile!.name.substring(0, 1))),
+        title: Text(c.profile!.name, style: t.titleLarge),
+        subtitle: Text(c.isParent ? 'Parent' : 'Teen · 16'),
+        trailing: const Icon(Icons.unfold_more_rounded),
+        onTap: () => accountSheet(context, c))),
+      const SectionHeading('Preferences'),
+      Surface(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8), child: Column(children: [
+        ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.contrast_rounded), title: const Text('Appearance'), subtitle: Text(switch(c.theme) {'light' => 'Light', 'dark' => 'Dark', _ => 'System'}), trailing: const Icon(Icons.chevron_right), onTap: () => appearanceSheet(context, c)),
+        ListTile(contentPadding: EdgeInsets.zero, leading: const Icon(Icons.people_outline), title: const Text('Family connections'), trailing: const Icon(Icons.chevron_right), onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => Scaffold(appBar: AppBar(title: const Text('Family')), body: const SafeArea(child: FamilyPage()))))),
+        const ListTile(contentPadding: EdgeInsets.zero, leading: Icon(Icons.language_outlined), title: Text('English'), trailing: Text('PKR')),
+      ])),
+      const SizedBox(height: 32),
+      TextButton.icon(onPressed: () async {
+        if (await confirmAction(context, title: 'Reset sample data?', body: 'Your changes will be replaced with the original transactions, budgets, goals and family connection.', action: 'Reset data')) await c.resetDemo();
+      }, icon: const Icon(Icons.restart_alt), label: const Text('Reset sample data')),
+      AppError(c),
+      const SizedBox(height: 32),
+      Text('Bachat by YouthPay', style: t.bodySmall),
+    ]);
   }
 }
+
+Future<void> accountSheet(BuildContext context, AppController c) => showModalBottomSheet<void>(
+  context: context, showDragHandle: true, useSafeArea: true, isScrollControlled: true,
+  builder: (sheetContext) => SheetBody(children: [
+    Text('Switch profile', style: Theme.of(context).textTheme.headlineMedium),
+    const SizedBox(height: 24),
+    ...UserRole.values.map((role) => Padding(padding: const EdgeInsets.only(bottom: 12), child: Surface(
+      child: ListTile(contentPadding: EdgeInsets.zero,
+        leading: CircleAvatar(child: Text(role == UserRole.teen ? 'A' : 'S')),
+        title: Text(role == UserRole.teen ? 'Ayesha' : 'Sana'), subtitle: Text(role == UserRole.teen ? 'Teen · 16' : 'Parent'),
+        trailing: c.profile!.role == role ? const Icon(Icons.check_circle_outline) : const Icon(Icons.chevron_right),
+        onTap: () async { Navigator.pop(sheetContext); await c.startDemo(role); },
+      )))),
+  ]),
+);
+
+Future<void> appearanceSheet(BuildContext context, AppController c) => showModalBottomSheet<void>(
+  context: context, showDragHandle: true, useSafeArea: true,
+  builder: (sheetContext) => SheetBody(children: [
+    Text('Appearance', style: Theme.of(context).textTheme.headlineMedium),
+    const SizedBox(height: 24),
+    ...{'system':'System', 'light':'Light', 'dark':'Dark'}.entries.map((entry) => ListTile(
+      title: Text(entry.value), leading: Icon(switch(entry.key) {'light'=>Icons.light_mode_outlined,'dark'=>Icons.dark_mode_outlined,_=>Icons.brightness_auto_outlined}),
+      trailing: c.theme == entry.key ? const Icon(Icons.check_circle_outline) : null,
+      onTap: () async { Navigator.pop(sheetContext); await c.setTheme(entry.key); },
+    )),
+  ]),
+);
 
 class RoleChoices extends StatelessWidget {
   const RoleChoices({super.key, required this.value, required this.onChanged});
