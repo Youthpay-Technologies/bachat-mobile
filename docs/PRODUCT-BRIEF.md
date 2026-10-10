@@ -46,3 +46,6 @@ Frequent coherent commits; feature branches; PRs; merge after relevant verificat
 ## External dependency
 
 The new Supabase project bachat-mobile-dev is created and the schema is deployed. Live RLS authorization tests pass. Google OAuth remains disabled until its client credentials and redirect allowlist are configured; see BACKEND.md.
+## Everyday money tools iteration
+
+Add transaction date/category filtering and sorting through a compact sheet, date-grouped activity, additive savings entry with target limits, and optional reuse of last month's budgets. Keep existing search/tab state, read-only parent access, local persistence, exact paisa arithmetic and minimal gray/green design. Savings entry updates the recorded total only; it does not transfer money or automatically add an expense. Budget reuse never overwrites a category already configured for the current month.
