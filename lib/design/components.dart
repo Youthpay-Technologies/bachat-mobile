@@ -265,33 +265,35 @@ class DashboardSkeleton extends StatelessWidget {
     );
     return Scaffold(
       body: SafeArea(
-        child: Semantics(
-          label: 'Loading Bachat',
-          liveRegion: true,
-          child: ExcludeSemantics(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      block(48, 48),
-                      const SizedBox(width: 16),
-                      block(120, 20),
-                    ],
-                  ),
-                  const SizedBox(height: 64),
-                  Center(child: block(120, 16)),
-                  const SizedBox(height: 16),
-                  Center(child: block(210, 48)),
-                  const SizedBox(height: 40),
-                  block(double.infinity, 52),
-                  const SizedBox(height: 48),
-                  block(100, 20),
-                  const SizedBox(height: 20),
-                  block(double.infinity, 120),
-                ],
+        child: SingleChildScrollView(
+          child: Semantics(
+            label: 'Loading Bachat',
+            liveRegion: true,
+            child: ExcludeSemantics(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        block(48, 48),
+                        const SizedBox(width: 16),
+                        block(120, 20),
+                      ],
+                    ),
+                    const SizedBox(height: 64),
+                    Center(child: block(120, 16)),
+                    const SizedBox(height: 16),
+                    Center(child: block(210, 48)),
+                    const SizedBox(height: 40),
+                    block(double.infinity, 52),
+                    const SizedBox(height: 48),
+                    block(100, 20),
+                    const SizedBox(height: 20),
+                    block(double.infinity, 120),
+                  ],
+                ),
               ),
             ),
           ),

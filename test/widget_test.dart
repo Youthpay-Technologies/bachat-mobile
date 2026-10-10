@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sembast/sembast_memory.dart';
 import 'package:bachat_mobile/main.dart';
 import 'package:bachat_mobile/presentation/app.dart';
+import 'package:bachat_mobile/design/components.dart';
 import 'package:bachat_mobile/application/controller.dart';
 import 'package:bachat_mobile/data/repository.dart';
 import 'package:bachat_mobile/domain/models.dart';
@@ -202,5 +203,112 @@ void main() {
     await tester.pumpAndSettle();
     expect(c.goals.last.title, 'A bicycle');
     expect(c.goals.last.savedMinor, 250000);
+  });
+
+  testWidgets(
+    'search is preserved across tabs and empty filters can be cleared',
+    (tester) async {
+      final c = await controller();
+      c.startPreview(UserRole.teen);
+      await mount(tester, c);
+      await tester.tap(find.text('Activity').last);
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Search transactions'),
+        'Readings',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Plan').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Activity').last);
+      await tester.pumpAndSettle();
+      expect(
+        tester
+            .widget<TextField>(
+              find.widgetWithText(TextField, 'Search transactions'),
+            )
+            .controller!
+            .text,
+        'Readings',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Search transactions'),
+        'unmatched query',
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('No matches'), findsOneWidget);
+      await tester.ensureVisible(find.text('Clear filters'));
+      await tester.tap(find.text('Clear filters'));
+      await tester.pumpAndSettle();
+      expect(find.text('No matches'), findsNothing);
+      expect(
+        tester
+            .widget<TextField>(
+              find.widgetWithText(TextField, 'Search transactions'),
+            )
+            .controller!
+            .text,
+        isEmpty,
+      );
+    },
+  );
+  testWidgets('profile and appearance sheets apply their choices', (
+    tester,
+  ) async {
+    final c = await controller();
+    c.startPreview(UserRole.teen);
+    await mount(tester, c);
+    await tester.tap(find.byTooltip('Switch profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Sana'));
+    await tester.pumpAndSettle();
+    expect(c.isParent, isTrue);
+    await tester.tap(find.text('You').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Appearance'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Dark'));
+    await tester.pumpAndSettle();
+    expect(c.themeMode, ThemeMode.dark);
+    expect(find.text('Appearance'), findsOneWidget);
+  });
+  testWidgets('multiple goals provide swipe and button carousel navigation', (
+    tester,
+  ) async {
+    final c = await controller();
+    c.startPreview(UserRole.teen);
+    c.allGoals.add(
+      const SavingsGoal(
+        id: 'second-goal',
+        ownerId: 'preview-teen',
+        title: 'A bicycle',
+        targetMinor: 2000000,
+      ),
+    );
+    await mount(tester, c);
+    await tester.scrollUntilVisible(find.byTooltip('Next goal'), 300);
+    final carousel = tester.widget<SingleChildScrollView>(
+      find.byWidgetPredicate(
+        (w) =>
+            w is SingleChildScrollView && w.scrollDirection == Axis.horizontal,
+      ),
+    );
+    expect(carousel.controller!.offset, 0);
+    await tester.tap(find.byTooltip('Next goal'));
+    await tester.pumpAndSettle();
+    expect(carousel.controller!.offset, greaterThan(0));
+    expect(find.text('2 goals'), findsOneWidget);
+  });
+  testWidgets('startup shows a skeleton without a forced loading delay', (
+    tester,
+  ) async {
+    final c = await controller();
+    c.ready = false;
+    await mount(tester, c);
+    expect(find.byType(DashboardSkeleton), findsOneWidget);
+    await tester.runAsync(c.initialize);
+    await tester.pumpAndSettle();
+    expect(find.byType(DashboardSkeleton), findsNothing);
+    expect(find.text('Skip introduction'), findsOneWidget);
   });
 }
