@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +19,7 @@ class AppGate extends ConsumerWidget {
     if (c.profile == null && c.syncing) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-    if (c.profile == null) return const ProfileScreen();
+    if (c.profile == null) return const WelcomeScreen();
     if (c.needsApproval) {
       return const Scaffold(body: SafeArea(child: FamilyPage(locked: true)));
     }
@@ -96,7 +95,7 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
                   ? 'Know where your money goes. Build a budget that fits your day. Save for something that matters.'
                   : step == 1
                   ? 'Teens track their own money. Parents stay in the loop, with access both of you approve.'
-                  : 'Choose your journey to get started. Your Google account keeps sign-in simple.',
+                  : 'Meet your money, your way. Explore a ready-to-use demo with no sign-in.',
               style: t.bodyLarge,
             ),
             const SizedBox(height: 36),
@@ -177,125 +176,21 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
               Text(
                 role == UserRole.teen
                     ? 'For ages 13–18. A parent must approve before you start tracking.'
-                    : 'Support more than one child, with a separate view for each.',
+                    : 'Sana · Parent demo. See Ayesha’s progress through a connected, read-only family view.',
               ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: c.busy ? null : () => c.signIn(role),
-                  icon: const Icon(Icons.login),
-                  label: Text(
-                    c.busy ? 'Opening Google…' : 'Continue with Google',
-                  ),
+                  onPressed: c.busy ? null : () => c.startDemo(role),
+                  icon: const Icon(Icons.arrow_forward_rounded),
+                  label: Text(role == UserRole.teen ? 'Explore as Ayesha' : 'Explore as Sana'),
                 ),
               ),
-              const SizedBox(height: 12),
-              const Text(
-                'Your records are private to you and your approved parent. We never connect to your bank automatically.',
-              ),
-              if (kDebugMode &&
-                  const bool.fromEnvironment('ENABLE_PREVIEW')) ...[
-                const Divider(height: 40),
-                const Text('Development preview · sample data only'),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () => c.startPreview(UserRole.teen),
-                      child: const Text('Preview teen'),
-                    ),
-                    OutlinedButton(
-                      onPressed: () => c.startPreview(UserRole.parent),
-                      child: const Text('Preview parent'),
-                    ),
-                  ],
-                ),
-              ],
+              const SizedBox(height: 16),
+              const Text('Demo users only. Changes stay on this device. You can switch between teen and parent anytime.'),
             ],
             AppError(c),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ProfileScreen extends ConsumerStatefulWidget {
-  const ProfileScreen({super.key});
-  @override
-  ConsumerState<ProfileScreen> createState() => _ProfileState();
-}
-
-class _ProfileState extends ConsumerState<ProfileScreen> {
-  final name = TextEditingController();
-  int age = 16;
-  UserRole? role;
-  @override
-  void dispose() {
-    name.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = ref.watch(controllerProvider);
-    final selected = role ?? c.chosenRole;
-    return Scaffold(
-      body: SafeArea(
-        child: PageBody(
-          children: [
-            const BachatMark(),
-            const SizedBox(height: 36),
-            Text(
-              'Let’s make it yours.',
-              style: Theme.of(context).textTheme.headlineLarge,
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'Your account type and age are fixed after setup. Check them before continuing.',
-            ),
-            const SizedBox(height: 28),
-            TextField(
-              controller: name,
-              textCapitalization: TextCapitalization.words,
-              maxLength: 60,
-              decoration: const InputDecoration(labelText: 'Your name'),
-            ),
-            const SizedBox(height: 18),
-            RoleChoices(
-              value: selected,
-              onChanged: (value) => setState(() => role = value),
-            ),
-            if (selected == UserRole.teen)
-              Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: DropdownButtonFormField<int>(
-                  initialValue: age,
-                  decoration: const InputDecoration(labelText: 'Age'),
-                  items: List.generate(
-                    6,
-                    (i) => DropdownMenuItem(
-                      value: i + 13,
-                      child: Text('${i + 13} years'),
-                    ),
-                  ),
-                  onChanged: (v) => setState(() => age = v!),
-                ),
-              ),
-            const SizedBox(height: 28),
-            FilledButton(
-              onPressed: c.busy
-                  ? null
-                  : () => c.createProfile(
-                      name.text,
-                      selected,
-                      selected == UserRole.teen ? age : null,
-                    ),
-              child: Text(c.busy ? 'Saving…' : 'Create my profile'),
-            ),
-            AppError(c),
-            TextButton(onPressed: c.signOut, child: const Text('Sign out')),
           ],
         ),
       ),
@@ -328,7 +223,7 @@ class _ShellState extends ConsumerState<DashboardShell> {
                 ),
                 child: Text(
                   c.preview
-                      ? 'PREVIEW · Sample data, saved on this device only'
+                      ? 'Demo · ${c.isParent ? 'Sana / parent' : 'Ayesha / teen'} · Saved on this device'
                       : c.pendingCount > 0
                       ? '${c.pendingCount} changes saved on this device · waiting to sync'
                       : 'Offline · Showing your saved records',
@@ -350,7 +245,9 @@ class _ShellState extends ConsumerState<DashboardShell> {
           ],
         ),
       ),
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
+        child: ClipRRect(borderRadius: BorderRadius.circular(36), child: NavigationBar(
         selectedIndex: tab,
         onDestinationSelected: (value) => setState(() => tab = value),
         destinations: const [
@@ -373,6 +270,7 @@ class _ShellState extends ConsumerState<DashboardShell> {
           ),
           NavigationDestination(icon: Icon(Icons.person_outline), label: 'You'),
         ],
+      )),
       ),
     );
   }
@@ -422,14 +320,14 @@ class HomePage extends ConsumerWidget {
               const Expanded(child: BachatMark()),
               IconButton(
                 onPressed: c.syncing ? null : c.refresh,
-                tooltip: 'Sync records',
+                tooltip: 'Records saved on this device',
                 icon: const Icon(Icons.sync),
               ),
             ],
           ),
           const SizedBox(height: 32),
           Text(
-            'A little clarity, ${c.profile!.name.split(' ').first}.',
+            'Hello, ${c.profile!.name.split(' ').first}.',
             style: t.headlineMedium,
           ),
           const SizedBox(height: 8),
@@ -981,7 +879,7 @@ class _FamilyState extends ConsumerState<FamilyPage> {
               Text('1. Share a family code', style: t.titleMedium),
               const SizedBox(height: 12),
               const Text(
-                'Ask your parent to sign in as a parent and enter this code. It expires in 24 hours. A new code replaces the previous one.',
+                'Create a code, switch to Sana’s parent demo and enter it. Then switch back to Ayesha to confirm. Demo codes stay on this device.',
               ),
               const SizedBox(height: 16),
               if (c.familyCode != null) ...[
@@ -1028,7 +926,7 @@ class _FamilyState extends ConsumerState<FamilyPage> {
                 const SizedBox(height: 12),
                 Text(
                   c.isParent
-                      ? 'Your child needs to confirm you in their app.'
+                      ? 'Switch to Ayesha’s teen demo to confirm this request.'
                       : 'Only confirm someone you know is your parent. They will be able to read your transactions, budgets, and goals.',
                 ),
                 if (!c.isParent)
@@ -1096,7 +994,7 @@ class _FamilyState extends ConsumerState<FamilyPage> {
         label: const Text('Check for updates'),
       ),
       if (widget.locked)
-        TextButton(onPressed: c.signOut, child: const Text('Sign out')),
+        OutlinedButton.icon(onPressed: () => c.startDemo(c.isParent ? UserRole.teen : UserRole.parent), icon: const Icon(Icons.swap_horiz), label: const Text('Switch demo user')),
     ];
     return widget.embedded
         ? Column(
@@ -1172,28 +1070,25 @@ class SettingsPage extends ConsumerWidget {
         ),
         const SectionHeading('Your data'),
         const Text(
-          'After setup and parent approval, your records remain available offline. New entries sync when you reconnect. Family approvals require a connection and are checked again when online.',
+          'This demo works offline. Transactions, budgets, goals and family choices are saved on this device and shared between both demo users. Authentication and cloud sync will be added later.',
         ),
         const SizedBox(height: 16),
         const Text(
           'Parents can read approved children’s records. Only teens can edit their own records. Removing the last parent pauses teen access.',
         ),
         const SizedBox(height: 24),
+        FilledButton.icon(
+          onPressed: () => c.startDemo(c.isParent ? UserRole.teen : UserRole.parent),
+          icon: const Icon(Icons.swap_horiz),
+          label: Text(c.isParent ? 'Switch to Ayesha · Teen' : 'Switch to Sana · Parent'),
+        ),
+        const SizedBox(height: 12),
         OutlinedButton.icon(
           onPressed: () async {
-            if (await confirmAction(
-              context,
-              title: c.preview ? 'Leave preview?' : 'Sign out of Bachat?',
-              body: c.pendingCount > 0
-                  ? 'You have ${c.pendingCount} unsynced changes. Signing out clears this device’s records, including these changes. Connect and sync first to keep them.'
-                  : 'Your saved records will be cleared from this device. Synced records stay in your account.',
-              action: c.preview ? 'Leave preview' : 'Sign out',
-            )) {
-              await c.signOut();
-            }
+            if (await confirmAction(context, title: 'Reset demo data?', body: 'This replaces your local demo changes with the original sample transactions, budget, goal and family connection.', action: 'Reset demo')) await c.resetDemo();
           },
-          icon: const Icon(Icons.logout),
-          label: Text(c.preview ? 'Leave preview' : 'Sign out'),
+          icon: const Icon(Icons.restart_alt),
+          label: const Text('Reset demo data'),
         ),
         AppError(c),
         const SizedBox(height: 24),

@@ -3,22 +3,22 @@ import 'package:flutter/material.dart';
 abstract final class BachatTheme {
   static ThemeData build(Brightness brightness) {
     final dark = brightness == Brightness.dark;
-    final accent = Color(dark ? 0xFFA4D1B2 : 0xFF285B46);
-    final text = Color(dark ? 0xFFF1F4EC : 0xFF172D35);
-    final canvas = Color(dark ? 0xFF111C1A : 0xFFF8F7F2);
+    final accent = Color(dark ? 0xFF67DE70 : 0xFF34C642);
+    final text = Color(dark ? 0xFFF3F5F7 : 0xFF14171C);
+    final canvas = Color(dark ? 0xFF14171C : 0xFFEEF0F4);
     final scheme =
         ColorScheme.fromSeed(
           seedColor: accent,
           brightness: brightness,
         ).copyWith(
           primary: accent,
-          onPrimary: dark ? const Color(0xFF173425) : Colors.white,
-          surface: Color(dark ? 0xFF192622 : 0xFFFFFFFF),
+          onPrimary: const Color(0xFF102314),
+          surface: Color(dark ? 0xFF20252D : 0xFFF7F8FA),
           onSurface: text,
-          onSurfaceVariant: Color(dark ? 0xFFB2C0B7 : 0xFF62716C),
-          outline: Color(dark ? 0xFF72857B : 0xFF7A8A80),
-          outlineVariant: Color(dark ? 0xFF41574A : 0xFFDDE3DB),
-          primaryContainer: Color(dark ? 0xFF263C30 : 0xFFE7EEE6),
+          onSurfaceVariant: Color(dark ? 0xFFBAC2CE : 0xFF596171),
+          outline: Color(dark ? 0xFF8290A1 : 0xFF7A8494),
+          outlineVariant: Color(dark ? 0xFF3B4452 : 0xFFD8DEE7),
+          primaryContainer: Color(dark ? 0xFF243D2B : 0xFFE0F3E3),
           onPrimaryContainer: text,
           error: Color(dark ? 0xFFFFB4AB : 0xFFA13636),
         );
@@ -34,7 +34,7 @@ abstract final class BachatTheme {
         displaySmall: TextStyle(
           fontFamily: 'DM Sans',
           fontSize: 40,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           height: 1.1,
           letterSpacing: -1.2,
           color: text,
@@ -42,20 +42,20 @@ abstract final class BachatTheme {
         ),
         headlineLarge: TextStyle(
           fontSize: 32,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           height: 1.2,
           letterSpacing: -0.7,
           color: text,
         ),
         headlineMedium: TextStyle(
           fontSize: 28,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           height: 1.2,
           color: text,
         ),
         titleLarge: TextStyle(
           fontSize: 20,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           height: 1.3,
           color: text,
         ),
@@ -63,7 +63,7 @@ abstract final class BachatTheme {
         bodyMedium: TextStyle(fontSize: 14, height: 1.5, color: text),
         labelLarge: TextStyle(
           fontSize: 15,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: text,
         ),
       ),
@@ -79,20 +79,12 @@ abstract final class BachatTheme {
           minimumSize: const Size(48, 54),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(28),
           ),
           textStyle: const TextStyle(
             fontFamily: 'DM Sans',
             fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-      outlinedButtonTheme: OutlinedButtonThemeData(
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(48, 52),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -101,11 +93,11 @@ abstract final class BachatTheme {
         fillColor: scheme.surface,
         contentPadding: const EdgeInsets.all(18),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(28),
           borderSide: BorderSide(color: scheme.outline),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(28),
           borderSide: BorderSide(color: scheme.outline),
         ),
         labelStyle: TextStyle(color: scheme.onSurfaceVariant),
@@ -113,10 +105,13 @@ abstract final class BachatTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: scheme.surface,
         elevation: 0,
-        height: 78,
-        indicatorColor: scheme.primaryContainer,
+        height: 74,
+        indicatorColor: scheme.primary,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: dark ? scheme.primary : const Color(0xFF22852E), linearTrackColor: scheme.outlineVariant, borderRadius: BorderRadius.circular(12)),
+      textButtonTheme: TextButtonThemeData(style: TextButton.styleFrom(foregroundColor: dark ? scheme.primary : const Color(0xFF216D2C), minimumSize: const Size(48,48))),
+      outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(foregroundColor: scheme.onSurface, minimumSize: const Size(48,52), shape: const StadiumBorder())),
       dividerTheme: DividerThemeData(
         color: scheme.outlineVariant,
         thickness: 1,
