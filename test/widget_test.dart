@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sembast/sembast_memory.dart';
 import 'package:bachat_mobile/main.dart';
+import 'package:bachat_mobile/presentation/app.dart';
 import 'package:bachat_mobile/application/controller.dart';
 import 'package:bachat_mobile/data/repository.dart';
 import 'package:bachat_mobile/domain/models.dart';
@@ -100,6 +101,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    expect(
+      MediaQuery.textScalerOf(tester.element(find.byType(AppGate))).scale(14),
+      28,
+    );
   });
   testWidgets('transaction form validates and updates dashboard totals', (
     tester,
@@ -153,6 +158,10 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    expect(
+      MediaQuery.textScalerOf(tester.element(find.byType(AppGate))).scale(14),
+      28,
+    );
   });
   testWidgets('budgets and savings goals can be saved through their forms', (
     tester,
