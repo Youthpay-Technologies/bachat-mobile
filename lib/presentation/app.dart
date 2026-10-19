@@ -1378,6 +1378,27 @@ class SettingsPage extends ConsumerWidget {
             ],
           ),
         ),
+
+        if (!c.isParent) ...[
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () async {
+                final controller = ref.read(controllerProvider);
+                await controller.syncEmailTransactions();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Email transactions synced successfully!'),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.email),
+              label: const Text('Sync Gmail Receipts'),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+
         const SizedBox(height: 32),
         TextButton.icon(
           onPressed: () async {

@@ -23,6 +23,9 @@ dependencies:
   hive: ^2.2.3         # Optional: for local database storage
   hive_flutter: ^1.1.0  # Optional: for local database storage
   another_telephony: ^0.4.1
+  google_sign_in: ^6.2.1
+  googleapis: ^13.1.0
+  http: ^1.2.0
 
 dev_dependencies:
   http: ^1.6.0

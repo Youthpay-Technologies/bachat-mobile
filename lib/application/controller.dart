@@ -8,6 +8,11 @@ import '../data/repository.dart';
 import '../domain/models.dart';
 import 'package:another_telephony/telephony.dart';
 
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:googleapis/gmail/v1.dart' as gmail;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 final controllerProvider = ChangeNotifierProvider<AppController>(
   (ref) => throw StateError('AppController must be provided at startup.'),
 );
@@ -930,6 +935,145 @@ class AppController extends ChangeNotifier {
     }
 
     return 'Other';
+  }
+
+  // Initialize Google Sign-In with read-only Gmail scope
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: [gmail.GmailApi.gmailReadonlyScope],
+  );
+
+  Future<void> syncEmailTransactions() async {
+    if (isParent || !approved || profile == null) return;
+
+    try {
+      // 1. Authenticate user with Google
+      final account =
+          await _googleSignIn.signInSilently() ?? await _googleSignIn.signIn();
+      if (account == null) return;
+
+      final authHeaders = await account.authHeaders;
+      final httpClient = GoogleAuthClient(authHeaders);
+      final gmailApi = gmail.GmailApi(httpClient);
+
+      // 2. Query Gmail for transaction-related keywords
+      final query =
+          'subject:(debited OR credited OR receipt OR order OR invoice OR paid OR payment)';
+      final listResponse = await gmailApi.users.messages.list(
+        'me',
+        q: query,
+        maxResults: 15,
+      );
+
+      final messages = listResponse.messages ?? [];
+      for (var msgRef in messages) {
+        final msg = await gmailApi.users.messages.get('me', msgRef.id!);
+        final body = _extractEmailBody(msg);
+        final snippet = msg.snippet ?? '';
+
+        final entry = _parseEmailToMoneyEntry(snippet, body);
+        if (entry != null) {
+          // 3. Prevent duplicate entries
+          bool exists = allEntries.any(
+            (e) =>
+                e.merchant == entry.merchant &&
+                e.amountMinor == entry.amountMinor &&
+                e.occurredAt.difference(entry.occurredAt).inHours.abs() < 24,
+          );
+          if (!exists) {
+            await saveEntry(
+              entry,
+            ); // Saves locally, queues to sync outbox, updates UI
+          }
+        }
+      }
+      notifyListeners();
+    } catch (e) {
+      error = 'Email sync error: $e';
+      notifyListeners();
+    }
+  }
+
+  String _extractEmailBody(gmail.Message message) {
+    if (message.payload?.body?.data != null) {
+      try {
+        return String.fromCharCodes(
+          base64Url.decode(message.payload!.body!.data!),
+        );
+      } catch (_) {}
+    }
+    final parts = message.payload?.parts ?? [];
+    for (var part in parts) {
+      if (part.body?.data != null) {
+        try {
+          return String.fromCharCodes(base64Url.decode(part.body!.data!));
+        } catch (_) {}
+      }
+    }
+    return message.snippet ?? '';
+  }
+
+  MoneyEntry? _parseEmailToMoneyEntry(String snippet, String body) {
+    final content = '$snippet $body'.toLowerCase();
+
+    // Determine direction
+    EntryDirection direction = EntryDirection.expense;
+    if (content.contains('credited') ||
+        content.contains('received payment') ||
+        content.contains('refund')) {
+      direction = EntryDirection.income;
+    }
+
+    // Extract amount using regex (matches Rs., PKR, or $)
+    final amountRegExp = RegExp(
+      r'(?:rs\.?|pkr|\$)\s*([\d,]+\.?\d*)',
+      caseSensitive: false,
+    );
+    final match = amountRegExp.firstMatch(content);
+    if (match == null) return null;
+
+    String cleanAmount = match.group(1)!.replaceAll(',', '');
+    double parsedAmount = double.tryParse(cleanAmount) ?? 0.0;
+    if (parsedAmount <= 0) return null;
+
+    int amountMinor = (parsedAmount * 100).round();
+
+    // Extract Merchant
+    String merchant = 'Email Receipt';
+    if (content.contains('foodpanda')) {
+      merchant = 'Foodpanda';
+    } else if (content.contains('uber') || content.contains('careem')) {
+      merchant = 'Careem / Uber';
+    } else if (content.contains('daraz')) {
+      merchant = 'Daraz';
+    } else if (content.contains('netflix')) {
+      merchant = 'Netflix';
+    }
+
+    // Categorize
+    String category = _categorizeTransaction(merchant, content);
+
+    return MoneyEntry(
+      id: const Uuid().v4(),
+      ownerId: profile!.id,
+      merchant: merchant,
+      amountMinor: amountMinor,
+      direction: direction,
+      category: category,
+      occurredAt: DateTime.now(),
+    );
+  }
+}
+
+class GoogleAuthClient extends http.BaseClient {
+  final Map<String, String> _headers;
+  final http.Client _client = http.Client();
+
+  GoogleAuthClient(this._headers);
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    request.headers.addAll(_headers);
+    return _client.send(request);
   }
 }
 
