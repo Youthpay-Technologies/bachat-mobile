@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/repository.dart';
 import '../domain/models.dart';
+import 'package:another_telephony/telephony.dart';
 
 final controllerProvider = ChangeNotifierProvider<AppController>(
   (ref) => throw StateError('AppController must be provided at startup.'),
@@ -129,6 +130,8 @@ class AppController extends ChangeNotifier {
     if (accountId != null) await _hydrate();
     ready = true;
     notifyListeners();
+
+    await initSmsListener();
     _auth = client?.auth.onAuthStateChange.listen((event) async {
       if (preview) return;
       if (event.event == AuthChangeEvent.signedOut) {
@@ -752,4 +755,188 @@ class AppController extends ChangeNotifier {
     _familyChannel?.unsubscribe();
     super.dispose();
   }
+
+  // SMS INTEGRATION
+
+  final Telephony _telephony = Telephony.instance;
+
+  Future<void> initSmsListener() async {
+    // Only activate for teens or active accounts where editing is allowed
+    if (isParent || !approved || profile == null) return;
+
+    bool? permissionsGranted = await _telephony.requestPhoneAndSmsPermissions;
+    if (permissionsGranted == true) {
+      // 1. Optional: Backfill past transactions from inbox on first load
+      await _loadPastSmsTransactions();
+
+      // 2. Listen to live incoming SMS in foreground & background
+      _telephony.listenIncomingSms(
+        onNewMessage: _onNewSmsMessage,
+        onBackgroundMessage: backgroundSmsHandler,
+        listenInBackground: true,
+      );
+    }
+  }
+
+  Future<void> _onNewSmsMessage(SmsMessage message) async {
+    final body = message.body ?? '';
+    final address = message.address ?? '';
+
+    if (_isTransactionSms(body, address)) {
+      final entry = _parseSmsToMoneyEntry(body);
+      if (entry != null) {
+        try {
+          await saveEntry(entry);
+        } catch (_) {
+          // Handle or ignore duplicate/invalid entries gracefully
+        }
+      }
+    }
+  }
+
+  Future<void> _loadPastSmsTransactions() async {
+    try {
+      List<SmsMessage> messages = await _telephony.getInboxSms(
+        columns: [SmsColumn.ADDRESS, SmsColumn.BODY, SmsColumn.DATE],
+        filter: SmsFilter.where(SmsColumn.BODY)
+            .like("%debited%")
+            .or(SmsColumn.BODY)
+            .like("%credited%")
+            .or(SmsColumn.BODY)
+            .like("%spent%")
+            .or(SmsColumn.BODY)
+            .like("%paid%"),
+      );
+
+      for (var message in messages) {
+        final body = message.body ?? '';
+        final entry = _parseSmsToMoneyEntry(
+          body,
+          timestamp: message.date != null
+              ? DateTime.fromMillisecondsSinceEpoch(message.date!)
+              : null,
+        );
+        if (entry != null) {
+          // Check if entry with similar details already exists to avoid duplication during re-syncs
+          bool exists = allEntries.any(
+            (e) =>
+                e.merchant == entry.merchant &&
+                e.amountMinor == entry.amountMinor &&
+                e.occurredAt.difference(entry.occurredAt).inMinutes.abs() < 5,
+          );
+          if (!exists) {
+            allEntries.add(entry);
+          }
+        }
+      }
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  bool _isTransactionSms(String body, String sender) {
+    final lower = body.toLowerCase();
+    // Filter for common banking keywords in Pakistan (Habib Bank, Meezan, Alfalah, Easypaisa, JazzCash, etc.)
+    return lower.contains('debited') ||
+        lower.contains('credited') ||
+        lower.contains('spent') ||
+        lower.contains('paid') ||
+        lower.contains('rs.') ||
+        lower.contains('pkr');
+  }
+
+  MoneyEntry? _parseSmsToMoneyEntry(String smsBody, {DateTime? timestamp}) {
+    final lower = smsBody.toLowerCase();
+
+    // Determine direction (Income vs Expense)
+    EntryDirection direction = EntryDirection.expense;
+    if (lower.contains('credited') ||
+        lower.contains('received') ||
+        lower.contains('deposited')) {
+      direction = EntryDirection.income;
+    }
+
+    // Extract amount using Regex (matches Rs. 1,500.00 or PKR 500)
+    final amountRegExp = RegExp(
+      r'(?:rs\.?|pkr)\s*([\d,]+\.?\d*)',
+      caseSensitive: false,
+    );
+    final match = amountRegExp.firstMatch(smsBody);
+    if (match == null) return null;
+
+    String cleanAmount = match.group(1)!.replaceAll(',', '');
+    double parsedAmount = double.tryParse(cleanAmount) ?? 0.0;
+    if (parsedAmount <= 0) return null;
+
+    // Convert to minor units (matching your app's convention, e.g., multiplying by 100)
+    int amountMinor = (parsedAmount * 100).round();
+
+    // Extract merchant name
+    String merchant = _extractMerchantName(smsBody);
+
+    // Categorize based on merchant or text content
+    String category = _categorizeTransaction(merchant, smsBody);
+
+    return MoneyEntry(
+      id: const Uuid().v4(),
+      ownerId: profile!.id,
+      merchant: merchant,
+      amountMinor: amountMinor,
+      direction: direction,
+      category: category,
+      occurredAt: timestamp ?? DateTime.now(),
+    );
+  }
+
+  String _extractMerchantName(String body) {
+    // Common anchor words for merchant names in bank alerts
+    final atRegExp = RegExp(
+      r'\b(?:at|to|from|infovisa\*|pos\*)\s+([A-Za-z0-9\s]+?)(?:\s+on|\s+avail|\s+avl|\.|$)',
+      caseSensitive: false,
+    );
+    final match = atRegExp.firstMatch(body);
+    if (match != null) {
+      String found = match.group(1)!.trim();
+      if (found.isNotEmpty && found.length < 30) return found;
+    }
+    return 'Bank Transaction';
+  }
+
+  String _categorizeTransaction(String merchant, String body) {
+    final combined = '$merchant $body'.toLowerCase();
+
+    if (combined.contains('foodpanda') ||
+        combined.contains('mcdonalds') ||
+        combined.contains('kfc') ||
+        combined.contains('restaurant') ||
+        combined.contains('cafe')) {
+      return 'Food & dining';
+    } else if (combined.contains('uber') ||
+        combined.contains('careem') ||
+        combined.contains('bykea') ||
+        combined.contains('fuel') ||
+        combined.contains('shell') ||
+        combined.contains('PSO')) {
+      return 'Transport';
+    } else if (combined.contains('daraz') ||
+        combined.contains('imtiaz') ||
+        combined.contains('carrefour') ||
+        combined.contains('grocery')) {
+      return 'Groceries';
+    } else if (combined.contains('readings') ||
+        combined.contains('book') ||
+        combined.contains('tuition') ||
+        combined.contains('school')) {
+      return 'Education';
+    }
+
+    return 'Other';
+  }
+}
+
+// Top-level background handler required by telephony package
+@pragma('vm:entry-point')
+void backgroundSmsHandler(SmsMessage message) {
+  // Background isolates cannot easily access Riverpod providers directly without re-initializing local DB.
+  // Typically, you initialize Sembast here and insert directly into the outbox or local db,
+  // or let the foreground handler sync it up when the app next opens.
 }
