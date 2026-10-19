@@ -4,6 +4,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:crypto/crypto.dart';
 import '../data/repository.dart';
 import '../domain/models.dart';
 import 'package:another_telephony/telephony.dart';
@@ -83,15 +84,6 @@ class AppController extends ChangeNotifier {
 
   static const demoKey = 'demo-family-v1';
 
-  Future<void> startDemo(UserRole role) async {
-    if (!preview) {
-      final saved = await repository.load(demoKey);
-      if (saved != null) _restoreDemo(saved);
-    }
-    startPreview(role);
-    await repository.save(demoKey, snapshot());
-  }
-
   void _restoreDemo(Map<String, dynamic> saved) {
     preview = true;
     profile = Profile.fromJson(
@@ -113,6 +105,15 @@ class AppController extends ChangeNotifier {
         .toList();
     selectedChildId = saved['selected_child'] as String?;
     familyCode = saved['family_code'] as String?;
+  }
+
+  Future<void> startDemo(UserRole role) async {
+    if (!preview) {
+      final saved = await repository.load(demoKey);
+      if (saved != null) _restoreDemo(saved);
+    }
+    startPreview(role);
+    await repository.save(demoKey, snapshot());
   }
 
   Future<void> resetDemo() async {
@@ -766,15 +767,12 @@ class AppController extends ChangeNotifier {
   final Telephony _telephony = Telephony.instance;
 
   Future<void> initSmsListener() async {
-    // Only activate for teens or active accounts where editing is allowed
-    if (isParent || !approved || profile == null) return;
+    if (preview || isParent || !approved || profile == null) return;
 
     bool? permissionsGranted = await _telephony.requestPhoneAndSmsPermissions;
     if (permissionsGranted == true) {
-      // 1. Optional: Backfill past transactions from inbox on first load
       await _loadPastSmsTransactions();
 
-      // 2. Listen to live incoming SMS in foreground & background
       _telephony.listenIncomingSms(
         onNewMessage: _onNewSmsMessage,
         onBackgroundMessage: backgroundSmsHandler,
@@ -784,17 +782,20 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> _onNewSmsMessage(SmsMessage message) async {
+    if (preview) return;
     final body = message.body ?? '';
     final address = message.address ?? '';
 
     if (_isTransactionSms(body, address)) {
-      final entry = _parseSmsToMoneyEntry(body);
+      final occurredTime = message.date != null
+          ? DateTime.fromMillisecondsSinceEpoch(message.date!)
+          : DateTime.now();
+
+      final entry = _parseSmsToMoneyEntry(body, timestamp: occurredTime);
       if (entry != null) {
         try {
           await saveEntry(entry);
-        } catch (_) {
-          // Handle or ignore duplicate/invalid entries gracefully
-        }
+        } catch (_) {}
       }
     }
   }
@@ -822,7 +823,6 @@ class AppController extends ChangeNotifier {
               : null,
         );
         if (entry != null) {
-          // Check if entry with similar details already exists to avoid duplication during re-syncs
           bool exists = allEntries.any(
             (e) =>
                 e.merchant == entry.merchant &&
@@ -830,7 +830,7 @@ class AppController extends ChangeNotifier {
                 e.occurredAt.difference(entry.occurredAt).inMinutes.abs() < 5,
           );
           if (!exists) {
-            allEntries.add(entry);
+            await saveEntry(entry);
           }
         }
       }
@@ -840,7 +840,6 @@ class AppController extends ChangeNotifier {
 
   bool _isTransactionSms(String body, String sender) {
     final lower = body.toLowerCase();
-    // Filter for common banking keywords in Pakistan (Habib Bank, Meezan, Alfalah, Easypaisa, JazzCash, etc.)
     return lower.contains('debited') ||
         lower.contains('credited') ||
         lower.contains('spent') ||
@@ -852,7 +851,6 @@ class AppController extends ChangeNotifier {
   MoneyEntry? _parseSmsToMoneyEntry(String smsBody, {DateTime? timestamp}) {
     final lower = smsBody.toLowerCase();
 
-    // Determine direction (Income vs Expense)
     EntryDirection direction = EntryDirection.expense;
     if (lower.contains('credited') ||
         lower.contains('received') ||
@@ -860,7 +858,6 @@ class AppController extends ChangeNotifier {
       direction = EntryDirection.income;
     }
 
-    // Extract amount using Regex (matches Rs. 1,500.00 or PKR 500)
     final amountRegExp = RegExp(
       r'(?:rs\.?|pkr)\s*([\d,]+\.?\d*)',
       caseSensitive: false,
@@ -872,13 +869,8 @@ class AppController extends ChangeNotifier {
     double parsedAmount = double.tryParse(cleanAmount) ?? 0.0;
     if (parsedAmount <= 0) return null;
 
-    // Convert to minor units (matching your app's convention, e.g., multiplying by 100)
     int amountMinor = (parsedAmount * 100).round();
-
-    // Extract merchant name
     String merchant = _extractMerchantName(smsBody);
-
-    // Categorize based on merchant or text content
     String category = _categorizeTransaction(merchant, smsBody);
 
     return MoneyEntry(
@@ -893,9 +885,8 @@ class AppController extends ChangeNotifier {
   }
 
   String _extractMerchantName(String body) {
-    // Common anchor words for merchant names in bank alerts
     final atRegExp = RegExp(
-      r'\b(?:at|to|from|infovisa\*|pos\*)\s+([A-Za-z0-9\s]+?)(?:\s+on|\s+avail|\s+avl|\.|$)',
+      r'(?:at|to|from|infovisa\*|pos\*)\s+([A-Za-z0-9\s]+?)(?:\s+on|\s+avail|\s+avl|\.|$)',
       caseSensitive: false,
     );
     final match = atRegExp.firstMatch(body);
@@ -937,60 +928,73 @@ class AppController extends ChangeNotifier {
     return 'Other';
   }
 
-  // Initialize Google Sign-In with read-only Gmail scope
+  // GMAIL INTEGRATION
+
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: [gmail.GmailApi.gmailReadonlyScope],
   );
 
   Future<void> syncEmailTransactions() async {
-    if (isParent || !approved || profile == null) return;
-
-    try {
-      // 1. Authenticate user with Google
-      final account =
-          await _googleSignIn.signInSilently() ?? await _googleSignIn.signIn();
-      if (account == null) return;
-
-      final authHeaders = await account.authHeaders;
-      final httpClient = GoogleAuthClient(authHeaders);
-      final gmailApi = gmail.GmailApi(httpClient);
-
-      // 2. Query Gmail for transaction-related keywords
-      final query =
-          'subject:(debited OR credited OR receipt OR order OR invoice OR paid OR payment)';
-      final listResponse = await gmailApi.users.messages.list(
-        'me',
-        q: query,
-        maxResults: 15,
+    if (preview || isParent || !approved || profile == null) {
+      throw const FormatException(
+        'Cannot run sync integrations while in local Demo mode.',
       );
+    }
 
-      final messages = listResponse.messages ?? [];
-      for (var msgRef in messages) {
-        final msg = await gmailApi.users.messages.get('me', msgRef.id!);
-        final body = _extractEmailBody(msg);
-        final snippet = msg.snippet ?? '';
+    final account =
+        await _googleSignIn.signInSilently() ?? await _googleSignIn.signIn();
+    if (account == null) {
+      throw const FormatException(
+        'Google authentication flow cancelled or skipped by the user.',
+      );
+    }
 
-        final entry = _parseEmailToMoneyEntry(snippet, body);
-        if (entry != null) {
-          // 3. Prevent duplicate entries
-          bool exists = allEntries.any(
-            (e) =>
-                e.merchant == entry.merchant &&
-                e.amountMinor == entry.amountMinor &&
-                e.occurredAt.difference(entry.occurredAt).inHours.abs() < 24,
-          );
-          if (!exists) {
-            await saveEntry(
-              entry,
-            ); // Saves locally, queues to sync outbox, updates UI
-          }
+    final authHeaders = await account.authHeaders;
+    final httpClient = GoogleAuthClient(authHeaders);
+    final gmailApi = gmail.GmailApi(httpClient);
+
+    final query =
+        'subject:(debited OR credited OR receipt OR order OR invoice OR paid OR payment)';
+    final listResponse = await gmailApi.users.messages.list(
+      'me',
+      q: query,
+      maxResults: 15,
+    );
+
+    final messages = listResponse.messages ?? [];
+    for (var msgRef in messages) {
+      final msg = await gmailApi.users.messages.get('me', msgRef.id!);
+
+      DateTime transactionDate = DateTime.now();
+      if (msg.internalDate != null) {
+        transactionDate = DateTime.fromMillisecondsSinceEpoch(
+          int.parse(msg.internalDate!),
+        );
+      }
+
+      final body = _extractEmailBody(msg);
+      final snippet = msg.snippet ?? '';
+
+      final entry = _parseEmailToMoneyEntry(
+        snippet,
+        body,
+        messageId: msg.id,
+        timestamp: transactionDate,
+      );
+      if (entry != null) {
+        bool exists = allEntries.any(
+          (e) =>
+              e.id == entry.id ||
+              (e.merchant == entry.merchant &&
+                  e.amountMinor == entry.amountMinor &&
+                  e.occurredAt.difference(entry.occurredAt).inHours.abs() < 24),
+        );
+        if (!exists) {
+          await saveEntry(entry);
         }
       }
-      notifyListeners();
-    } catch (e) {
-      error = 'Email sync error: $e';
-      notifyListeners();
     }
+    notifyListeners();
   }
 
   String _extractEmailBody(gmail.Message message) {
@@ -1012,10 +1016,14 @@ class AppController extends ChangeNotifier {
     return message.snippet ?? '';
   }
 
-  MoneyEntry? _parseEmailToMoneyEntry(String snippet, String body) {
+  MoneyEntry? _parseEmailToMoneyEntry(
+    String snippet,
+    String body, {
+    String? messageId,
+    DateTime? timestamp,
+  }) {
     final content = '$snippet $body'.toLowerCase();
 
-    // Determine direction
     EntryDirection direction = EntryDirection.expense;
     if (content.contains('credited') ||
         content.contains('received payment') ||
@@ -1023,7 +1031,6 @@ class AppController extends ChangeNotifier {
       direction = EntryDirection.income;
     }
 
-    // Extract amount using regex (matches Rs., PKR, or $)
     final amountRegExp = RegExp(
       r'(?:rs\.?|pkr|\$)\s*([\d,]+\.?\d*)',
       caseSensitive: false,
@@ -1031,13 +1038,16 @@ class AppController extends ChangeNotifier {
     final match = amountRegExp.firstMatch(content);
     if (match == null) return null;
 
+    final matchedText = match.group(0)?.toLowerCase() ?? '';
+    if (matchedText.contains('\$')) {
+      return null;
+    }
+
     String cleanAmount = match.group(1)!.replaceAll(',', '');
     double parsedAmount = double.tryParse(cleanAmount) ?? 0.0;
     if (parsedAmount <= 0) return null;
 
     int amountMinor = (parsedAmount * 100).round();
-
-    // Extract Merchant
     String merchant = 'Email Receipt';
     if (content.contains('foodpanda')) {
       merchant = 'Foodpanda';
@@ -1049,17 +1059,24 @@ class AppController extends ChangeNotifier {
       merchant = 'Netflix';
     }
 
-    // Categorize
     String category = _categorizeTransaction(merchant, content);
 
+    // Generate unique ID deterministically via md5 to handle deduplication seamlessly
+    String generatedId = const Uuid().v4();
+    if (messageId != null) {
+      try {
+        // v5 creates an identical, valid UUID string every time for the same input text
+        generatedId = const Uuid().v5(Uuid.NAMESPACE_URL, messageId);
+      } catch (_) {}
+    }
     return MoneyEntry(
-      id: const Uuid().v4(),
+      id: generatedId,
       ownerId: profile!.id,
       merchant: merchant,
       amountMinor: amountMinor,
       direction: direction,
       category: category,
-      occurredAt: DateTime.now(),
+      occurredAt: timestamp ?? DateTime.now(),
     );
   }
 }
@@ -1077,10 +1094,7 @@ class GoogleAuthClient extends http.BaseClient {
   }
 }
 
-// Top-level background handler required by telephony package
 @pragma('vm:entry-point')
 void backgroundSmsHandler(SmsMessage message) {
-  // Background isolates cannot easily access Riverpod providers directly without re-initializing local DB.
-  // Typically, you initialize Sembast here and insert directly into the outbox or local db,
-  // or let the foreground handler sync it up when the app next opens.
+  // Foreground sync processes handle batch synchronization routines natively when context mounts
 }
