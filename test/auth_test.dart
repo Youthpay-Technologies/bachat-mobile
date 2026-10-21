@@ -21,7 +21,10 @@ void main() {
     final client = SupabaseClient(
       'https://example.supabase.co',
       'public-test-key',
-      authOptions: const AuthClientOptions(autoRefreshToken: false),
+      authOptions: AuthClientOptions(
+        autoRefreshToken: false,
+        pkceAsyncStorage: MemoryPkceStorage(),
+      ),
       httpClient: MockClient((request) async {
         final response = await handler(request);
         return http.Response(
@@ -128,6 +131,26 @@ void main() {
       expect(c.authNotice, contains('If an account exists'));
       expect(await c.finishPasswordRecovery('a long passphrase'), isFalse);
       expect(c.error, contains('expired'));
+    },
+  );
+  test(
+    'PKCE recovery callback survives startup and clears only after password update',
+    () async {
+      final c = await setup((r) async {
+        if (r.url.path.endsWith('/token')) return json(fixtureSession());
+        if (r.url.path.endsWith('/user')) return json(fixtureUser());
+        if (r.url.path.endsWith('/profiles')) return json([]);
+        return json({});
+      });
+      expect(await c.requestPasswordReset('teen@example.com'), isTrue);
+      await c.handleAuthLink(
+        Uri.parse('com.getyouthpay.bachat://auth/callback?code=fixture-code'),
+      );
+      expect(c.recoveringPassword, isTrue);
+      expect(await c.repository.loadRecovery(), isTrue);
+      expect(await c.finishPasswordRecovery('a new long passphrase'), isTrue);
+      expect(c.recoveringPassword, isFalse);
+      expect(await c.repository.loadRecovery(), isFalse);
     },
   );
   test('owner mismatch is rejected before sending an outbox record', () async {

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 const fixtureAccount = '01d263f0-3e3f-4d2f-aa01-5ea8933b1251';
 Map<String, dynamic> fixtureUser([String id = fixtureAccount]) => {
@@ -24,4 +25,19 @@ Map<String, dynamic> fixtureSession([String id = fixtureAccount]) {
     'token_type': 'bearer',
     'user': fixtureUser(id),
   };
+}
+
+class MemoryPkceStorage extends GotrueAsyncStorage {
+  final values = <String, String>{};
+  @override
+  Future<String?> getItem({required String key}) async => values[key];
+  @override
+  Future<void> setItem({required String key, required String value}) async {
+    values[key] = value;
+  }
+
+  @override
+  Future<void> removeItem({required String key}) async {
+    values.remove(key);
+  }
 }
