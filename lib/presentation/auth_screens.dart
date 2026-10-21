@@ -13,7 +13,7 @@ class AuthScreen extends ConsumerStatefulWidget {
 }
 
 class _AuthScreenState extends ConsumerState<AuthScreen> {
-  final form = GlobalKey<FormState>();
+  var form = GlobalKey<FormState>();
   final email = TextEditingController();
   final password = TextEditingController();
   final confirm = TextEditingController();
@@ -50,7 +50,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   void mode({bool signUp = false, bool forgot = false}) {
     ref.read(controllerProvider).clearAuthFeedback();
-    form.currentState?.reset();
+    form = GlobalKey<FormState>();
     password.clear();
     confirm.clear();
     setState(() {
