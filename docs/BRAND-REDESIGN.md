@@ -2,7 +2,7 @@
 
 ## Scope and integration
 
-Worktree: `bachat-brand`, branch `feat/cobalt-brand-redesign`. The redesign is rebased onto authentication snapshot `eb9eceb`, preserving the other agent's latest authentication, synchronization and test work. Its original checkout was not edited. The deprecated Next.js project is outside this change.
+Worktree: `bachat-brand`, branch `feat/cobalt-brand-redesign`. The redesign is rebased onto authentication snapshot `2ff6728`, preserving the other agent's latest authentication, synchronization and test work. Its original checkout was not edited. The deprecated Next.js project is outside this change.
 
 The integration target is `feat/teen-auth-and-cloud`. Authentication PR #9 is still a draft against `main`; a stacked redesign PR keeps that unrelated work out of the redesign diff and does not publish it to `main` prematurely.
 
@@ -25,7 +25,7 @@ Final checks use the normal Flutter 3.47.7 / Dart 3.13.5 CLI with the requested 
 | --- | --- |
 | `dart format --output=none --set-exit-if-changed lib test tool` | Passed |
 | `flutter analyze --no-pub` | Passed, no issues |
-| `flutter test --no-pub` | 51 passed |
+| `flutter test --no-pub` | 52 passed |
 | `flutter build apk --debug --no-pub` | Passed; debug APK built |
 | `flutter build web --release --no-pub` | Passed; release web preview built |
 | `git diff --check` | Passed |
