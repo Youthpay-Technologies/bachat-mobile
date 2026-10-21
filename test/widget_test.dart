@@ -132,7 +132,7 @@ void main() {
     c.startPreview(UserRole.parent);
     await mount(tester, c);
     expect(find.text('Child · Read only'), findsOneWidget);
-    expect(find.text('Add transaction'), findsNothing);
+    expect(find.text('Spend'), findsNothing);
     await tester.tap(find.text('Plan').last);
     await tester.pumpAndSettle();
     expect(find.text('New goal'), findsNothing);
@@ -145,7 +145,7 @@ void main() {
     await tester.runAsync(() => c.revokeLink(c.links.first));
     await tester.pumpAndSettle();
     expect(find.text('A little support to get started'), findsOneWidget);
-    expect(find.text('Add transaction'), findsNothing);
+    expect(find.text('Spend'), findsNothing);
   });
   testWidgets('narrow large text onboarding has no layout exception', (
     tester,
@@ -181,8 +181,8 @@ void main() {
     final c = await controller();
     c.startPreview(UserRole.teen);
     await mount(tester, c);
-    await tester.ensureVisible(find.text('Add transaction'));
-    await tester.tap(find.text('Add transaction'));
+    await tester.ensureVisible(find.text('Spend'));
+    await tester.tap(find.text('Spend'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Save transaction'));
     await tester.tap(find.text('Save transaction'));
