@@ -91,8 +91,10 @@ void main() {
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       lock.dispose();
-      await client.dispose();
-      await db.close();
+      await tester.runAsync(() async {
+        await client.dispose();
+        await db.close();
+      });
     },
   );
 }
