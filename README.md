@@ -1,28 +1,29 @@
 # Bachat
 
-Bachat helps teens understand their spending, build realistic budgets, and save toward things that matter. Parents can follow their child's progress through a shared, read-only view while teens stay in control of their records.
+Bachat helps teens understand their spending, build realistic budgets, and save toward things that matter. The current release supports teen accounts; parent onboarding is disabled while family features are prepared for a later release.
 
 This repository contains the standalone Flutter mobile app for Android and iOS. The initial release focuses on everyday money habits in English, using Pakistani rupees (PKR).
 
 ## What you can do
 
+- Create an account, verify your email, sign in, and recover your password.
 - Record, edit, and delete expenses and income, with exact paisa amounts.
 - Review monthly spending and category totals on the dashboard.
 - Search activity, filter by date or category, and sort by date or amount.
 - Set monthly category budgets and reuse missing categories from last month's plan.
 - Create savings goals, add savings, and track progress toward each target.
-- Explore separate teen and parent journeys, including mutual family approval.
+- Keep your records in your own Supabase account, with offline edits queued for synchronization.
 - Switch between light, dark, and system appearance.
 
 The learning tab is coming soon. Automatic bank, SMS, and Gmail imports are planned for later.
 
-## Current development experience
+## Accounts and data
 
-The app currently opens without authentication. Continue as **Ayesha**, a 16-year-old teen, or **Sana**, her parent. Switch profiles from the home header or **You** to explore both journeys.
+Choose **Continue as a teen**, then sign in or create an account. Verify your email and complete your name and age (13-18). New accounts start with empty records. Parent onboarding is greyed out; sample personas and profile switching are not exposed in the authenticated app.
 
-Both profiles share persistent sample records stored locally. Changes survive app restarts and profile switches; settings includes a confirmed reset. Parent views cannot edit transactions, budgets, or goals. Family linking and approval can be explored locally, but do not verify real identities.
+Supabase Auth manages sessions. PostgreSQL row-level security restricts transactions, budgets, and savings goals to their verified teen owner. Edits are saved locally before the screen updates, then synchronized when a connection is available. Signing out clears this device's account cache; a confirmation warns about unsynced changes.
 
-Authentication and cloud synchronization are deferred. Supabase migrations and adapters are retained for future integration; the current startup does not initialize Supabase or upload sample records. Recorded net flow is not a bank balance.
+Email confirmation and password recovery require working hosted email delivery and allowed redirect URLs. See [backend setup](docs/BACKEND.md) for the current deployment requirements. Recorded net flow is not a bank balance.
 
 ## Get started
 
@@ -47,7 +48,7 @@ In the original Windows workspace, helper scripts use the prepared local toolcha
 ./scripts/dev.ps1
 ```
 
-The helper preview runs at http://127.0.0.1:8080. No sign-in or Supabase environment configuration is needed for the current local experience.
+The helper preview runs at http://127.0.0.1:8080. The app uses the development Supabase project by default. Only public client configuration ships with it; other environments can override `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` with Dart defines. Hosted auth configuration and email delivery must be completed before testing email links.
 
 ## Project structure
 
@@ -55,7 +56,7 @@ The helper preview runs at http://127.0.0.1:8080. No sign-in or Supabase environ
 | --- | --- |
 | `lib/domain` | Money models, calculations, and activity filtering |
 | `lib/application` | App state, profile journeys, and business rules |
-| `lib/data` | Local persistence and future backend adapters |
+| `lib/data` | Account snapshots, persistent outbox, and Supabase access |
 | `lib/design` | Shared theme and interface components |
 | `lib/presentation` | Screens, navigation, forms, and sheets |
 | `test` | Domain, repository, controller, and widget checks |
