@@ -313,3 +313,143 @@ class _ProfileSetupState extends ConsumerState<ProfileSetupScreen> {
     );
   }
 }
+
+class AccountDetails extends ConsumerStatefulWidget {
+  const AccountDetails(this.controller, {super.key});
+  final AppController controller;
+  @override
+  ConsumerState<AccountDetails> createState() => _AccountDetailsState();
+}
+
+class _AccountDetailsState extends ConsumerState<AccountDetails> {
+  late final name = TextEditingController(
+    text: widget.controller.profile?.name ?? '',
+  );
+  final form = GlobalKey<FormState>();
+  @override
+  void dispose() {
+    name.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = ref.watch(controllerProvider);
+    return Padding(
+      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
+        child: Form(
+          key: form,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Your account',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              const SizedBox(height: 24),
+              TextFormField(
+                controller: name,
+                maxLength: 60,
+                enabled: !c.busy,
+                decoration: const InputDecoration(labelText: 'Name'),
+                validator: (v) =>
+                    (v ?? '').trim().isEmpty ? 'Enter your name.' : null,
+              ),
+              const SizedBox(height: 16),
+              SelectableText(c.client?.auth.currentUser?.email ?? ''),
+              const SizedBox(height: 8),
+              Text(
+                'Teen · ${c.profile?.age}',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 24),
+              AppError(c),
+              FilledButton(
+                onPressed: c.busy
+                    ? null
+                    : () async {
+                        if (form.currentState!.validate() &&
+                            await c.updateName(name.text) &&
+                            context.mounted)
+                          Navigator.pop(context);
+                      },
+                child: Text(c.busy ? 'Saving...' : 'Save changes'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AccountActions extends ConsumerWidget {
+  const AccountActions(this.controller, {super.key});
+  final AppController controller;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = ref.watch(controllerProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (c.pendingCount > 0 || c.offline)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.cloud_upload_outlined),
+            title: Text(
+              c.pendingCount > 0
+                  ? '${c.pendingCount} changes waiting to sync'
+                  : 'Connection unavailable',
+            ),
+            trailing: TextButton(
+              onPressed: c.syncing ? null : c.refresh,
+              child: Text(c.syncing ? 'Syncing...' : 'Retry'),
+            ),
+          ),
+        OutlinedButton.icon(
+          onPressed: c.busy
+              ? null
+              : () async {
+                  final email = c.client?.auth.currentUser?.email;
+                  if (email != null &&
+                      await c.requestPasswordReset(email) &&
+                      context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Check your email for a password reset link.',
+                        ),
+                      ),
+                    );
+                  }
+                },
+          icon: const Icon(Icons.lock_reset),
+          label: const Text('Reset password'),
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: c.busy
+              ? null
+              : () async {
+                  if (await confirmAction(
+                    context,
+                    title: 'Sign out?',
+                    body: c.pendingCount > 0
+                        ? 'Your unsynced changes on this device will be discarded. Stay signed in and retry sync to keep them.'
+                        : 'You can sign in again with your email and password.',
+                    action: c.pendingCount > 0
+                        ? 'Discard changes and sign out'
+                        : 'Sign out',
+                  ))
+                    await c.run(c.signOut);
+                },
+          icon: const Icon(Icons.logout),
+          label: const Text('Sign out'),
+        ),
+      ],
+    );
+  }
+}
