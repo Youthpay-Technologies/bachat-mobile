@@ -30,15 +30,23 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('onboarding explains role and required approval', (tester) async {
+  testWidgets('onboarding enables only teen authentication', (tester) async {
     final c = await controller();
     await mount(tester, c);
     expect(find.text('bachat'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Skip introduction'), 300);
     await tester.tap(find.text('Skip introduction'));
     await tester.pumpAndSettle();
-    expect(find.text('Continue as Ayesha'), findsOneWidget);
-    expect(find.textContaining('Teen'), findsOneWidget);
+    expect(find.text('Continue as a teen'), findsOneWidget);
+    final parent = tester.widget<ChoiceChip>(
+      find.widgetWithText(ChoiceChip, "I'm a parent"),
+    );
+    expect(parent.onSelected, isNull);
+    await tester.ensureVisible(find.text('Continue as a teen'));
+    await tester.tap(find.text('Continue as a teen'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sign in'), findsOneWidget);
+    expect(find.text('Create an account'), findsOneWidget);
   });
   testWidgets('teen dashboard and all tabs render', (tester) async {
     final c = await controller();

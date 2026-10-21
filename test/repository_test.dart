@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'support/auth_fixture.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -96,11 +97,12 @@ void main() {
       }),
     );
     addTearDown(client.dispose);
+    await client.auth.recoverSession(jsonEncode(fixtureSession('teen')));
     final r = BachatRepository(db, client);
     await r.queue(
       'teen',
       'transactions',
-      {'id': 'entry', 'amount_minor': 100},
+      {'id': 'entry', 'owner_id': 'teen', 'amount_minor': 100},
       {'version': 1},
     );
     final sync = r.synchronize('teen');
@@ -108,7 +110,7 @@ void main() {
     await r.queue(
       'teen',
       'transactions',
-      {'id': 'entry', 'amount_minor': 250},
+      {'id': 'entry', 'owner_id': 'teen', 'amount_minor': 250},
       {'version': 2},
     );
     release.complete();
