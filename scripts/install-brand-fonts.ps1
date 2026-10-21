@@ -44,7 +44,7 @@ if (-not $brandManifest.Contains('family: Instrument Sans')) {
         - asset: assets/fonts/InstrumentSerif-Italic.ttf
           style: italic
 '@
-    $brandManifest = $brandManifest.Replace('  fonts:', $brandFontManifest.TrimEnd())
+    $brandManifest = [regex]::Replace($brandManifest, '(?m)^  fonts:[ \t]*\r?$', $brandFontManifest.TrimEnd())
     [System.IO.File]::WriteAllText($brandManifestPath, $brandManifest)
 }
 
