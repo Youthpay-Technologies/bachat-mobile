@@ -339,7 +339,8 @@ class AppController extends ChangeNotifier {
             .eq('id', id)
             .maybeSingle();
         if (existing == null) await client!.from('profiles').insert(p.toJson());
-        profile = p;
+        if (accountId != id) return;
+        profile = existing == null ? p : Profile.fromJson(existing);
         await repository.save(id, snapshot());
         await refresh();
       });
@@ -433,7 +434,12 @@ class AppController extends ChangeNotifier {
                 : 'Unable to sync your changes. Try again.')
           : 'You are offline. Your saved changes will sync when you reconnect.';
     } finally {
-      if (generation == _generation) syncing = false;
+      if (generation == _generation) {
+        syncing = false;
+        if (pendingCount > 0 && !offline && error == null) {
+          unawaited(Future<void>.microtask(refresh));
+        }
+      }
       notifyListeners();
     }
   }
