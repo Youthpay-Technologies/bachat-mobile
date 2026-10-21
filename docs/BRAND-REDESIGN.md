@@ -23,6 +23,7 @@ The normal Flutter CLI could not write the shared SDK cache or launch child tool
 | --- | --- |
 | `dart format --output=none --set-exit-if-changed lib test tool` | Passed |
 | `git diff --check` | Passed |
+| Direct Dart analysis-server protocol | 28 files, 0 diagnostics |
 | PowerShell parser for `scripts/install-brand-fonts.ps1` | No syntax errors |
 | Existing domain, repository, demo, everyday-tools and widget tests | 36 passed, 0 failed through an in-process `test_api` Declarer/Invoker harness in `flutter_tester` |
 | Real Flutter renders | 26 completed, no Flutter exceptions |
@@ -56,6 +57,6 @@ Ratios were computed using WCAG relative luminance from the declared opaque fore
 
 1. In a network-enabled session, run `./scripts/install-brand-fonts.ps1`, commit the fonts/licenses and manifest, then refresh verification and screenshots. Until then the requested Instrument faces are not delivered: headings fall back to Inter and editorial text uses the platform serif.
 2. Run the normal Flutter checks and relevant platform builds in an environment with writable tooling. Android and iOS builds, signed releases, screen-reader behavior and a complete keyboard audit were not verified in this redesign session.
-3. Confirm the authentication branch's integration status, push this branch, create the appropriately based PR and merge after checks. `git push` and GitHub API calls currently fail because the session routes network requests to an unavailable proxy at `127.0.0.1:9`. No PR or merge has happened.
+3. Confirm the authentication branch's integration status, push this branch, create the appropriately based PR and merge after checks. `git push` and the explicit `gh pr create --draft` attempt both failed because the session routes network requests to an unavailable proxy at `127.0.0.1:9`. The draft body is prepared in the ignored `.pr-brand.md`. No PR or merge has happened.
 
 The session's approval policy also rejected the attempted font-download escalation. That policy must change, or the remaining network work must run in a different session; no approval was inferred.
