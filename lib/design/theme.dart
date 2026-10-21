@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'brand.dart';
 
 abstract final class BachatRadii {
@@ -27,7 +28,9 @@ abstract final class BachatTheme {
           outline: Color(dark ? 0xFF8393B3 : 0xFF73819A),
           outlineVariant: Color(dark ? 0xFF2C3C5C : 0xFFDEE4F0),
           primaryContainer: Color(dark ? 0xFF243A6A : 0xFFE9EFFF),
-          onPrimaryContainer: dark ? const Color(0xFFDCE5FF) : BachatBrand.cobalt,
+          onPrimaryContainer: dark
+              ? const Color(0xFFDCE5FF)
+              : BachatBrand.cobalt,
           secondary: BachatBrand.sunshine,
           onSecondary: BachatBrand.ink,
           secondaryContainer: Color(dark ? 0xFF40391E : 0xFFFFF5CB),
@@ -55,49 +58,48 @@ abstract final class BachatTheme {
         ),
       ),
       scaffoldBackgroundColor: canvas,
-      textTheme: base.textTheme.apply(
-        bodyColor: text,
-        displayColor: text,
-      ).copyWith(
-        displaySmall: TextStyle(
-          fontFamily: BachatBrand.headingFont,
-          fontSize: 48,
-          fontWeight: FontWeight.w700,
-          height: 1.1,
-          letterSpacing: -1.4,
-          color: text,
-          fontFeatures: const [FontFeature.tabularFigures()],
-        ),
-        headlineLarge: TextStyle(
-          fontFamily: BachatBrand.headingFont,
-          fontSize: 30,
-          fontWeight: FontWeight.w700,
-          height: 1.2,
-          letterSpacing: -0.7,
-          color: text,
-        ),
-        headlineMedium: TextStyle(
-          fontFamily: BachatBrand.headingFont,
-          fontSize: 28,
-          fontWeight: FontWeight.w700,
-          height: 1.2,
-          color: text,
-        ),
-        titleLarge: TextStyle(
-          fontFamily: BachatBrand.headingFont,
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          height: 1.3,
-          color: text,
-        ),
-        bodyLarge: TextStyle(fontSize: 16, height: 1.5, color: text),
-        bodyMedium: TextStyle(fontSize: 14, height: 1.5, color: text),
-        labelLarge: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-          color: text,
-        ),
-      ),
+      textTheme: base.textTheme
+          .apply(bodyColor: text, displayColor: text)
+          .copyWith(
+            displaySmall: TextStyle(
+              fontFamily: BachatBrand.headingFont,
+              fontSize: 48,
+              fontWeight: FontWeight.w700,
+              height: 1.1,
+              letterSpacing: -1.4,
+              color: text,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+            headlineLarge: TextStyle(
+              fontFamily: BachatBrand.headingFont,
+              fontSize: 30,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+              letterSpacing: -0.7,
+              color: text,
+            ),
+            headlineMedium: TextStyle(
+              fontFamily: BachatBrand.headingFont,
+              fontSize: 28,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+              color: text,
+            ),
+            titleLarge: TextStyle(
+              fontFamily: BachatBrand.headingFont,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              height: 1.3,
+              color: text,
+            ),
+            bodyLarge: TextStyle(fontSize: 16, height: 1.5, color: text),
+            bodyMedium: TextStyle(fontSize: 14, height: 1.5, color: text),
+            labelLarge: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: text,
+            ),
+          ),
       appBarTheme: AppBarTheme(
         backgroundColor: canvas,
         foregroundColor: text,
@@ -133,10 +135,7 @@ abstract final class BachatTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(BachatRadii.control),
-          borderSide: BorderSide(
-            color: scheme.primary,
-            width: 2,
-          ),
+          borderSide: BorderSide(color: scheme.primary, width: 2),
         ),
         labelStyle: TextStyle(color: scheme.onSurfaceVariant),
       ),
@@ -230,4 +229,3 @@ abstract final class BachatTheme {
     );
   }
 }
-

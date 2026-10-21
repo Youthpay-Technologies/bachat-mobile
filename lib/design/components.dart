@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'theme.dart';
 import 'brand.dart';
 
@@ -131,7 +132,11 @@ class EmptyState extends StatelessWidget {
             color: Theme.of(context).colorScheme.primaryContainer,
             borderRadius: BorderRadius.circular(BachatRadii.surface),
           ),
-          child: Icon(icon, size: 30, color: Theme.of(context).colorScheme.primary),
+          child: Icon(
+            icon,
+            size: 30,
+            color: Theme.of(context).colorScheme.primary,
+          ),
         ),
         const SizedBox(height: 14),
         Text(
@@ -228,9 +233,8 @@ class DashboardSkeleton extends StatelessWidget {
   const DashboardSkeleton({super.key});
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(
-      context,
-    ).colorScheme.outlineVariant.withValues(alpha: .5);
+    final color = Theme.of(context).colorScheme.outlineVariant
+        .withValues(alpha: .5);
     Widget block(double width, double height) => Container(
       width: width,
       height: height,

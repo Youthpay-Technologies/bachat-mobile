@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'brand.dart';
 import 'theme.dart';
 
@@ -39,23 +40,23 @@ class SpendingHero extends StatelessWidget {
             Expanded(
               child: Text(
                 '$month spending',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  color: Colors.white,
-                ),
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(color: Colors.white),
               ),
             ),
             const ExcludeSemantics(
-              child: Icon(Icons.north_east_rounded, color: BachatBrand.sunshine),
+              child: Icon(
+                Icons.north_east_rounded,
+                color: BachatBrand.sunshine,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 24),
         Text(
           amount,
-          style: Theme.of(context).textTheme.displaySmall?.copyWith(
-            color: Colors.white,
-            fontSize: 44,
-          ),
+          style: Theme.of(context).textTheme.displaySmall
+              ?.copyWith(color: Colors.white, fontSize: 44),
         ),
         const SizedBox(height: 24),
         Row(
@@ -73,7 +74,11 @@ class SpendingHero extends StatelessWidget {
             const Expanded(
               child: Text(
                 'Your everyday, in perspective.',
-                style: TextStyle(color: Colors.white, fontSize: 13, height: 1.5),
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  height: 1.5,
+                ),
               ),
             ),
           ],
