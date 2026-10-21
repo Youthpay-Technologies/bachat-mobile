@@ -90,10 +90,11 @@ class AppController extends ChangeNotifier {
   static const demoKey = 'demo-family-v1';
 
   Future<void> startDemo(UserRole role) async {
-    if (client != null)
+    if (client != null) {
       throw StateError(
         'Sample profiles are unavailable in authenticated mode.',
       );
+    }
     if (!preview) {
       final saved = await repository.load(demoKey);
       if (saved != null) _restoreDemo(saved);
@@ -126,10 +127,11 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> resetDemo() async {
-    if (client != null)
+    if (client != null) {
       throw StateError(
         'Sample profiles are unavailable in authenticated mode.',
       );
+    }
     final role = profile?.role ?? UserRole.teen;
     _reset();
     startPreview(role);
@@ -293,8 +295,9 @@ class AppController extends ChangeNotifier {
             'Bachat teen accounts are for ages 13 to 18.',
           );
         }
-        if (role != UserRole.teen)
+        if (role != UserRole.teen) {
           throw const FormatException('Parent accounts are coming soon.');
+        }
         final id = accountId;
         if (id == null) {
           throw const FormatException('Sign in again to finish your profile.');
@@ -393,8 +396,9 @@ class AppController extends ChangeNotifier {
       if (generation != _generation) return;
       offline = false;
       error = null;
-      if (localRevision == _localRevision)
+      if (localRevision == _localRevision) {
         await repository.save(id, snapshot());
+      }
     } catch (e) {
       if (generation != _generation) return;
       offline = e is! PostgrestException;
@@ -436,10 +440,12 @@ class AppController extends ChangeNotifier {
     final id = profile!.id;
     final generation = _generation;
     final next = snapshot();
-    if (entries != null)
+    if (entries != null) {
       next['entries'] = entries.map((e) => e.toJson()).toList();
-    if (budgets != null)
+    }
+    if (budgets != null) {
       next['budgets'] = budgets.map((e) => e.toJson()).toList();
+    }
     if (goals != null) next['goals'] = goals.map((e) => e.toJson()).toList();
     _localRevision++;
     if (preview) {
@@ -457,8 +463,9 @@ class AppController extends ChangeNotifier {
   }
 
   void _validateOwner(String owner) {
-    if (owner != profile!.id)
+    if (owner != profile!.id) {
       throw const FormatException('You can only edit your own records.');
+    }
   }
 
   Future<void> saveEntry(MoneyEntry entry) => _serialize(() async {
@@ -542,14 +549,17 @@ class AppController extends ChangeNotifier {
     final goal = allGoals
         .where((g) => g.id == goalId && g.ownerId == profile!.id && !g.deleted)
         .firstOrNull;
-    if (goal == null)
+    if (goal == null) {
       throw const FormatException('This goal is no longer available.');
-    if (goal.savedMinor >= goal.targetMinor)
+    }
+    if (goal.savedMinor >= goal.targetMinor) {
       throw const FormatException('This goal has already reached its target.');
-    if (amountMinor <= 0 || amountMinor > goal.targetMinor - goal.savedMinor)
+    }
+    if (amountMinor <= 0 || amountMinor > goal.targetMinor - goal.savedMinor) {
       throw FormatException(
         'Enter an amount between Rs 0.01 and ${money(goal.targetMinor - goal.savedMinor)}.',
       );
+    }
     await _saveGoal(
       SavingsGoal(
         id: goal.id,
@@ -756,10 +766,11 @@ class AppController extends ChangeNotifier {
   }
 
   void startPreview(UserRole role) {
-    if (client != null)
+    if (client != null) {
       throw StateError(
         'Sample profiles are unavailable in authenticated mode.',
       );
+    }
     if (preview) {
       profile = Profile(
         id: role == UserRole.teen ? 'preview-teen' : 'preview-parent',

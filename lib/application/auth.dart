@@ -53,10 +53,11 @@ extension TeenAuthentication on AppController {
     if (validateEmail(email) != null || password.isEmpty) {
       throw const FormatException('Enter your email and password.');
     }
-    if (client == null)
+    if (client == null) {
       throw const FormatException(
         'Authentication is unavailable. Restart the app and try again.',
       );
+    }
     await client!.auth.signInWithPassword(
       email: email.trim(),
       password: password,
@@ -68,14 +69,16 @@ extension TeenAuthentication on AppController {
   });
 
   Future<bool> signUp(String email, String password) => run(() async {
-    if (validateEmail(email) != null)
+    if (validateEmail(email) != null) {
       throw const FormatException('Enter a valid email address.');
+    }
     final invalid = validatePassword(password);
     if (invalid != null) throw FormatException(invalid);
-    if (client == null)
+    if (client == null) {
       throw const FormatException(
         'Authentication is unavailable. Restart the app and try again.',
       );
+    }
     final result = await client!.auth.signUp(
       email: email.trim(),
       password: password,
@@ -94,8 +97,9 @@ extension TeenAuthentication on AppController {
   });
 
   Future<bool> resendConfirmation(String email) => run(() async {
-    if (validateEmail(email) != null)
+    if (validateEmail(email) != null) {
       throw const FormatException('Enter a valid email address.');
+    }
     await client!.auth.resend(
       type: OtpType.signup,
       email: email.trim(),
@@ -106,8 +110,9 @@ extension TeenAuthentication on AppController {
   });
 
   Future<bool> requestPasswordReset(String email) => run(() async {
-    if (validateEmail(email) != null)
+    if (validateEmail(email) != null) {
       throw const FormatException('Enter a valid email address.');
+    }
     await client!.auth.resetPasswordForEmail(
       email.trim(),
       redirectTo: authRedirect,
@@ -134,11 +139,13 @@ extension TeenAuthentication on AppController {
 
   Future<bool> updateName(String name) => run(() async {
     final clean = name.trim();
-    if (clean.isEmpty || clean.length > 60)
+    if (clean.isEmpty || clean.length > 60) {
       throw const FormatException('Enter a name between 1 and 60 characters.');
+    }
     final id = accountId;
-    if (id == null || preview)
+    if (id == null || preview) {
       throw const FormatException('Sign in again to update your profile.');
+    }
     final updated = await client!
         .from('profiles')
         .update({'name': clean})

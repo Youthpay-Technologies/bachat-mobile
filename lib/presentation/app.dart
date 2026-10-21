@@ -19,8 +19,9 @@ class AppGate extends ConsumerWidget {
     if (!c.ready) {
       return const DashboardSkeleton();
     }
-    if (c.recoveringPassword && c.signedIn)
+    if (c.recoveringPassword && c.signedIn) {
       return const AuthScreen(recovery: true);
+    }
     if (!c.signedIn) return const WelcomeScreen();
     if (c.profile == null && c.syncing) {
       return const DashboardSkeleton();

@@ -98,8 +98,9 @@ class BachatRepository {
     final result = <Map<String, dynamic>>[];
     String? after;
     while (true) {
-      if (client.auth.currentUser?.id != account)
+      if (client.auth.currentUser?.id != account) {
         throw const FormatException('Your account changed. Sign in again.');
+      }
       var query = client.from(table).select().eq('owner_id', account);
       if (after != null) query = query.gt('id', after);
       final page = await query.order('id').limit(pageSize);
@@ -115,13 +116,15 @@ class BachatRepository {
     if (client == null) return;
     for (final operation in await pending(account)) {
       final value = operation.value;
-      if (client.auth.currentUser?.id != account)
+      if (client.auth.currentUser?.id != account) {
         throw const FormatException('Your account changed. Sign in again.');
+      }
       final row = Map<String, dynamic>.from(value['row'] as Map);
-      if (row['owner_id'] != account)
+      if (row['owner_id'] != account) {
         throw const FormatException(
           'Cannot sync a record owned by another account.',
         );
+      }
       // Budgets have a natural owner/month/category identity across devices.
       if (value['table'] == 'budgets') {
         final existing = await client
@@ -134,8 +137,9 @@ class BachatRepository {
             .maybeSingle();
         if (existing != null) row['id'] = existing['id'];
       }
-      if (client.auth.currentUser?.id != account)
+      if (client.auth.currentUser?.id != account) {
         throw const FormatException('Your account changed. Sign in again.');
+      }
       await client.from(value['table'] as String).upsert(row);
       // Preserve any edit queued while the previous version was in flight.
       await database.transaction((txn) async {

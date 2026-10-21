@@ -292,12 +292,13 @@ class _ProfileSetupState extends ConsumerState<ProfileSetupScreen> {
                   onPressed: c.busy
                       ? null
                       : () async {
-                          if (form.currentState!.validate())
+                          if (form.currentState!.validate()) {
                             await c.createProfile(
                               name.text,
                               UserRole.teen,
                               age,
                             );
+                          }
                         },
                   child: Text(c.busy ? 'Saving...' : 'Start tracking'),
                 ),
@@ -373,8 +374,9 @@ class _AccountDetailsState extends ConsumerState<AccountDetails> {
                     : () async {
                         if (form.currentState!.validate() &&
                             await c.updateName(name.text) &&
-                            context.mounted)
+                            context.mounted) {
                           Navigator.pop(context);
+                        }
                       },
                 child: Text(c.busy ? 'Saving...' : 'Save changes'),
               ),
@@ -443,8 +445,9 @@ class AccountActions extends ConsumerWidget {
                     action: c.pendingCount > 0
                         ? 'Discard changes and sign out'
                         : 'Sign out',
-                  ))
+                  )) {
                     await c.run(c.signOut);
+                  }
                 },
           icon: const Icon(Icons.logout),
           label: const Text('Sign out'),
