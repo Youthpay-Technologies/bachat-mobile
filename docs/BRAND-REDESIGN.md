@@ -2,7 +2,7 @@
 
 ## Scope and integration
 
-Worktree: `bachat-brand`, branch `feat/cobalt-brand-redesign`. The redesign is rebased onto authentication snapshot `0bd516c`, preserving the other agent's latest authentication, synchronization and test work. Its original checkout was not edited. The deprecated Next.js project is outside this change.
+Worktree: `bachat-brand`, branch `feat/cobalt-brand-redesign`. The redesign is rebased onto authentication snapshot `eb9eceb`, preserving the other agent's latest authentication, synchronization and test work. Its original checkout was not edited. The deprecated Next.js project is outside this change.
 
 The integration target is `feat/teen-auth-and-cloud`. Authentication PR #9 is still a draft against `main`; a stacked redesign PR keeps that unrelated work out of the redesign diff and does not publish it to `main` prematurely.
 
@@ -35,7 +35,7 @@ Final checks use the normal Flutter 3.47.7 / Dart 3.13.5 CLI with the requested 
 
 The renders cover Welcome, Home/navigation, Activity, Plan, Learn and Settings in both themes, each at 390px / normal text and 320px / doubled text, plus both parent dashboards. The large-text spending panel was visually checked and refined to keep the amount readable. These artifacts use local preview records, not a live authenticated account. See [light home](screenshots/brand/home-light.png), [dark home](screenshots/brand/home-dark.png), [large-text home](screenshots/brand/home-light-large-text.png), [welcome](screenshots/brand/welcome-light.png) and [all renders](screenshots/brand/).
 
-The workflow keeps Android compilation required on PRs. APK artifact uploads run only for `main` pushes; the existing draft PR had compiled successfully but its artifact upload failed because the account's storage quota was exhausted.
+The upstream workflow keeps Android compilation required on PRs and makes APK artifact uploads opt-in. Its latest configuration was preserved when resolving the concurrent CI edit; the redesign does not change it.
 
 ## Measured contrast
 
