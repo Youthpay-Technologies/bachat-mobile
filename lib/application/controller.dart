@@ -143,6 +143,7 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> initialize({
+    Uri? initialAuthLink,
     bool observeConnectivity = true,
     bool observeLinks = true,
   }) async {
@@ -170,7 +171,7 @@ class AppController extends ChangeNotifier {
     );
     if (observeLinks) {
       if (kIsWeb) {
-        await handleAuthLink(Uri.base);
+        await handleAuthLink(initialAuthLink ?? Uri.base);
       } else {
         final appLinks = AppLinks();
         _deepLinks = appLinks.uriLinkStream.listen(
