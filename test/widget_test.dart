@@ -39,7 +39,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Continue as a teen'), findsOneWidget);
     final parent = tester.widget<ChoiceChip>(
-      find.widgetWithText(ChoiceChip, "I'm a parent"),
+      find.byWidgetPredicate(
+        (w) => w is ChoiceChip && (w.label as Text).data!.contains('parent'),
+      ),
     );
     expect(parent.onSelected, isNull);
     await tester.ensureVisible(find.text('Continue as a teen'));

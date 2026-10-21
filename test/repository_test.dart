@@ -118,6 +118,7 @@ void main() {
     expect(uploaded!['amount_minor'], 100);
     expect((await r.pending('teen')).single.value['row'], {
       'id': 'entry',
+      'owner_id': 'teen',
       'amount_minor': 250,
     });
     expect((await r.load('teen'))!['version'], 2);
