@@ -46,8 +46,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Pocket money'), findsWidgets);
     expect(find.text('Salary'), findsWidgets);
-    final receiveCategories = tester.widget<DropdownButtonFormField<String>>(
-      find.byType(DropdownButtonFormField<String>).last,
+    final receiveCategories = tester.widget<DropdownButton<String>>(
+      find.byType(DropdownButton<String>).last,
     );
     expect(
       receiveCategories.items!.map((item) => item.value),
