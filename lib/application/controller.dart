@@ -801,6 +801,7 @@ class AppController extends ChangeNotifier {
   }
 
   void _reset() {
+    deviceLock?.unbind();
     _stopMoneySubscription();
     _refreshAgain = false;
     _loadedAccount = null;

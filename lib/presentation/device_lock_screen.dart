@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import '../application/controller.dart';
 import '../application/device_lock.dart';
 import '../design/components.dart';
-import 'forms.dart';
 
 class DevicePrivacyGate extends StatefulWidget {
   const DevicePrivacyGate({
@@ -102,7 +101,7 @@ class _PinSessionState extends State<_PinSession> {
   final form = GlobalKey<FormState>();
   final pin = TextEditingController(), confirm = TextEditingController();
   late final Timer ticker;
-  bool previousSetup = false, signingOut = false;
+  bool signingOut = false, confirmSignOut = false;
   @override
   void initState() {
     super.initState();
@@ -145,15 +144,10 @@ class _PinSessionState extends State<_PinSession> {
   Future<void> signOut() async {
     final c = widget.controller, lock = widget.lock, id = c.accountId;
     if (id == null || signingOut || lock.busy) return;
-    final accepted = await confirmAction(
-      context,
-      title: 'Sign in again?',
-      body: c.pendingCount > 0
-          ? 'Unsynced changes on this device will be discarded. You will need your account password to return.'
-          : 'You will need your account password to return and set a new device PIN.',
-      action: 'Sign out',
-    );
-    if (!accepted || !mounted) return;
+    if (!confirmSignOut) {
+      setState(() => confirmSignOut = true);
+      return;
+    }
     setState(() => signingOut = true);
     try {
       await c.signOut();
@@ -299,9 +293,26 @@ class _PinSessionState extends State<_PinSession> {
                         ),
                       ),
                       const SizedBox(height: 12),
+                      if (confirmSignOut) ...[
+                        Text(
+                          widget.controller.pendingCount > 0
+                              ? 'Unsynced changes will be discarded. Sign in with your account password to reset this PIN.'
+                              : 'Sign in with your account password to reset this device PIN.',
+                        ),
+                        TextButton(
+                          onPressed: signingOut
+                              ? null
+                              : () => setState(() => confirmSignOut = false),
+                          child: const Text('Keep locked'),
+                        ),
+                      ],
                       TextButton(
                         onPressed: lock.busy || signingOut ? null : signOut,
-                        child: const Text('Forgot PIN? Sign in again'),
+                        child: Text(
+                          confirmSignOut
+                              ? 'Sign out'
+                              : 'Forgot PIN? Sign in again',
+                        ),
                       ),
                     ],
                   ),

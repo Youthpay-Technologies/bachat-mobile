@@ -41,6 +41,18 @@ class DeviceLock extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
+  void unbind() {
+    _epoch++;
+    account = null;
+    _record = null;
+    locked = true;
+    loading = true;
+    busy = false;
+    _changeRequested = false;
+    _changeVerified = false;
+    _notify();
+  }
+
   Future<void> bind(String id) async {
     final epoch = ++_epoch;
     account = id;
