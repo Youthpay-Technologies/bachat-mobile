@@ -23,7 +23,7 @@ Google sign-in, bank/SMS/Gmail imports, squads, rewards and parent personal spen
 
 ## Interface and architecture
 
-Use the reference-inspired pale gray surfaces, dark text and restrained green accents, with spacious typography, limited corner radii, subtle motion and light/dark themes. Reuse the YouthPay/YP mark with Bachat naming; it may change later.
+Use the confirmed cobalt #0C38A9, sunshine #FFDE59 and tangerine #FF751E identity, with Instrument Sans headings, Inter interface text and selective Instrument Serif Italic accents. The lowercase-b symbol replaces the YP tile, with “by YouthPay” retained as endorsement. All requested font families and licenses are bundled for offline use. Keep semantic light/dark themes, flat surfaces and native accessible controls; see [design](DESIGN.md) and [redesign verification](BRAND-REDESIGN.md).
 
 Flutter uses Riverpod, native navigation, an account-gated tab shell, and separate domain, application, data and presentation layers. Sembast/IndexedDB stores account snapshots and queued edits; Supabase provides Auth and PostgreSQL with RLS. Amounts use integer paisa. Cross-device conflicts use the last successfully uploaded record; savings changes on different devices are not merged additively.
 

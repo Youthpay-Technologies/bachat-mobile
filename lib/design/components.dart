@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import 'theme.dart';
+import 'brand.dart';
 
 class BachatMark extends StatelessWidget {
   const BachatMark({super.key, this.large = false});
@@ -8,24 +10,8 @@ class BachatMark extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      Container(
-        width: large ? 52 : 36,
-        height: large ? 52 : 36,
-        decoration: BoxDecoration(
-          color: const Color(0xFF172D35),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          'YP',
-          style: TextStyle(
-            color: const Color(0xFFEBDDB5),
-            fontWeight: FontWeight.w800,
-            fontSize: large ? 20 : 14,
-          ),
-        ),
-      ),
-      const SizedBox(width: 10),
+      BachatSymbol(size: large ? 56 : 40),
+      const SizedBox(width: 12),
       Flexible(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,15 +19,18 @@ class BachatMark extends StatelessWidget {
             Text(
               'bachat',
               style: TextStyle(
-                fontSize: large ? 27 : 22,
+                fontFamily: BachatBrand.headingFont,
+                fontFamilyFallback: const [BachatBrand.interfaceFont],
+                fontSize: large ? 32 : 25,
                 fontWeight: FontWeight.w700,
-                letterSpacing: -0.8,
+                letterSpacing: -1.1,
+                height: 1.1,
               ),
             ),
             Text(
               'by YouthPay',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
@@ -58,33 +47,23 @@ class Surface extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(20),
     this.tinted = false,
+    this.tone,
   });
   final Widget child;
   final EdgeInsetsGeometry padding;
   final bool tinted;
+  final Color? tone;
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(BachatRadii.surface),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.025),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-        ],
       ),
       child: Material(
-        color: tinted ? colors.primaryContainer : colors.surface,
+        color: tone ?? (tinted ? colors.primaryContainer : colors.surface),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BachatRadii.surface),
-          side: BorderSide(
-            color: Theme.of(context).brightness == Brightness.light
-                ? Colors.white
-                : colors.outlineVariant,
-          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: SizedBox(
@@ -106,9 +85,9 @@ class SectionHeading extends StatelessWidget {
     padding: const EdgeInsets.only(top: 36, bottom: 18),
     child: LayoutBuilder(
       builder: (context, constraints) {
-        final heading = Text(
-          title,
-          style: Theme.of(context).textTheme.titleLarge,
+        final heading = Semantics(
+          header: true,
+          child: Text(title, style: Theme.of(context).textTheme.titleLarge),
         );
         final button = action == null
             ? null
@@ -148,7 +127,18 @@ class EmptyState extends StatelessWidget {
   Widget build(BuildContext context) => Surface(
     child: Column(
       children: [
-        Icon(icon, size: 34, color: Theme.of(context).colorScheme.primary),
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.primaryContainer,
+            borderRadius: BorderRadius.circular(BachatRadii.surface),
+          ),
+          child: Icon(
+            icon,
+            size: 30,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
         const SizedBox(height: 14),
         Text(
           title,
@@ -199,8 +189,14 @@ Future<bool> confirmAction(
     false;
 
 class StatusBadge extends StatelessWidget {
-  const StatusBadge(this.label, {super.key, this.icon, this.danger = false});
-  final bool danger;
+  const StatusBadge(
+    this.label, {
+    super.key,
+    this.icon,
+    this.danger = false,
+    this.highlight = false,
+  });
+  final bool danger, highlight;
   final String label;
   final IconData? icon;
   @override
@@ -209,6 +205,8 @@ class StatusBadge extends StatelessWidget {
     decoration: BoxDecoration(
       color: danger
           ? Theme.of(context).colorScheme.errorContainer
+          : highlight
+          ? Theme.of(context).colorScheme.secondaryContainer
           : Theme.of(context).colorScheme.primaryContainer,
       borderRadius: BorderRadius.circular(BachatRadii.compact),
     ),
@@ -221,6 +219,8 @@ class StatusBadge extends StatelessWidget {
             size: 16,
             color: danger
                 ? Theme.of(context).colorScheme.onErrorContainer
+                : highlight
+                ? Theme.of(context).colorScheme.onSecondaryContainer
                 : Theme.of(context).colorScheme.onPrimaryContainer,
           ),
           const SizedBox(width: 6),
@@ -231,6 +231,8 @@ class StatusBadge extends StatelessWidget {
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: danger
                   ? Theme.of(context).colorScheme.onErrorContainer
+                  : highlight
+                  ? Theme.of(context).colorScheme.onSecondaryContainer
                   : Theme.of(context).colorScheme.onPrimaryContainer,
             ),
           ),
@@ -269,7 +271,7 @@ class DashboardSkeleton extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        block(48, 48),
+                        const BachatSymbol(size: 48),
                         const SizedBox(width: 16),
                         block(120, 20),
                       ],

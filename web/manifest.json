@@ -1,11 +1,11 @@
 {
-    "name": "bachat_mobile",
-    "short_name": "bachat_mobile",
+    "name": "Bachat",
+    "short_name": "Bachat",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0C38A9",
+    "theme_color": "#0C38A9",
+    "description": "Bachat by YouthPay. Make money make sense.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
@@ -33,3 +33,4 @@
         }
     ]
 }
+

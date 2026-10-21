@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+
 import '../application/controller.dart';
 import '../design/components.dart';
 import '../design/theme.dart';
+import '../design/brand.dart';
+import '../design/brand_panels.dart';
 import '../domain/models.dart';
 import '../domain/activity_filter.dart';
 import 'activity_filters.dart';
@@ -118,14 +121,18 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
         child: PageBody(
           children: [
             const BachatMark(large: true),
-            const SizedBox(height: 52),
-            Text(
-              step == 0
-                  ? 'Make money\nmake sense.'
+            const SizedBox(height: 40),
+            BrandHeadline(
+              lead: step == 0
+                  ? 'Make money'
                   : step == 1
-                  ? 'Small habits.\nReal progress.'
-                  : 'Your money.\nYour way.',
-              style: t.displaySmall,
+                  ? 'Small habits.'
+                  : 'Your money.',
+              accent: step == 0
+                  ? 'make sense.'
+                  : step == 1
+                  ? 'Real progress.'
+                  : 'Your way.',
             ),
             const SizedBox(height: 18),
             Text(
@@ -136,21 +143,14 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
                   : 'Track spending, build a budget and save for what matters.',
               style: t.bodyLarge,
             ),
-            const SizedBox(height: 36),
+            const SizedBox(height: 28),
             Surface(
-              tinted: true,
+              tone: Theme.of(context).colorScheme.secondaryContainer,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    step == 0
-                        ? Icons.account_balance_wallet_outlined
-                        : step == 1
-                        ? Icons.people_outline
-                        : Icons.savings_outlined,
-                    size: 40,
-                  ),
-                  const SizedBox(height: 24),
+                  const HabitIllustration(compact: true),
+                  const SizedBox(height: 20),
                   Text(
                     step == 0
                         ? 'Your everyday, in perspective'
@@ -341,14 +341,7 @@ class HomePage extends ConsumerWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: Text(
-                  c.profile!.name.substring(0, 1),
-                  style: t.titleLarge,
-                ),
-              ),
+              const BachatSymbol(size: 48),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -373,31 +366,16 @@ class HomePage extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 28),
           ChildPicker(c),
           if (c.isParent && c.children.isEmpty)
             const FamilyPage(embedded: true)
           else ...[
-            Center(
-              child: Column(
-                children: [
-                  Text(
-                    '${DateFormat.MMMM().format(DateTime.now())} spending',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    money(summary.spentMinor),
-                    style: t.displaySmall,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              ),
+            SpendingHero(
+              month: DateFormat.MMMM().format(DateTime.now()),
+              amount: money(summary.spentMinor),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
             if (!c.isParent)
               SizedBox(
                 width: double.infinity,
@@ -409,6 +387,7 @@ class HomePage extends ConsumerWidget {
               ),
             const SectionHeading('Overview'),
             Surface(
+              tone: Theme.of(context).colorScheme.primaryContainer,
               child: Wrap(
                 spacing: 32,
                 runSpacing: 16,
@@ -558,9 +537,7 @@ class EntryTile extends StatelessWidget {
                   entry.direction == EntryDirection.income
                       ? Icons.south_west
                       : categoryIcon(entry.category),
-                  color: Theme.of(context).brightness == Brightness.light
-                      ? const Color(0xFF216D2C)
-                      : Theme.of(context).colorScheme.primary,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
               ),
               const SizedBox(width: 12),
@@ -810,8 +787,12 @@ class PlanPage extends ConsumerWidget {
     return PageBody(
       children: [
         Text('Plan', style: t.headlineLarge),
-
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
+        Text(
+          'Make room for what matters.',
+          style: BachatBrand.editorial(context, size: 30),
+        ),
+        const SizedBox(height: 16),
         ChildPicker(c),
         SectionHeading(
           'Monthly budgets',
@@ -965,6 +946,7 @@ class GoalCard extends StatelessWidget {
   final AppController c;
   @override
   Widget build(BuildContext context) => Surface(
+    tone: Theme.of(context).colorScheme.secondaryContainer,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -994,6 +976,7 @@ class GoalCard extends StatelessWidget {
           icon: goal.progress == 1
               ? Icons.check_rounded
               : Icons.savings_outlined,
+          highlight: true,
         ),
         const SizedBox(height: 16),
         Text('${money(goal.savedMinor)} of ${money(goal.targetMinor)}'),
@@ -1031,14 +1014,18 @@ class LearnPage extends StatelessWidget {
   Widget build(BuildContext context) => PageBody(
     children: [
       Text('Learn', style: Theme.of(context).textTheme.headlineLarge),
-      const SizedBox(height: 72),
-      const Icon(Icons.auto_stories_outlined, size: 64),
       const SizedBox(height: 32),
+      Surface(
+        tone: Theme.of(context).colorScheme.secondaryContainer,
+        padding: const EdgeInsets.all(28),
+        child: const HabitIllustration(),
+      ),
+      const SizedBox(height: 28),
       const StatusBadge('Coming soon', icon: Icons.schedule_rounded),
       const SizedBox(height: 24),
-      Text(
-        'A little knowledge.\nBetter money habits.',
-        style: Theme.of(context).textTheme.headlineLarge,
+      const BrandHeadline(
+        lead: 'A little knowledge.',
+        accent: 'Better money habits.',
       ),
       const SizedBox(height: 16),
       const Text(

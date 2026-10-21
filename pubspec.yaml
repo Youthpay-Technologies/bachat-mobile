@@ -30,7 +30,19 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/fonts/InstrumentSans-OFL.txt
+    - assets/fonts/InstrumentSerif-OFL.txt
+    - assets/fonts/Inter-OFL.txt
   fonts:
-    - family: DM Sans
+    - family: Instrument Sans
       fonts:
-        - asset: assets/fonts/DMSans.ttf
+        - asset: assets/fonts/InstrumentSans.ttf
+    - family: Instrument Serif
+      fonts:
+        - asset: assets/fonts/InstrumentSerif-Regular.ttf
+        - asset: assets/fonts/InstrumentSerif-Italic.ttf
+          style: italic
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
