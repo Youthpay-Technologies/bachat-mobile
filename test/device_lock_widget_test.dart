@@ -90,7 +90,6 @@ void main() {
       expect(find.text('Spend money'), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
-      c.dispose();
       lock.dispose();
       await client.dispose();
       await db.close();
