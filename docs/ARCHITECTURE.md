@@ -11,7 +11,7 @@
 
 ## Authentication
 
-The app initializes Supabase with publishable client configuration, restores its secure local session, then installs auth listeners before handling email callbacks. Password recovery is persisted until the password is changed or the user signs out. Link origins/schemes are constrained. PKCE code verification is performed by the Supabase client.
+The app captures the initial callback URL before Flutter routing, initializes Supabase with publishable client configuration, restores its secure local session, then installs auth listeners before handling email callbacks. Password recovery is persisted until the password is changed or the user signs out. Link origins/schemes are constrained. PKCE code verification is performed by the Supabase client.
 
 The root gate separates signed-out onboarding, password recovery, incomplete profiles, account-loading failures and the dashboard. Only teen accounts are enabled. Parent options are disabled, cached parent sessions cannot enter the dashboard, and the server rejects parent profile creation. Sample personas are available only to isolated tests using a repository without a cloud client.
 
@@ -31,4 +31,4 @@ Connection failures preserve local snapshots and queued edits. Account settings 
 
 Postgres RLS enforces verified teen ownership independently of client state. The application never ships a service-role key. Profile roles/signup ages and record ownership are immutable. Parent sharing is disabled at the database boundary for this release.
 
-Domain, repository, auth/controller and widget tests cover financial validation, persistence, role gates, PKCE recovery, session boundaries, pagination, concurrency and narrow/large-text layouts. Live SQL tests use rollback fixtures; successful browser auth/CRUD is verified with an intercepted transport. See [backend setup](BACKEND.md) and [verification notes](VERIFICATION.md) for remaining hosted configuration and live email testing requirements.
+Domain, repository, auth/controller and widget tests cover financial validation, persistence, role gates, PKCE recovery, session boundaries, pagination, concurrency and narrow/large-text layouts. Live SQL tests use rollback fixtures. Approved disposable users also verified real Auth/REST and Flutter browser sign-in, CRUD, offline synchronization, account switching and password recovery; their accounts and records were removed afterward. See [backend setup](BACKEND.md) and [verification notes](VERIFICATION.md) for remaining hosted configuration and live email testing requirements.

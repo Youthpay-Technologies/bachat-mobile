@@ -11,6 +11,8 @@ import 'presentation/app.dart';
 bool _backendReady = false;
 
 Future<void> main() async {
+  // Capture email callback parameters before Flutter routing can update the URL.
+  final initialAuthLink = Uri.base;
   WidgetsFlutterBinding.ensureInitialized();
   try {
     if (!_backendReady) {
@@ -33,7 +35,7 @@ Future<void> main() async {
         child: const BachatApp(),
       ),
     );
-    await controller.initialize();
+    await controller.initialize(initialAuthLink: initialAuthLink);
   } catch (_) {
     runApp(
       MaterialApp(

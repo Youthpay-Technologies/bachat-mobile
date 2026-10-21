@@ -1,12 +1,38 @@
-# Current teen authentication verification — 2026-10-21
+# Teen authentication verification - 2026-10-21
 
-Analyzer is clean and **51 tests pass**. Final-source Android arm64 debug APK and web release builds pass. iOS signing and physical-device testing have not been performed. Coverage now includes email/password validation, pending confirmation, invalid credentials, profile setup, blocked parent registration and sample bypasses, PKCE password recovery, owner-scoped outbox, 501-row pagination, serialized savings increments, failed persistence, edits queued during refresh, and auth/profile layouts at 320px / 200% text. Native and web session storage use the configured platform adapters; tests use isolated storage.
+Analyzer is clean and **all 52 tests pass** for the final source, including the new legacy recovery regression alongside PKCE recovery. Final-source Android arm64 debug APK and web release compilation pass locally. CI also runs formatting, analysis, tests and both platform builds. iOS signing and physical-device tests have not been performed.
 
-Live Supabase MCP migrations are applied and `supabase/tests/teen_authorization.sql` passed with rollback-scoped fixtures. It verifies owner CRUD, unrelated-user isolation, unverified-user write rejection, blocked parent profiles/family RPCs, immutable identity/age, category/amount bounds, goal limits and budget uniqueness. Follow-up queries confirmed RLS on all exposed application tables, zero test profiles, no persistent auth fixtures, and no account-deletion RPC. Advisors report no security warnings/errors; private deny-by-default family tables and unused indexes have informational notices.
+## Live backend and browser
 
-Chrome at 390 x 844 verified the actual live invalid-credential response and the greyed-out parent option. A separate browser context intercepted successful Auth/REST responses in memory to verify sign-in, profile completion, empty initial records, transaction/budget/goal creation, exact savings addition, offline editing across reload, synchronization and sign-out. This run reported zero page errors. The screenshots below were visually inspected. They do not represent permanent cloud test users.
+Supabase migrations are applied through MCP. `supabase/tests/teen_authorization.sql` passes with rollback fixtures: verified owner CRUD, other-user isolation, unverified write rejection, parent/family blocking, immutable identity/age, category/amount/goal limits and budget uniqueness. RLS is enabled on all exposed application tables; no account-deletion RPC exists. Security advisors reported no warnings/errors, with informational notices for private deny-by-default family tables and unused indexes.
 
-Successful **live** email confirmation, sign-in and recovery remain unverified. Hosted redirect/password settings await CLI login because the MCP tool set has no auth-settings mutation. SMTP delivery to a real inbox has not been verified. Automatic approval rejected persistent cloud test-account creation; no generated credentials or users were created. See [backend setup](BACKEND.md).
+With the owner's explicit approval, two disposable users exercised real Supabase HTTP sign-in, unconfirmed-email rejection, confirmation-token exchange, teen profile creation, parent rejection, CRUD and spoofed-owner rejection for transactions/budgets/goals, recovery verification, password update, old-password rejection, refresh and logout invalidation. `scripts/check_live_auth.py` accepts fixture credentials only through hidden input or stdin; no credentials were saved to disk.
+
+Chrome at 390 x 844 then used the actual Flutter interface and live backend for sign-in; a Rs 125.50 expense; a Rs 2,000 budget; a Rs 5,000 goal; exact savings from Rs 100 to Rs 150.25; offline transaction creation, reload and reconnection sync; sign-out and account isolation; and password recovery followed by new-password sign-in. Successful Auth/REST responses were not intercepted. Only the offline segment temporarily aborted backend requests. Zero browser page errors were reported. Screenshots below were visually inspected.
+
+Recovery testing exposed callback loss during initial Flutter routing. The app now captures the entry URL before routing and handles it after auth listeners are installed. The successful browser recovery run loaded the real issued session into a fresh app startup.
+
+Sessions were revoked and both temporary users deleted after testing. Queries confirmed zero fixture users, profiles, transactions, budgets, savings goals, sessions, refresh tokens or one-time tokens. No permanent sample users remain.
+
+| Live dashboard | Saved plan |
+|---|---|
+| ![Dashboard](screenshots/live-home.png) | ![Plan](screenshots/live-plan.png) |
+
+| Separate account | Password recovery |
+|---|---|
+| ![Separate account](screenshots/live-second-account.png) | ![Recovery](screenshots/live-recovery.png) |
+
+## Deployment boundaries
+
+Tokens were prepared for the approved fixtures, so these checks establish Auth/session behavior rather than delivery to an inbox. A request to their reserved invalid email domain returned `email_address_invalid`; this does not establish real-recipient SMTP readiness. Real inbox confirmation and recovery remain unverified.
+
+The hosted server honored localhost callbacks but rejected `com.getyouthpay.bachat://auth/callback` and fell back to the web site URL. Apply the prepared configuration using an authenticated Supabase CLI session; available MCP tools cannot change Auth settings. CLI is currently signed out. Native email links cannot be claimed complete until this is applied and tested on a device. See [backend setup](BACKEND.md).
+
+The earlier Android CI failure occurred during artifact upload because GitHub's account storage quota was exhausted; compilation succeeded. Uploads are now opt-in for manually dispatched runs, while Android compilation remains mandatory for every PR.
+
+## Earlier isolated browser checks
+
+Before the approved live fixtures, isolated browser transport simulations covered sign-in, profile completion, empty records, CRUD, offline edits and sign-out. They also reported zero page errors. The live invalid-credential response and greyed-out parent onboarding were checked separately. Those earlier screenshots follow.
 
 | Teen onboarding | Sign in | Live invalid credentials |
 |---|---|---|

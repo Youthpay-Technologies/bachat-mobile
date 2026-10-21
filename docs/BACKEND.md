@@ -10,7 +10,7 @@ The project was restored from its paused state on 2026-10-21. Email sign-up is e
 
 ## Hosted Auth configuration
 
-The connected Supabase MCP tools expose database operations but no Auth settings update. The CLI was signed out during implementation. Sign in with `npx supabase@2.120.0 login`, then review and apply the narrow hosted configuration:
+The connected Supabase MCP tools expose database operations but no Auth settings update. The CLI remains signed out. Live token verification honored the localhost web redirect, but rejected the native scheme and fell back to the web site URL. Native email links therefore need the allowlist applied before device use. Sign in with `npx supabase@2.120.0 login`, then review and apply the narrow hosted configuration:
 
 ```powershell
 ./scripts/configure-auth.ps1
@@ -55,4 +55,6 @@ Account deletion is outside this release and has no callable database function. 
 
 Security advisors reported no warnings/errors. Two informational findings concern deny-by-default private family tables with no policies. Unused-index informational findings are expected in the empty development database. See [private RLS information](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
 
-Automated auth tests use isolated HTTP/PKCE fixtures. The browser's successful sign-in/CRUD journey uses an intercepted test transport; live invalid-credential handling is checked separately. Permanent remote test-account creation was rejected by automatic approval review, so a successful live email confirmation/sign-in/recovery journey is not claimed. It requires configured email delivery, hosted redirects, and an approved test account.
+Approved temporary accounts passed real Supabase HTTP sign-in, unconfirmed-email rejection, confirmation-token exchange, teen profile creation, parent rejection, CRUD and unrelated-user isolation for all three money tables, recovery verification, password update, refresh and logout invalidation. The actual Flutter browser also passed live sign-in, transaction/budget/goal creation, exact savings addition, offline save/reload/reconnect, account switching and recovery/password update, with zero page errors. No successful Auth/REST responses were intercepted in that live run.
+
+Confirmation/recovery tokens were prepared only for the two explicitly approved disposable accounts; this verifies Auth processing, not inbox delivery. A mail request to the reserved invalid fixture domain was rejected with `email_address_invalid`, which does not establish SMTP readiness for real recipients. Real inbox delivery remains unverified. Both accounts were removed after revoking sessions; queries confirmed zero remaining fixture users, profiles, money rows, sessions, refresh tokens or one-time tokens. Credentials were held in memory only. See [verification](VERIFICATION.md).
