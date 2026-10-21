@@ -110,10 +110,9 @@ class _PinSessionState extends State<_PinSession> {
         ? Future.value()
         : Future.microtask(() => lock.bind(id));
     ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted && lock.waitSeconds > 0) {
+      if (mounted) {
         setState(() {});
-      } else if (mounted)
-        setState(() {});
+      }
     });
   }
 

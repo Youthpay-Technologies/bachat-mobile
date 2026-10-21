@@ -111,9 +111,9 @@ class _EntryFormState extends State<EntryForm> {
                 maxLength: 100,
                 textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
-                  labelText: direction == EntryDirection.expense
-                      ? 'Where or what was it?'
-                      : 'Where did it come from?',
+                  labelText: direction == EntryDirection.income
+                      ? 'Where did it come from?'
+                      : 'Where or what was it?',
                 ),
                 validator: requiredText,
               ),

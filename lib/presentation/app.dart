@@ -385,6 +385,7 @@ class HomePage extends ConsumerWidget {
                 runSpacing: 16,
                 children: [
                   _Metric('Money in', money(summary.incomeMinor)),
+                  _Metric('Set aside', money(summary.savedMinor)),
                   _Metric(
                     'Net flow',
                     money(
@@ -496,6 +497,7 @@ class _Metric extends StatelessWidget {
 }
 
 IconData categoryIcon(String category) => switch (category) {
+  'Savings' => Icons.savings_outlined,
   'Food & dining' => Icons.restaurant_outlined,
   'Transport' => Icons.directions_bus_outlined,
   'Education' => Icons.menu_book_outlined,
