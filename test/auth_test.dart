@@ -322,10 +322,11 @@ void main() {
           caughtUp = Completer<void>();
       var reads = 0;
       final c = await setup((r) async {
-        if (r.url.path.endsWith('/profiles'))
+        if (r.url.path.endsWith('/profiles')) {
           return json([
             {'id': fixtureAccount, 'name': 'Teen', 'role': 'teen', 'age': 16},
           ]);
+        }
         if (r.url.path.endsWith('/transactions')) {
           reads++;
           if (reads == 1) {
