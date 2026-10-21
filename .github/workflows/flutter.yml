@@ -1,5 +1,11 @@
 name: Flutter checks
 on:
+  workflow_dispatch:
+    inputs:
+      upload_apk:
+        description: Upload the debug APK (requires available artifact storage)
+        type: boolean
+        default: false
   pull_request:
   push:
     branches: [main]
@@ -45,7 +51,7 @@ jobs:
           cache-read-only: false
       - run: flutter build apk --debug
       - uses: actions/upload-artifact@v4
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_apk
         with:
           name: bachat-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
