@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 
 enum UserRole { teen, parent }
 
-enum EntryDirection { expense, income }
+enum EntryDirection { expense, income, savings }
 
 const categories = [
   'Food & dining',
@@ -15,6 +15,23 @@ const categories = [
   'Transfer',
   'Other',
 ];
+
+const incomeCategories = [
+  'Pocket money',
+  'Gift',
+  'Salary',
+  'Freelance',
+  'Refund',
+  'Transfer',
+  'Other',
+];
+const spendCategories = [...categories, 'Savings'];
+final transactionCategories = {...spendCategories, ...incomeCategories};
+List<String> categoriesFor(EntryDirection direction) => switch (direction) {
+  EntryDirection.expense => spendCategories,
+  EntryDirection.income => incomeCategories,
+  EntryDirection.savings => const ['Savings'],
+};
 
 int parseMoney(String input) {
   final clean = input.trim().replaceAll(',', '');
@@ -73,9 +90,12 @@ class MoneyEntry {
     required this.category,
     required this.occurredAt,
     this.note = '',
+    this.customCategory = '',
     this.deleted = false,
   });
-  final String id, ownerId, merchant, category, note;
+  final String id, ownerId, merchant, category, note, customCategory;
+  String get categoryLabel =>
+      customCategory.isEmpty ? category : customCategory;
   final int amountMinor;
   final EntryDirection direction;
   final DateTime occurredAt;
@@ -89,6 +109,7 @@ class MoneyEntry {
     category: j['category'] as String,
     occurredAt: DateTime.parse(j['occurred_at'] as String).toLocal(),
     note: j['note'] as String? ?? '',
+    customCategory: j['custom_category'] as String? ?? '',
     deleted: j['deleted'] as bool? ?? false,
   );
   Map<String, dynamic> toJson() => {
@@ -100,8 +121,23 @@ class MoneyEntry {
     'category': category,
     'occurred_at': occurredAt.toUtc().toIso8601String(),
     'note': note,
+    'custom_category': customCategory,
     'deleted': deleted,
   };
+}
+
+MoneyEntry normalizeEntry(MoneyEntry entry) {
+  final tag = entry.customCategory.trim();
+  final savings =
+      entry.direction != EntryDirection.income &&
+      (entry.category == 'Savings' ||
+          (entry.category == 'Other' && tag.toLowerCase() == 'savings'));
+  return MoneyEntry.fromJson({
+    ...entry.toJson(),
+    'direction': savings ? 'savings' : entry.direction.name,
+    'category': savings ? 'Savings' : entry.category,
+    'custom_category': !savings && entry.category == 'Other' ? tag : '',
+  });
 }
 
 class CategoryBudget {
@@ -211,6 +247,8 @@ class MoneySummary {
     )) {
       if (e.direction == EntryDirection.income) {
         incomeMinor += e.amountMinor;
+      } else if (e.direction == EntryDirection.savings) {
+        savedMinor += e.amountMinor;
       } else {
         spentMinor += e.amountMinor;
         byCategory.update(
@@ -221,6 +259,6 @@ class MoneySummary {
       }
     }
   }
-  int incomeMinor = 0, spentMinor = 0;
+  int incomeMinor = 0, spentMinor = 0, savedMinor = 0;
   final Map<String, int> byCategory = {};
 }

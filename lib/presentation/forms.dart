@@ -9,6 +9,7 @@ Future<void> entryForm(
   BuildContext context,
   AppController c, {
   MoneyEntry? existing,
+  EntryDirection direction = EntryDirection.expense,
 }) async {
   final result = await showModalBottomSheet<String>(
     context: context,
@@ -18,13 +19,19 @@ Future<void> entryForm(
     isScrollControlled: true,
     useSafeArea: true,
     showDragHandle: true,
-    builder: (_) => EntryForm(c: c, existing: existing),
+    builder: (_) => EntryForm(c: c, existing: existing, direction: direction),
   );
   if (context.mounted && result != null) showFeedback(context, result);
 }
 
 class EntryForm extends StatefulWidget {
-  const EntryForm({super.key, required this.c, this.existing});
+  const EntryForm({
+    super.key,
+    required this.c,
+    this.existing,
+    this.direction = EntryDirection.expense,
+  });
+  final EntryDirection direction;
   final AppController c;
   final MoneyEntry? existing;
   @override
@@ -33,7 +40,7 @@ class EntryForm extends StatefulWidget {
 
 class _EntryFormState extends State<EntryForm> {
   final form = GlobalKey<FormState>();
-  late final TextEditingController merchant, amount, note;
+  late final TextEditingController merchant, amount, note, customCategory;
   late String category;
   late EntryDirection direction;
   late DateTime date;
@@ -48,8 +55,11 @@ class _EntryFormState extends State<EntryForm> {
       text: e == null ? '' : (e.amountMinor / 100).toStringAsFixed(2),
     );
     note = TextEditingController(text: e?.note);
-    category = e?.category ?? categories.first;
-    direction = e?.direction ?? EntryDirection.expense;
+    direction = e?.direction == EntryDirection.savings
+        ? EntryDirection.expense
+        : e?.direction ?? widget.direction;
+    category = e?.category ?? categoriesFor(direction).first;
+    customCategory = TextEditingController(text: e?.customCategory);
     date = e?.occurredAt ?? DateTime.now();
   }
 
@@ -58,6 +68,7 @@ class _EntryFormState extends State<EntryForm> {
     merchant.dispose();
     amount.dispose();
     note.dispose();
+    customCategory.dispose();
     super.dispose();
   }
 
@@ -70,7 +81,9 @@ class _EntryFormState extends State<EntryForm> {
           readOnly
               ? 'Transaction details'
               : widget.existing == null
-              ? 'Add a transaction'
+              ? (direction == EntryDirection.income
+                    ? 'Receive money'
+                    : 'Spend money')
               : 'Edit transaction',
           style: Theme.of(context).textTheme.headlineSmall,
         ),
@@ -79,23 +92,6 @@ class _EntryFormState extends State<EntryForm> {
           key: form,
           child: Column(
             children: [
-              SegmentedButton<EntryDirection>(
-                segments: const [
-                  ButtonSegment(
-                    value: EntryDirection.expense,
-                    label: Text('Expense'),
-                  ),
-                  ButtonSegment(
-                    value: EntryDirection.income,
-                    label: Text('Income'),
-                  ),
-                ],
-                selected: {direction},
-                onSelectionChanged: readOnly
-                    ? null
-                    : (v) => setState(() => direction = v.first),
-              ),
-              const SizedBox(height: 20),
               TextFormField(
                 controller: amount,
                 style: Theme.of(context).textTheme.headlineLarge,
@@ -117,9 +113,9 @@ class _EntryFormState extends State<EntryForm> {
                 maxLength: 100,
                 textCapitalization: TextCapitalization.sentences,
                 decoration: InputDecoration(
-                  labelText: direction == EntryDirection.expense
-                      ? 'Where or what was it?'
-                      : 'Where did it come from?',
+                  labelText: direction == EntryDirection.income
+                      ? 'Where did it come from?'
+                      : 'Where or what was it?',
                 ),
                 validator: requiredText,
               ),
@@ -127,13 +123,36 @@ class _EntryFormState extends State<EntryForm> {
               DropdownButtonFormField<String>(
                 initialValue: category,
                 decoration: const InputDecoration(labelText: 'Category'),
-                items: categories
+                items: categoriesFor(direction)
                     .map((v) => DropdownMenuItem(value: v, child: Text(v)))
                     .toList(),
                 onChanged: readOnly
                     ? null
                     : (v) => setState(() => category = v!),
               ),
+              if (category == 'Other') ...[
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: customCategory,
+                  readOnly: readOnly,
+                  maxLength: 40,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(labelText: 'Category name'),
+                  validator: requiredText,
+                  onChanged: (_) => setState(() {}),
+                ),
+              ],
+              if (direction != EntryDirection.income &&
+                  (category == 'Savings' ||
+                      (category == 'Other' &&
+                          customCategory.text.trim().toLowerCase() ==
+                              'savings')))
+                const Padding(
+                  padding: EdgeInsets.only(top: 12),
+                  child: Text(
+                    'Added to savings, outside your spending totals.',
+                  ),
+                ),
               const SizedBox(height: 16),
               ListTile(
                 contentPadding: EdgeInsets.zero,
@@ -186,6 +205,9 @@ class _EntryFormState extends State<EntryForm> {
                           category: category,
                           occurredAt: date,
                           note: note.text.trim(),
+                          customCategory: category == 'Other'
+                              ? customCategory.text.trim()
+                              : '',
                         ),
                       );
                       if (context.mounted) {
@@ -195,7 +217,8 @@ class _EntryFormState extends State<EntryForm> {
                       if (mounted) {
                         setState(() {
                           saving = false;
-                          error = 'Unable to save this entry. Try again.';
+                          error =
+                              'Unable to save this entry. Check the details and try again.';
                         });
                       }
                     }

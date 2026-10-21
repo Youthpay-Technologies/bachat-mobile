@@ -65,9 +65,9 @@ class ActivityFilter {
               (category == null || e.category == category) &&
               (start == null || !e.occurredAt.isBefore(start)) &&
               (end == null || e.occurredAt.isBefore(end)) &&
-              '${e.merchant} ${e.category} ${e.note}'.toLowerCase().contains(
-                search,
-              ),
+              '${e.merchant} ${e.category} ${e.customCategory} ${e.note}'
+                  .toLowerCase()
+                  .contains(search),
         )
         .toList();
     result.sort((a, b) {

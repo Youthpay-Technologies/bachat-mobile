@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'data/backend_config.dart';
+import 'data/pin_storage.dart';
+import 'application/device_lock.dart';
+import 'presentation/device_lock_screen.dart';
 import 'application/controller.dart';
 import 'data/database.dart';
 import 'data/repository.dart';
@@ -28,6 +31,7 @@ Future<void> main() async {
     }
     final controller = AppController(
       BachatRepository(await openDatabase(), Supabase.instance.client),
+      deviceLock: DeviceLock(SecurePinStorage()),
     );
     runApp(
       ProviderScope(
@@ -77,6 +81,8 @@ class BachatApp extends ConsumerWidget {
       darkTheme: BachatTheme.build(Brightness.dark),
       themeMode: controller.themeMode,
       themeAnimationDuration: Duration.zero,
+      builder: (context, child) =>
+          DevicePrivacyGate(controller: controller, child: child!),
       home: const AppGate(),
     );
   }

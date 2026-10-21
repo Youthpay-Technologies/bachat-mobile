@@ -6,11 +6,13 @@ Bachat is a Flutter expense tracker for teens aged 13-18, launching in English w
 
 - Email/password registration, email confirmation, sign-in, recovery and session restoration through Supabase.
 - Profile setup and name editing; light, dark and system appearance.
-- Manual expenses and income with exact paisa amounts, editing and deletion.
+- Separate Spend/Receive actions and category sets, with custom Other labels. A spending label "savings" records money set aside instead of an expense.
+- Manual transactions with exact paisa amounts, editing and deletion.
+- A personal six-digit app-lock PIN on every device; change/lock controls in You.
 - Monthly spending and category breakdowns, searchable activity, date/category filters and sorting.
 - Monthly category budgets, including reuse of missing categories from the previous month.
 - Savings goals, recorded savings additions and progress. Adding savings does not transfer money or create an expense.
-- Offline account snapshots and a durable sync queue after initial online sign-in/setup.
+- Offline account snapshots and a durable sync queue after initial online sign-in/setup; Realtime and catch-up reads synchronize money records and profiles across devices on the same account. PINs and appearance remain device preferences.
 - A coming-soon learning tab.
 
 Verified teens manage their own records without parent approval while parent registration is disabled. New accounts start empty. Sample personas are not exposed in the authenticated app. RLS independently enforces verified teen ownership for every cloud money operation.

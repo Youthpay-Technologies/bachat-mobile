@@ -314,6 +314,39 @@ void main() {
       await goalUploaded.future.timeout(const Duration(seconds: 3));
     },
   );
+  test(
+    'remote notifications during a refresh trigger a catch-up read',
+    () async {
+      final reading = Completer<void>(),
+          release = Completer<void>(),
+          caughtUp = Completer<void>();
+      var reads = 0;
+      final c = await setup((r) async {
+        if (r.url.path.endsWith('/profiles')) {
+          return json([
+            {'id': fixtureAccount, 'name': 'Teen', 'role': 'teen', 'age': 16},
+          ]);
+        }
+        if (r.url.path.endsWith('/transactions')) {
+          reads++;
+          if (reads == 1) {
+            reading.complete();
+            await release.future;
+          } else if (!caughtUp.isCompleted) {
+            caughtUp.complete();
+          }
+        }
+        return json([]);
+      }, signedIn: true);
+      final refresh = c.refresh();
+      await reading.future;
+      c.requestRefresh();
+      release.complete();
+      await refresh;
+      await caughtUp.future.timeout(const Duration(seconds: 3));
+      expect(reads, 2);
+    },
+  );
   test('bad transaction fields fail before entering the outbox', () async {
     final db = await databaseFactoryMemory.openDatabase('bad-entry');
     addTearDown(db.close);

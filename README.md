@@ -7,12 +7,15 @@ This repository contains the standalone Flutter mobile app for Android and iOS. 
 ## What you can do
 
 - Create an account, verify your email, sign in, and recover your password.
-- Record, edit, and delete expenses and income, with exact paisa amounts.
+- Use separate Spend and Receive actions, each with relevant categories.
+- Record, edit, and delete transactions with exact paisa amounts and custom Other tags.
+- Type “savings” under Other to record money set aside, outside spending totals.
 - Review monthly spending and category totals on the dashboard.
 - Search activity, filter by date or category, and sort by date or amount.
 - Set monthly category budgets and reuse missing categories from last month's plan.
 - Create savings goals, add savings, and track progress toward each target.
-- Keep your records in your own Supabase account, with offline edits queued for synchronization.
+- Sync your profile, transactions, budgets and goals across devices signed into the same account. Offline edits queue until reconnecting.
+- Protect each device with its own 6-digit PIN, required when reopening Bachat.
 - Switch between light, dark, and system appearance.
 
 The learning tab is coming soon. Automatic bank, SMS, and Gmail imports are planned for later.
@@ -20,6 +23,8 @@ The learning tab is coming soon. Automatic bank, SMS, and Gmail imports are plan
 ## Accounts and data
 
 Choose **Continue as a teen**, then sign in or create an account. Verify your email and complete your name and age (13-18). New accounts start with empty records. Parent onboarding is greyed out; sample personas and profile switching are not exposed in the authenticated app.
+
+Each device creates its own PIN after sign-in/profile setup. You can change it or lock immediately in You. A forgotten PIN requires signing out and authenticating again; unsynced changes are explicitly warned about before being discarded. PINs are never uploaded.
 
 Supabase Auth manages sessions. PostgreSQL row-level security restricts transactions, budgets, and savings goals to their verified teen owner. Edits are saved locally before the screen updates, then synchronized when a connection is available. Signing out clears this device's account cache; a confirmation warns about unsynced changes.
 

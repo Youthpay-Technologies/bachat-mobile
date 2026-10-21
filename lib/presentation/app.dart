@@ -376,15 +376,7 @@ class HomePage extends ConsumerWidget {
               amount: money(summary.spentMinor),
             ),
             const SizedBox(height: 16),
-            if (!c.isParent)
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => entryForm(context, c),
-                  icon: const Icon(Icons.add_rounded),
-                  label: const Text('Add transaction'),
-                ),
-              ),
+            if (!c.isParent) MoneyActions(c),
             const SectionHeading('Overview'),
             Surface(
               tone: Theme.of(context).colorScheme.primaryContainer,
@@ -393,9 +385,14 @@ class HomePage extends ConsumerWidget {
                 runSpacing: 16,
                 children: [
                   _Metric('Money in', money(summary.incomeMinor)),
+                  _Metric('Set aside', money(summary.savedMinor)),
                   _Metric(
                     'Net flow',
-                    money(summary.incomeMinor - summary.spentMinor),
+                    money(
+                      summary.incomeMinor -
+                          summary.spentMinor -
+                          summary.savedMinor,
+                    ),
                   ),
                 ],
               ),
@@ -500,6 +497,7 @@ class _Metric extends StatelessWidget {
 }
 
 IconData categoryIcon(String category) => switch (category) {
+  'Savings' => Icons.savings_outlined,
   'Food & dining' => Icons.restaurant_outlined,
   'Transport' => Icons.directions_bus_outlined,
   'Education' => Icons.menu_book_outlined,
@@ -508,6 +506,43 @@ IconData categoryIcon(String category) => switch (category) {
   'Health' => Icons.favorite_outline,
   _ => Icons.payments_outlined,
 };
+
+class MoneyActions extends StatelessWidget {
+  const MoneyActions(this.controller, {super.key});
+  final AppController controller;
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, size) {
+      final buttons = [
+        FilledButton.icon(
+          onPressed: () => entryForm(context, controller),
+          icon: const Icon(Icons.north_east_rounded),
+          label: const Text('Spend'),
+        ),
+        OutlinedButton.icon(
+          onPressed: () =>
+              entryForm(context, controller, direction: EntryDirection.income),
+          icon: const Icon(Icons.south_west_rounded),
+          label: const Text('Receive'),
+        ),
+      ];
+      if (size.maxWidth < 300 ||
+          MediaQuery.textScalerOf(context).scale(14) > 21) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [buttons.first, const SizedBox(height: 12), buttons.last],
+        );
+      }
+      return Row(
+        children: [
+          Expanded(child: buttons.first),
+          const SizedBox(width: 12),
+          Expanded(child: buttons.last),
+        ],
+      );
+    },
+  );
+}
 
 class EntryTile extends StatelessWidget {
   const EntryTile(this.entry, this.c, {super.key});
@@ -551,7 +586,7 @@ class EntryTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${entry.category} · ${DateFormat.MMMd().format(entry.occurredAt)}',
+                      '${entry.categoryLabel} · ${DateFormat.MMMd().format(entry.occurredAt)}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     if (compact)
@@ -661,7 +696,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            ...['All', 'Expense', 'Income'].map(
+            ...['All', 'Expense', 'Income', 'Savings'].map(
               (value) => ChoiceChip(
                 label: Text(value),
                 selected: filter == value,
@@ -691,12 +726,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
             ),
           ),
         const SizedBox(height: 20),
-        if (!c.isParent)
-          OutlinedButton.icon(
-            onPressed: () => entryForm(context, c),
-            icon: const Icon(Icons.add),
-            label: const Text('Add transaction'),
-          ),
+        if (!c.isParent) MoneyActions(c),
         const SizedBox(height: 16),
         if (entries.isEmpty)
           EmptyState(
@@ -794,6 +824,31 @@ class PlanPage extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         ChildPicker(c),
+        const SectionHeading('Set aside'),
+        Surface(
+          child: Row(
+            children: [
+              const Icon(Icons.savings_outlined),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      money(
+                        c.entries
+                            .where((e) => e.direction == EntryDirection.savings)
+                            .fold<int>(0, (total, e) => total + e.amountMinor),
+                      ),
+                      style: t.headlineMedium,
+                    ),
+                    const Text('Recorded savings'),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
         SectionHeading(
           'Monthly budgets',
           action: c.isParent ? null : 'Add budget',
@@ -1372,6 +1427,21 @@ class SettingsPage extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => appearanceSheet(context, c),
               ),
+              if (!c.preview && c.deviceLock != null) ...[
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.pin_outlined),
+                  title: const Text('Change PIN'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => c.deviceLock!.lock(changePin: true),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.lock_outline),
+                  title: const Text('Lock now'),
+                  onTap: () => c.deviceLock!.lock(),
+                ),
+              ],
               if (c.preview)
                 ListTile(
                   contentPadding: EdgeInsets.zero,

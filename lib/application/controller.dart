@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'device_lock.dart';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
@@ -11,13 +12,15 @@ import '../data/repository.dart';
 import '../domain/models.dart';
 
 part 'auth.dart';
+part 'sync.dart';
 
 final controllerProvider = ChangeNotifierProvider<AppController>(
   (ref) => throw StateError('AppController must be provided at startup.'),
 );
 
 class AppController extends ChangeNotifier {
-  AppController(this.repository);
+  AppController(this.repository, {this.deviceLock});
+  final DeviceLock? deviceLock;
   final BachatRepository repository;
   Profile? profile;
   List<FamilyLink> links = [];
@@ -46,6 +49,10 @@ class AppController extends ChangeNotifier {
   StreamSubscription<List<ConnectivityResult>>? _connection;
   Timer? _poll;
   RealtimeChannel? _familyChannel;
+  RealtimeChannel? _moneyChannel;
+  String? _subscribedAccount;
+  bool _observeRealtime = false, _refreshAgain = false;
+  Timer? _syncDebounce;
   Future<void> _mutationTail = Future<void>.value();
   int _generation = 0;
   int _localRevision = 0;
@@ -146,7 +153,9 @@ class AppController extends ChangeNotifier {
     Uri? initialAuthLink,
     bool observeConnectivity = true,
     bool observeLinks = true,
+    bool observeRealtime = true,
   }) async {
+    _observeRealtime = observeRealtime;
     theme = await repository.loadTheme();
     chosenRole = UserRole.teen;
     pendingEmail = await repository.loadPendingEmail();
@@ -249,6 +258,7 @@ class AppController extends ChangeNotifier {
       _reset();
       _loadedAccount = account;
     }
+    _ensureMoneySubscription(account);
     final generation = _generation;
     final cached = await repository.load(account);
     if (accountId != account || generation != _generation) return;
@@ -347,7 +357,11 @@ class AppController extends ChangeNotifier {
       });
   Future<void> refresh() async {
     final id = accountId, cloud = client;
-    if (id == null || cloud == null || preview || syncing) return;
+    if (id == null || cloud == null || preview || _disposed) return;
+    if (syncing) {
+      _refreshAgain = true;
+      return;
+    }
     final generation = _generation;
     final localRevision = _localRevision;
     syncing = true;
@@ -437,7 +451,10 @@ class AppController extends ChangeNotifier {
     } finally {
       if (generation == _generation) {
         syncing = false;
-        if (pendingCount > 0 && !offline && error == null) {
+        final followUp =
+            _refreshAgain || (pendingCount > 0 && !offline && error == null);
+        _refreshAgain = false;
+        if (followUp) {
           unawaited(Future<void>.microtask(refresh));
         }
       }
@@ -500,7 +517,8 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  Future<void> saveEntry(MoneyEntry entry) => _serialize(() async {
+  Future<void> saveEntry(MoneyEntry value) => _serialize(() async {
+    final entry = normalizeEntry(value);
     _validateOwner(entry.ownerId);
     final now = DateTime.now();
     if (entry.merchant.trim().isEmpty ||
@@ -508,7 +526,9 @@ class AppController extends ChangeNotifier {
         entry.note.length > 500 ||
         entry.amountMinor <= 0 ||
         entry.amountMinor > 999999999999 ||
-        !categories.contains(entry.category) ||
+        !categoriesFor(entry.direction).contains(entry.category) ||
+        entry.customCategory.length > 40 ||
+        (entry.category != 'Other' && entry.customCategory.isNotEmpty) ||
         entry.occurredAt.isBefore(DateTime(2000)) ||
         !entry.occurredAt.isBefore(
           DateTime(now.year, now.month, now.day + 1),
@@ -781,6 +801,9 @@ class AppController extends ChangeNotifier {
   }
 
   void _reset() {
+    deviceLock?.unbind();
+    _stopMoneySubscription();
+    _refreshAgain = false;
     _loadedAccount = null;
     profileChecked = false;
     syncing = false;
@@ -910,6 +933,7 @@ class AppController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _stopMoneySubscription();
     _auth?.cancel();
     _deepLinks?.cancel();
     _connection?.cancel();

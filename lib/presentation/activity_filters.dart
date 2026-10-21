@@ -111,7 +111,7 @@ class _ActivityFilterSheetState extends State<ActivityFilterSheet> {
         decoration: const InputDecoration(labelText: 'Category'),
         items: [
           const DropdownMenuItem(value: 'all', child: Text('All categories')),
-          ...categories.map(
+          ...transactionCategories.map(
             (value) => DropdownMenuItem(value: value, child: Text(value)),
           ),
         ],

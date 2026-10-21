@@ -31,6 +31,98 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  testWidgets('Spend and Receive open fixed flows with separate categories', (
+    tester,
+  ) async {
+    final c = await controller();
+    c.startPreview(UserRole.teen);
+    await mount(tester, c);
+    await tester.ensureVisible(find.text('Receive').first);
+    await tester.tap(find.text('Receive').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Receive money'), findsOneWidget);
+    expect(find.byType(SegmentedButton<EntryDirection>), findsNothing);
+    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.pumpAndSettle();
+    expect(find.text('Pocket money'), findsWidgets);
+    expect(find.text('Salary'), findsWidgets);
+    final receiveCategories = tester.widget<DropdownButton<String>>(
+      find.byType(DropdownButton<String>).last,
+    );
+    expect(
+      receiveCategories.items!.map((item) => item.value),
+      isNot(contains('Food & dining')),
+    );
+    await tester.tap(find.text('Gift').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Amount'),
+      '2000',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Where did it come from?'),
+      'Birthday',
+    );
+    await tester.ensureVisible(find.text('Save transaction'));
+    await tester.tap(find.text('Save transaction'));
+    await tester.pumpAndSettle();
+    expect(c.entries.first.direction, EntryDirection.income);
+    expect(c.entries.first.category, 'Gift');
+  });
+
+  testWidgets('Other savings is recorded once and excluded from spending', (
+    tester,
+  ) async {
+    final c = await controller();
+    c.startPreview(UserRole.teen);
+    final before = MoneySummary(c.entries, DateTime.now()).spentMinor;
+    await mount(tester, c);
+    await tester.ensureVisible(find.text('Spend').first);
+    await tester.tap(find.text('Spend').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Other').last);
+    await tester.tap(find.text('Other').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Amount'),
+      '125.50',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Where or what was it?'),
+      'Put aside',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Category name'),
+      ' savings ',
+    );
+    await tester.pump();
+    expect(
+      find.text('Added to savings, outside your spending totals.'),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(find.text('Save transaction'));
+    await tester.tap(find.text('Save transaction'));
+    await tester.pumpAndSettle();
+    expect(c.entries.first.direction, EntryDirection.savings);
+    expect(MoneySummary(c.entries, DateTime.now()).spentMinor, before);
+    expect(MoneySummary(c.entries, DateTime.now()).savedMinor, 12550);
+    await tester.ensureVisible(find.text('Put aside'));
+    await tester.tap(find.text('Put aside'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Food & dining').last);
+    await tester.tap(find.text('Food & dining').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Save transaction'));
+    await tester.tap(find.text('Save transaction'));
+    await tester.pumpAndSettle();
+    expect(MoneySummary(c.entries, DateTime.now()).savedMinor, 0);
+    expect(MoneySummary(c.entries, DateTime.now()).spentMinor, before + 12550);
+  });
+
   testWidgets('onboarding enables only teen authentication', (tester) async {
     final c = await controller();
     await mount(tester, c);
@@ -132,7 +224,7 @@ void main() {
     c.startPreview(UserRole.parent);
     await mount(tester, c);
     expect(find.text('Child · Read only'), findsOneWidget);
-    expect(find.text('Add transaction'), findsNothing);
+    expect(find.text('Spend'), findsNothing);
     await tester.tap(find.text('Plan').last);
     await tester.pumpAndSettle();
     expect(find.text('New goal'), findsNothing);
@@ -145,7 +237,7 @@ void main() {
     await tester.runAsync(() => c.revokeLink(c.links.first));
     await tester.pumpAndSettle();
     expect(find.text('A little support to get started'), findsOneWidget);
-    expect(find.text('Add transaction'), findsNothing);
+    expect(find.text('Spend'), findsNothing);
   });
   testWidgets('narrow large text onboarding has no layout exception', (
     tester,
@@ -181,8 +273,8 @@ void main() {
     final c = await controller();
     c.startPreview(UserRole.teen);
     await mount(tester, c);
-    await tester.ensureVisible(find.text('Add transaction'));
-    await tester.tap(find.text('Add transaction'));
+    await tester.ensureVisible(find.text('Spend'));
+    await tester.tap(find.text('Spend'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Save transaction'));
     await tester.tap(find.text('Save transaction'));
