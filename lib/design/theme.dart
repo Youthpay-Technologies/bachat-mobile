@@ -63,6 +63,7 @@ abstract final class BachatTheme {
           .copyWith(
             displaySmall: TextStyle(
               fontFamily: BachatBrand.headingFont,
+              fontFamilyFallback: const [BachatBrand.interfaceFont],
               fontSize: 48,
               fontWeight: FontWeight.w700,
               height: 1.1,
@@ -72,6 +73,7 @@ abstract final class BachatTheme {
             ),
             headlineLarge: TextStyle(
               fontFamily: BachatBrand.headingFont,
+              fontFamilyFallback: const [BachatBrand.interfaceFont],
               fontSize: 30,
               fontWeight: FontWeight.w700,
               height: 1.2,
@@ -80,6 +82,7 @@ abstract final class BachatTheme {
             ),
             headlineMedium: TextStyle(
               fontFamily: BachatBrand.headingFont,
+              fontFamilyFallback: const [BachatBrand.interfaceFont],
               fontSize: 28,
               fontWeight: FontWeight.w700,
               height: 1.2,
@@ -87,6 +90,7 @@ abstract final class BachatTheme {
             ),
             titleLarge: TextStyle(
               fontFamily: BachatBrand.headingFont,
+              fontFamilyFallback: const [BachatBrand.interfaceFont],
               fontSize: 20,
               fontWeight: FontWeight.w700,
               height: 1.3,
@@ -95,6 +99,7 @@ abstract final class BachatTheme {
             titleMedium: TextStyle(
               fontFamily: BachatBrand.headingFont,
               fontFamilyFallback: const [BachatBrand.interfaceFont],
+              fontFamilyFallback: const [BachatBrand.interfaceFont],
               fontSize: 18,
               fontWeight: FontWeight.w600,
               height: 1.3,
@@ -102,20 +107,33 @@ abstract final class BachatTheme {
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
             titleSmall: TextStyle(
+              fontFamily: BachatBrand.interfaceFont,
               fontSize: 14,
               fontWeight: FontWeight.w600,
               height: 1.4,
               color: text,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
-            bodyLarge: TextStyle(fontSize: 16, height: 1.5, color: text),
-            bodyMedium: TextStyle(fontSize: 14, height: 1.5, color: text),
+            bodyLarge: TextStyle(
+              fontFamily: BachatBrand.interfaceFont,
+              fontSize: 16,
+              height: 1.5,
+              color: text,
+            ),
+            bodyMedium: TextStyle(
+              fontFamily: BachatBrand.interfaceFont,
+              fontSize: 14,
+              height: 1.5,
+              color: text,
+            ),
             bodySmall: TextStyle(
+              fontFamily: BachatBrand.interfaceFont,
               fontSize: 13,
               height: 1.5,
               color: scheme.onSurfaceVariant,
             ),
             labelLarge: TextStyle(
+              fontFamily: BachatBrand.interfaceFont,
               fontSize: 15,
               fontWeight: FontWeight.w700,
               color: text,
