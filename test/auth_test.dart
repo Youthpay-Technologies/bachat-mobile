@@ -155,6 +155,32 @@ void main() {
       expect(await c.repository.loadRecovery(), isFalse);
     },
   );
+  test(
+    'legacy recovery fragments establish a password recovery session',
+    () async {
+      final c = await setup((r) async => json(fixtureUser()));
+      final session = fixtureSession();
+      final callback = Uri(
+        scheme: 'com.getyouthpay.bachat',
+        host: 'auth',
+        path: '/callback',
+        fragment: Uri(
+          queryParameters: {
+            'access_token': session['access_token'] as String,
+            'refresh_token': session['refresh_token'] as String,
+            'expires_in': '3600',
+            'token_type': 'bearer',
+            'type': 'recovery',
+          },
+        ).query,
+      );
+      await c.handleAuthLink(callback);
+      expect(c.signedIn, isTrue);
+      expect(c.recoveringPassword, isTrue);
+      expect(await c.repository.loadRecovery(), isTrue);
+      expect(c.error, isNull);
+    },
+  );
   test('owner mismatch is rejected before sending an outbox record', () async {
     var requests = 0;
     final c = await setup((_) async {
