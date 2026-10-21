@@ -99,7 +99,6 @@ abstract final class BachatTheme {
             titleMedium: TextStyle(
               fontFamily: BachatBrand.headingFont,
               fontFamilyFallback: const [BachatBrand.interfaceFont],
-              fontFamilyFallback: const [BachatBrand.interfaceFont],
               fontSize: 18,
               fontWeight: FontWeight.w600,
               height: 1.3,
