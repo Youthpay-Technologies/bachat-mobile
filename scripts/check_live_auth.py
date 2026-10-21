@@ -3,6 +3,7 @@ Credentials are read from stdin and never written or printed. This script does n
 create users; cleanup is performed separately against the recorded fixture IDs.
 """
 import json
+import getpass
 import re
 import sys
 import uuid
@@ -15,7 +16,10 @@ class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         return None
 
-config = json.loads(sys.stdin.readline())
+private_input = getpass.getpass('Temporary fixture JSON (hidden): ') if sys.stdin.isatty() else sys.stdin.readline()
+if not private_input.strip():
+    raise SystemExit('Expected private fixture JSON on stdin.')
+config = json.loads(private_input)
 fixtures = config['fixtures']
 assert len(fixtures) == 2 and all(x['email'].startswith('bachat-integration-') and x['email'].endswith('@example.invalid') for x in fixtures)
 source = (Path(__file__).resolve().parents[1] / 'lib/data/backend_config.dart').read_text(encoding='utf-8-sig')
