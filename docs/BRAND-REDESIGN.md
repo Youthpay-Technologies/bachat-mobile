@@ -2,9 +2,9 @@
 
 ## Scope and integration
 
-Worktree: `bachat-brand`, branch `feat/cobalt-brand-redesign`. The redesign is rebased onto authentication snapshot `2ff6728`, preserving the other agent's latest authentication, synchronization and test work. Its original checkout was not edited. The deprecated Next.js project is outside this change.
+Worktree: `bachat-brand`, branch `feat/cobalt-brand-redesign`. The redesign includes updated `main` at `4269e64`, preserving the merged authentication, synchronization and test work. Its original checkout was not edited. The deprecated Next.js project is outside this change.
 
-The integration target is `feat/teen-auth-and-cloud`. Authentication PR #9 is still a draft against `main`; a stacked redesign PR keeps that unrelated work out of the redesign diff and does not publish it to `main` prematurely.
+The integration target is `main`. Authentication PR #9 has merged; incorporating its main-branch merge adds ancestry without changing the application files used for the completed validation below.
 
 ## Delivered identity
 
