@@ -13,6 +13,7 @@ build/
 !.env.example
 config/*.local.json
 android/local.properties
+android/.kotlin/
 android/key.properties
 *.jks
 *.keystore
