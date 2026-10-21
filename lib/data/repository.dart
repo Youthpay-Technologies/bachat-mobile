@@ -88,14 +88,55 @@ class BachatRepository {
     database,
     finder: Finder(filter: Filter.equals('account', account)),
   );
+  Future<List<Map<String, dynamic>>> fetchRows(
+    String table,
+    String account,
+  ) async {
+    final client = cloud;
+    if (client == null) return [];
+    const pageSize = 500;
+    final result = <Map<String, dynamic>>[];
+    String? after;
+    while (true) {
+      if (client.auth.currentUser?.id != account)
+        throw const FormatException('Your account changed. Sign in again.');
+      var query = client.from(table).select().eq('owner_id', account);
+      if (after != null) query = query.gt('id', after);
+      final page = await query.order('id').limit(pageSize);
+      result.addAll(page);
+      if (page.length < pageSize) break;
+      after = page.last['id'] as String;
+    }
+    return result;
+  }
+
   Future<void> synchronize(String account) async {
     final client = cloud;
     if (client == null) return;
     for (final operation in await pending(account)) {
       final value = operation.value;
-      await client
-          .from(value['table'] as String)
-          .upsert(Map<String, dynamic>.from(value['row'] as Map));
+      if (client.auth.currentUser?.id != account)
+        throw const FormatException('Your account changed. Sign in again.');
+      final row = Map<String, dynamic>.from(value['row'] as Map);
+      if (row['owner_id'] != account)
+        throw const FormatException(
+          'Cannot sync a record owned by another account.',
+        );
+      // Budgets have a natural owner/month/category identity across devices.
+      if (value['table'] == 'budgets') {
+        final existing = await client
+            .from('budgets')
+            .select('id')
+            .eq('owner_id', account)
+            .eq('month', row['month'])
+            .eq('category', row['category'])
+            .eq('deleted', false)
+            .maybeSingle();
+        if (existing != null) row['id'] = existing['id'];
+      }
+      if (client.auth.currentUser?.id != account)
+        throw const FormatException('Your account changed. Sign in again.');
+      await client.from(value['table'] as String).upsert(row);
       // Preserve any edit queued while the previous version was in flight.
       await database.transaction((txn) async {
         final latest = await _outbox.record(operation.key).get(txn);

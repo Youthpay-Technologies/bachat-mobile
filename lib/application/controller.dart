@@ -89,6 +89,10 @@ class AppController extends ChangeNotifier {
   static const demoKey = 'demo-family-v1';
 
   Future<void> startDemo(UserRole role) async {
+    if (client != null)
+      throw StateError(
+        'Sample profiles are unavailable in authenticated mode.',
+      );
     if (!preview) {
       final saved = await repository.load(demoKey);
       if (saved != null) _restoreDemo(saved);
@@ -121,6 +125,10 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> resetDemo() async {
+    if (client != null)
+      throw StateError(
+        'Sample profiles are unavailable in authenticated mode.',
+      );
     final role = profile?.role ?? UserRole.teen;
     _reset();
     startPreview(role);
@@ -211,7 +219,9 @@ class AppController extends ChangeNotifier {
       _reset();
       _loadedAccount = account;
     }
+    final generation = _generation;
     final cached = await repository.load(account);
+    if (accountId != account || generation != _generation) return;
     if (cached != null) {
       profile = cached['profile'] == null
           ? null
@@ -233,8 +243,11 @@ class AppController extends ChangeNotifier {
           .map((j) => SavingsGoal.fromJson(Map<String, dynamic>.from(j as Map)))
           .toList();
       selectedChildId = cached['selected_child'] as String?;
+      profileChecked = profile != null;
     }
-    pendingCount = (await repository.pending(account)).length;
+    final pending = await repository.pending(account);
+    if (accountId != account || generation != _generation) return;
+    pendingCount = pending.length;
     notifyListeners();
   }
 
@@ -339,15 +352,9 @@ class AppController extends ChangeNotifier {
       pendingCount = (await repository.pending(id)).length;
       if (visible.isNotEmpty) {
         final data = await Future.wait([
-          cloud
-              .from('transactions')
-              .select()
-              .inFilter('owner_id', visible.toList()),
-          cloud.from('budgets').select().inFilter('owner_id', visible.toList()),
-          cloud
-              .from('savings_goals')
-              .select()
-              .inFilter('owner_id', visible.toList()),
+          repository.fetchRows('transactions', id),
+          repository.fetchRows('budgets', id),
+          repository.fetchRows('savings_goals', id),
         ]);
         if (generation != _generation) return;
         final pending = await repository.pending(id);
@@ -386,14 +393,15 @@ class AppController extends ChangeNotifier {
       error = null;
       await repository.save(id, snapshot());
     } catch (e) {
-      offline = true;
+      if (generation != _generation) return;
+      offline = e is! PostgrestException;
       error = e is PostgrestException
           ? (e.code == '23505'
                 ? 'A budget category already exists on another device. Review it before retrying sync.'
                 : 'Unable to sync your changes. Try again.')
           : 'You are offline. Your saved changes will sync when you reconnect.';
     } finally {
-      syncing = false;
+      if (generation == _generation) syncing = false;
       notifyListeners();
     }
   }
@@ -678,6 +686,10 @@ class AppController extends ChangeNotifier {
   }
 
   void startPreview(UserRole role) {
+    if (client != null)
+      throw StateError(
+        'Sample profiles are unavailable in authenticated mode.',
+      );
     if (preview) {
       profile = Profile(
         id: role == UserRole.teen ? 'preview-teen' : 'preview-parent',
