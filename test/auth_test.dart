@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -224,6 +225,66 @@ void main() {
       await db.close();
       await expectLater(c.addSavings('preview-goal', 100), throwsA(anything));
       expect(c.goals.single.savedMinor, before);
+    },
+  );
+  test(
+    'refresh immediately drains edits queued while remote reads are in flight',
+    () async {
+      final reading = Completer<void>(),
+          release = Completer<void>(),
+          goalUploaded = Completer<void>();
+      var pause = true;
+      final rows = <String, List<Map<String, dynamic>>>{
+        'transactions': [],
+        'budgets': [],
+        'savings_goals': [],
+      };
+      final profile = {
+        'id': fixtureAccount,
+        'name': 'Teen',
+        'role': 'teen',
+        'age': 16,
+      };
+      final c = await setup((r) async {
+        final table = r.url.pathSegments.last;
+        if (table == 'profiles') return json([profile]);
+        if (r.method == 'POST') {
+          final row = Map<String, dynamic>.from(jsonDecode(r.body) as Map);
+          rows[table]!.add(row);
+          if (table == 'savings_goals' && !goalUploaded.isCompleted)
+            goalUploaded.complete();
+          return json({}, 201);
+        }
+        if (table == 'transactions' && pause) {
+          pause = false;
+          reading.complete();
+          await release.future;
+        }
+        return json(rows[table] ?? []);
+      }, signedIn: true);
+      c.profile = Profile.fromJson(profile);
+      await c.saveEntry(
+        MoneyEntry(
+          id: 'entry',
+          ownerId: fixtureAccount,
+          merchant: 'Lunch',
+          amountMinor: 100,
+          direction: EntryDirection.expense,
+          category: 'Other',
+          occurredAt: DateTime.now(),
+        ),
+      );
+      await reading.future;
+      await c.saveGoal(
+        const SavingsGoal(
+          id: 'goal',
+          ownerId: fixtureAccount,
+          title: 'Book',
+          targetMinor: 10000,
+        ),
+      );
+      release.complete();
+      await goalUploaded.future.timeout(const Duration(seconds: 3));
     },
   );
   test('bad transaction fields fail before entering the outbox', () async {
