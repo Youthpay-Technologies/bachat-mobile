@@ -84,9 +84,9 @@ class SectionHeading extends StatelessWidget {
     padding: const EdgeInsets.only(top: 36, bottom: 18),
     child: LayoutBuilder(
       builder: (context, constraints) {
-        final heading = Text(
-          title,
-          style: Theme.of(context).textTheme.titleLarge,
+        final heading = Semantics(
+          header: true,
+          child: Text(title, style: Theme.of(context).textTheme.titleLarge),
         );
         final button = action == null
             ? null
@@ -188,8 +188,14 @@ Future<bool> confirmAction(
     false;
 
 class StatusBadge extends StatelessWidget {
-  const StatusBadge(this.label, {super.key, this.icon, this.danger = false});
-  final bool danger;
+  const StatusBadge(
+    this.label, {
+    super.key,
+    this.icon,
+    this.danger = false,
+    this.highlight = false,
+  });
+  final bool danger, highlight;
   final String label;
   final IconData? icon;
   @override
@@ -198,6 +204,8 @@ class StatusBadge extends StatelessWidget {
     decoration: BoxDecoration(
       color: danger
           ? Theme.of(context).colorScheme.errorContainer
+          : highlight
+          ? Theme.of(context).colorScheme.secondaryContainer
           : Theme.of(context).colorScheme.primaryContainer,
       borderRadius: BorderRadius.circular(BachatRadii.compact),
     ),
@@ -210,6 +218,8 @@ class StatusBadge extends StatelessWidget {
             size: 16,
             color: danger
                 ? Theme.of(context).colorScheme.onErrorContainer
+                : highlight
+                ? Theme.of(context).colorScheme.onSecondaryContainer
                 : Theme.of(context).colorScheme.onPrimaryContainer,
           ),
           const SizedBox(width: 6),
@@ -220,6 +230,8 @@ class StatusBadge extends StatelessWidget {
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: danger
                   ? Theme.of(context).colorScheme.onErrorContainer
+                  : highlight
+                  ? Theme.of(context).colorScheme.onSecondaryContainer
                   : Theme.of(context).colorScheme.onPrimaryContainer,
             ),
           ),
@@ -233,8 +245,9 @@ class DashboardSkeleton extends StatelessWidget {
   const DashboardSkeleton({super.key});
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.outlineVariant
-        .withValues(alpha: .5);
+    final color = Theme.of(
+      context,
+    ).colorScheme.outlineVariant.withValues(alpha: .5);
     Widget block(double width, double height) => Container(
       width: width,
       height: height,
