@@ -31,6 +31,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
     - family: DM Sans
       fonts:
         - asset: assets/fonts/DMSans.ttf
