@@ -33,6 +33,19 @@ class BachatRepository {
     await _snapshots.record(account).put(database, snapshot);
   }
 
+  Future<String?> loadPendingEmail() async =>
+      (await _preferences.record('verification').get(database))?['email']
+          as String?;
+  Future<void> savePendingEmail(String? email) async {
+    await _preferences.record('verification').put(database, {'email': email});
+  }
+
+  Future<bool> loadRecovery() async =>
+      (await _preferences.record('recovery').get(database))?['active'] == true;
+  Future<void> saveRecovery(bool active) async {
+    await _preferences.record('recovery').put(database, {'active': active});
+  }
+
   Future<String> loadTheme() async =>
       (await _preferences.record('appearance').get(database))?['theme']
           as String? ??

@@ -2,10 +2,13 @@ import 'dart:async';
 import 'package:uuid/uuid.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/repository.dart';
 import '../domain/models.dart';
+
+part 'auth.dart';
 
 final controllerProvider = ChangeNotifierProvider<AppController>(
   (ref) => throw StateError('AppController must be provided at startup.'),
@@ -24,6 +27,11 @@ class AppController extends ChangeNotifier {
   String theme = 'system';
   String? error;
   String? familyCode;
+  String? pendingEmail;
+  String? authNotice;
+  bool recoveringPassword = false;
+  bool profileChecked = false;
+  bool _disposed = false;
   bool busy = false,
       ready = false,
       preview = false,
@@ -42,7 +50,10 @@ class AppController extends ChangeNotifier {
   bool get signedIn => accountId != null;
   bool get isParent => profile?.role == UserRole.parent;
   bool get approved => links.any((l) => l.approved && l.teenId == profile?.id);
-  bool get needsApproval => profile?.role == UserRole.teen && !approved;
+  bool get needsApproval =>
+      preview && profile?.role == UserRole.teen && !approved;
+  bool get canUseOwnData =>
+      profile?.role == UserRole.teen && (!preview || approved);
   List<FamilyLink> get children => links.where((l) => l.approved).toList();
   String? get viewingId => isParent
       ? (children.any((link) => link.teenId == selectedChildId)
@@ -118,7 +129,9 @@ class AppController extends ChangeNotifier {
 
   Future<void> initialize() async {
     theme = await repository.loadTheme();
-    chosenRole = UserRole.values.byName(await repository.loadRole());
+    chosenRole = UserRole.teen;
+    pendingEmail = await repository.loadPendingEmail();
+    recoveringPassword = await repository.loadRecovery();
     if (client == null) {
       final saved = await repository.load(demoKey);
       if (saved != null) _restoreDemo(saved);
@@ -126,21 +139,20 @@ class AppController extends ChangeNotifier {
       notifyListeners();
       return;
     }
+    _auth = client!.auth.onAuthStateChange.listen(
+      (event) {
+        unawaited(_handleAuth(event));
+      },
+      onError: (Object event) {
+        error = event is AuthException
+            ? authMessage(event)
+            : 'Unable to restore your session. Please sign in again.';
+        notifyListeners();
+      },
+    );
     if (accountId != null) await _hydrate();
     ready = true;
     notifyListeners();
-    _auth = client?.auth.onAuthStateChange.listen((event) async {
-      if (preview) return;
-      if (event.event == AuthChangeEvent.signedOut) {
-        _generation++;
-        _reset();
-        notifyListeners();
-      } else if (event.session != null &&
-          event.event != AuthChangeEvent.initialSession) {
-        await _hydrate();
-        await refresh();
-      }
-    });
     _connection = Connectivity().onConnectivityChanged.listen((results) {
       offline = results.contains(ConnectivityResult.none);
       notifyListeners();
@@ -150,6 +162,36 @@ class AppController extends ChangeNotifier {
       if (signedIn && !preview) unawaited(refresh());
     });
     if (signedIn) unawaited(refresh());
+  }
+
+  Future<void> _handleAuth(AuthState event) async {
+    if (preview || _disposed) return;
+    try {
+      if (event.event == AuthChangeEvent.signedOut) {
+        final previous = _loadedAccount;
+        _generation++;
+        _reset();
+        recoveringPassword = false;
+        await repository.saveRecovery(false);
+        if (previous != null) await repository.clearAccount(previous);
+      } else if (event.session != null) {
+        if (event.event == AuthChangeEvent.passwordRecovery) {
+          recoveringPassword = true;
+          await repository.saveRecovery(true);
+        }
+        await _hydrate();
+        await refresh();
+      }
+    } catch (_) {
+      error =
+          'Unable to restore your account. Check your connection and retry.';
+    }
+    notifyListeners();
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
   }
 
   Map<String, dynamic> snapshot() => {
@@ -208,10 +250,12 @@ class AppController extends ChangeNotifier {
       error = e.message;
       return false;
     } on AuthException catch (e) {
-      error = e.message;
+      error = authMessage(e);
       return false;
     } on PostgrestException catch (e) {
-      error = 'Unable to save. ${e.message}';
+      error = e.code == '23505'
+          ? 'A record already exists for this category. Refresh and edit the existing record.'
+          : 'Unable to save your changes. Refresh and try again.';
       return false;
     } catch (_) {
       error = 'Unable to connect. Check your connection and try again.';
@@ -234,6 +278,8 @@ class AppController extends ChangeNotifier {
             'Bachat teen accounts are for ages 13 to 18.',
           );
         }
+        if (role != UserRole.teen)
+          throw const FormatException('Parent accounts are coming soon.');
         final id = accountId;
         if (id == null) {
           throw const FormatException('Sign in again to finish your profile.');
@@ -244,7 +290,12 @@ class AppController extends ChangeNotifier {
           role: role,
           age: role == UserRole.teen ? age : null,
         );
-        await client!.from('profiles').insert(p.toJson());
+        final existing = await client!
+            .from('profiles')
+            .select()
+            .eq('id', id)
+            .maybeSingle();
+        if (existing == null) await client!.from('profiles').insert(p.toJson());
         profile = p;
         await repository.save(id, snapshot());
         await refresh();
@@ -265,34 +316,26 @@ class AppController extends ChangeNotifier {
       if (generation != _generation) return;
       if (p == null) {
         profile = null;
+        profileChecked = true;
         return;
       }
+      profileChecked = true;
       profile = Profile.fromJson(p);
-      final rows = await cloud
-          .from('family_links')
-          .select(
-            '*,teen:profiles!family_links_teen_id_fkey(name),parent:profiles!family_links_parent_id_fkey(name)',
-          );
-      if (generation != _generation) return;
-      links = rows
-          .map(
-            (r) => FamilyLink.fromJson({
-              ...r,
-              'teen_name': (r['teen'] as Map?)?['name'] ?? 'Teen',
-              'parent_name': (r['parent'] as Map?)?['name'] ?? 'Parent',
-            }),
-          )
-          .toList();
-      final visible = isParent
-          ? children.map((l) => l.teenId).toSet()
-          : (approved ? {id} : <String>{});
+      if (isParent) {
+        await signOut();
+        error =
+            'Parent accounts are coming soon. Please sign in with a teen account.';
+        return;
+      }
+      links = [];
+      final visible = {id};
       if (isParent && !visible.contains(selectedChildId)) {
         selectedChildId = visible.firstOrNull;
       }
       allEntries.removeWhere((e) => !visible.contains(e.ownerId));
       allBudgets.removeWhere((b) => !visible.contains(b.ownerId));
       allGoals.removeWhere((g) => !visible.contains(g.ownerId));
-      if (!isParent && approved) await repository.synchronize(id);
+      if (!isParent) await repository.synchronize(id);
       pendingCount = (await repository.pending(id)).length;
       if (visible.isNotEmpty) {
         final data = await Future.wait([
@@ -342,20 +385,13 @@ class AppController extends ChangeNotifier {
       offline = false;
       error = null;
       await repository.save(id, snapshot());
-      _familyChannel ??= cloud
-          .channel('family-$id')
-          .onPostgresChanges(
-            event: PostgresChangeEvent.all,
-            schema: 'public',
-            table: 'family_links',
-            callback: (_) => unawaited(refresh()),
-          )
-          .subscribe();
     } catch (e) {
       offline = true;
       error = e is PostgrestException
-          ? 'Sync needs attention. ${e.message}'
-          : null;
+          ? (e.code == '23505'
+                ? 'A budget category already exists on another device. Review it before retrying sync.'
+                : 'Unable to sync your changes. Try again.')
+          : 'You are offline. Your saved changes will sync when you reconnect.';
     } finally {
       syncing = false;
       notifyListeners();
@@ -472,9 +508,9 @@ class AppController extends ChangeNotifier {
   }
 
   void _requireEdit() {
-    if (isParent || !approved || profile == null) {
+    if (isParent || !canUseOwnData || profile == null) {
       throw const FormatException(
-        'An approved teen account is required to make changes.',
+        'Sign in with a teen account to make changes.',
       );
     }
   }
@@ -626,6 +662,8 @@ class AppController extends ChangeNotifier {
 
   void _reset() {
     _loadedAccount = null;
+    profileChecked = false;
+    syncing = false;
     profile = null;
     links = [];
     allEntries = [];
@@ -746,6 +784,7 @@ class AppController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _auth?.cancel();
     _connection?.cancel();
     _poll?.cancel();
