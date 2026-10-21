@@ -77,6 +77,9 @@ void main() {
       await tester.tap(find.text('Spend').first);
       await tester.pumpAndSettle();
       expect(find.text('Spend money'), findsOneWidget);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+      await tester.pumpAndSettle();
+      expect(find.text('Spend money'), findsNothing);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.hidden);
       await tester.pumpAndSettle();
       expect(find.text('Spend money'), findsNothing);

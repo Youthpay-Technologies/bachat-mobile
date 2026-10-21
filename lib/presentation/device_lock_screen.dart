@@ -71,9 +71,9 @@ class _DevicePrivacyGateState extends State<DevicePrivacyGate>
               ),
             ),
             if (obscured)
-              const ColoredBox(
-                color: Color(0xFFEEF0F4),
-                child: Center(child: Icon(Icons.lock_outline)),
+              ColoredBox(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                child: const Center(child: Icon(Icons.lock_outline)),
               )
             else if (needsLock)
               _PinSession(
