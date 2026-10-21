@@ -1,39 +1,41 @@
 # Mobile brand redesign verification
 
-## Scope and isolation
+## Scope and integration
 
-Worktree: `bachat-brand`, branch `feat/cobalt-brand-redesign`. The branch starts at committed mobile snapshot `c2aa2b9` on `feat/teen-auth-and-cloud`. The other agent's original checkout and the deprecated Next.js project were not edited.
+Worktree: `bachat-brand`, branch `feat/cobalt-brand-redesign`. The redesign is rebased onto authentication snapshot `0bd516c`, preserving the other agent's latest authentication, synchronization and test work. Its original checkout was not edited. The deprecated Next.js project is outside this change.
 
-This is currently stacked on the authentication work, which was not yet in local `main` at the start. A PR against `main` before that work merges would include its commits. Target the authentication branch for a stacked PR, or rebase the redesign onto updated `main` after authentication merges. Do not silently merge unrelated authentication changes as part of this redesign.
+The integration target is `feat/teen-auth-and-cloud`. Authentication PR #9 is still a draft against `main`; a stacked redesign PR keeps that unrelated work out of the redesign diff and does not publish it to `main` prematurely.
 
-## Implemented
+## Delivered identity
 
 - New code-native lowercase-b symbol and Bachat / YouthPay wordmark.
-- Exact cobalt #0C38A9, sunshine #FFDE59 and tangerine #FF751E brand primitives with semantic light/dark themes.
-- Shared typography roles, tabular financial figures, flat surfaces, navigation, fields, badges, loading and empty states.
+- Exact cobalt #0C38A9, sunshine #FFDE59 and tangerine #FF751E primitives with semantic light/dark themes.
+- Bundled Instrument Sans headings, Inter interface text and selective Instrument Serif Italic editorial accents. Instrument Serif regular is included too. All requested families and their open font licenses ship offline.
+- Tabular financial figures, flat surfaces, navigation, fields, badges, loading and empty states.
 - Editorial onboarding, static habit illustration, spending hero, sunshine savings cards and revised Learn presentation.
-- Android/iOS launcher icons, Flutter preview icons and install metadata.
-- Licensed offline Inter. Instrument Sans and Instrument Serif placements are implemented but their assets are pending.
+- Android/iOS launcher icons and Flutter preview icons/install metadata.
 
-## Checks completed
+`pubspec.yaml` and Flutter's generated font manifest register each family correctly. The installer only edits the top-level font list, preserving nested face declarations.
 
-The normal Flutter CLI could not write the shared SDK cache or launch child tools under this session's sandbox. Verification used the existing installed Flutter 3.47.7 / Dart 3.13.5 binaries directly, without changing the shared SDK or the other agent's source.
+## Verification
+
+Final checks use the normal Flutter 3.47.7 / Dart 3.13.5 CLI with the requested fonts bundled.
 
 | Check | Result |
 | --- | --- |
 | `dart format --output=none --set-exit-if-changed lib test tool` | Passed |
+| `flutter analyze --no-pub` | Passed, no issues |
+| `flutter test --no-pub` | 51 passed |
+| `flutter build apk --debug --no-pub` | Passed; debug APK built |
+| `flutter build web --release --no-pub` | Running |
 | `git diff --check` | Passed |
-| Direct Dart analysis-server protocol | 28 files, 0 diagnostics |
-| PowerShell parser for `scripts/install-brand-fonts.ps1` | No syntax errors |
-| Existing domain, repository, demo, everyday-tools and widget tests | 36 passed, 0 failed through an in-process `test_api` Declarer/Invoker harness in `flutter_tester` |
-| Real Flutter renders | 26 completed, no Flutter exceptions |
-| Launcher generation | Canonical Flutter painter rendered all 25 icon files |
+| PowerShell font installer parser | No syntax errors |
+| Real Flutter renders with bundled typography | 26 completed, no Flutter exceptions |
+| Launcher generation | Canonical painter rendered all 25 icon files |
 
-The test harness used a local copy of the existing Material test shader assets. These are test runs through the installed Flutter engine, not a claim that the normal `flutter test` command succeeded. Temporary harnesses and logs remain in the ignored `.dart_tool` directory of this worktree.
+The renders cover Welcome, Home/navigation, Activity, Plan, Learn and Settings in both themes, each at 390px / normal text and 320px / doubled text, plus both parent dashboards. The large-text spending panel was visually checked and refined to keep the amount readable. These artifacts use local preview records, not a live authenticated account. See [light home](screenshots/brand/home-light.png), [dark home](screenshots/brand/home-dark.png), [large-text home](screenshots/brand/home-light-large-text.png), [welcome](screenshots/brand/welcome-light.png) and [all renders](screenshots/brand/).
 
-The existing tests exposed two stale expectations, corrected in separate commits: a queued transaction retains its `owner_id`, and the disabled parent choice uses the existing typographic apostrophe. No application authentication or synchronization behavior was changed.
-
-The renders cover Welcome, Home/navigation, Activity, Plan, Learn and Settings in both themes, each at 390px / normal text and 320px / doubled text, plus both parent dashboards. The large-text spending panel was visually checked and refined to keep the sample amount readable. The artifacts use local preview records and fallback Instrument typography. See [light home](screenshots/brand/home-light.png), [dark home](screenshots/brand/home-dark.png), [large-text home](screenshots/brand/home-light-large-text.png) and [all renders](screenshots/brand/).
+The workflow keeps Android compilation required on PRs. APK artifact uploads run only for `main` pushes; the existing draft PR had compiled successfully but its artifact upload failed because the account's storage quota was exhausted.
 
 ## Measured contrast
 
@@ -53,10 +55,6 @@ Ratios were computed using WCAG relative luminance from the declared opaque fore
 | Dark secondary action / primary container | 8.84:1 |
 | Dark savings label / savings container | 9.30:1 |
 
-## Remaining work before merge
+## Platform boundaries
 
-1. In a network-enabled session, run `./scripts/install-brand-fonts.ps1`, commit the fonts/licenses and manifest, then refresh verification and screenshots. Until then the requested Instrument faces are not delivered: headings fall back to Inter and editorial text uses the platform serif.
-2. Run the normal Flutter checks and relevant platform builds in an environment with writable tooling. Android and iOS builds, signed releases, screen-reader behavior and a complete keyboard audit were not verified in this redesign session.
-3. Confirm the authentication branch's integration status, push this branch, create the appropriately based PR and merge after checks. `git push` and the explicit `gh pr create --draft` attempt both failed because the session routes network requests to an unavailable proxy at `127.0.0.1:9`. The draft body is prepared in the ignored `.pr-brand.md`. No PR or merge has happened.
-
-The session's approval policy also rejected the attempted font-download escalation. That policy must change, or the remaining network work must run in a different session; no approval was inferred.
+iOS builds and signing require macOS/Xcode and were not verified here. The Android result is a debug build, not release-signing verification. Screen-reader behavior and a complete keyboard audit remain outside the completed automated checks. Native Flutter controls, accessible names, field labels and reduced-motion handling are retained.
