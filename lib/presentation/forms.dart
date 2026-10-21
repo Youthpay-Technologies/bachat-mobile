@@ -55,7 +55,9 @@ class _EntryFormState extends State<EntryForm> {
       text: e == null ? '' : (e.amountMinor / 100).toStringAsFixed(2),
     );
     note = TextEditingController(text: e?.note);
-    direction = e?.direction ?? widget.direction;
+    direction = e?.direction == EntryDirection.savings
+        ? EntryDirection.expense
+        : e?.direction ?? widget.direction;
     category = e?.category ?? categoriesFor(direction).first;
     customCategory = TextEditingController(text: e?.customCategory);
     date = e?.occurredAt ?? DateTime.now();

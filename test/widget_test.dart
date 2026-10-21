@@ -108,6 +108,19 @@ void main() {
     expect(c.entries.first.direction, EntryDirection.savings);
     expect(MoneySummary(c.entries, DateTime.now()).spentMinor, before);
     expect(MoneySummary(c.entries, DateTime.now()).savedMinor, 12550);
+    await tester.ensureVisible(find.text('Put aside'));
+    await tester.tap(find.text('Put aside'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Food & dining').last);
+    await tester.tap(find.text('Food & dining').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Save transaction'));
+    await tester.tap(find.text('Save transaction'));
+    await tester.pumpAndSettle();
+    expect(MoneySummary(c.entries, DateTime.now()).savedMinor, 0);
+    expect(MoneySummary(c.entries, DateTime.now()).spentMinor, before + 12550);
   });
 
   testWidgets('onboarding enables only teen authentication', (tester) async {
