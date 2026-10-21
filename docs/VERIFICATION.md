@@ -1,3 +1,27 @@
+# Current teen authentication verification — 2026-10-21
+
+Analyzer is clean and **51 tests pass**. Coverage now includes email/password validation, pending confirmation, invalid credentials, profile setup, blocked parent registration and sample bypasses, PKCE password recovery, owner-scoped outbox, 501-row pagination, serialized savings increments, failed persistence, edits queued during refresh, and auth/profile layouts at 320px / 200% text. Native and web session storage use the configured platform adapters; tests use isolated storage.
+
+Live Supabase MCP migrations are applied and `supabase/tests/teen_authorization.sql` passed with rollback-scoped fixtures. It verifies owner CRUD, unrelated-user isolation, unverified-user write rejection, blocked parent profiles/family RPCs, immutable identity/age, category/amount bounds, goal limits and budget uniqueness. Follow-up queries confirmed RLS on all exposed application tables, zero test profiles, no persistent auth fixtures, and no account-deletion RPC. Advisors report no security warnings/errors; private deny-by-default family tables and unused indexes have informational notices.
+
+Chrome at 390 x 844 verified the actual live invalid-credential response and the greyed-out parent option. A separate browser context intercepted successful Auth/REST responses in memory to verify sign-in, profile completion, empty initial records, transaction/budget/goal creation, exact savings addition, offline editing across reload, synchronization and sign-out. This run reported zero page errors. The screenshots below were visually inspected. They do not represent permanent cloud test users.
+
+Successful **live** email confirmation, sign-in and recovery remain unverified. Hosted redirect/password settings await CLI login because the MCP tool set has no auth-settings mutation. SMTP delivery to a real inbox has not been verified. Automatic approval rejected persistent cloud test-account creation; no generated credentials or users were created. See [backend setup](BACKEND.md).
+
+| Teen onboarding | Sign in | Live invalid credentials |
+|---|---|---|
+| ![Onboarding](screenshots/auth-onboarding.png) | ![Sign in](screenshots/auth-sign-in.png) | ![Error](screenshots/auth-error.png) |
+
+| Profile completion | Empty dashboard | Plan |
+|---|---|---|
+| ![Profile](screenshots/auth-profile-setup.png) | ![Dashboard](screenshots/auth-empty-dashboard.png) | ![Plan](screenshots/auth-plan.png) |
+
+![Account settings](screenshots/auth-settings.png)
+
+The previous local Next.js application was removed at the owner's request. Flutter and sibling brand assets remain. Earlier verification notes below are historical and include sample personas that are not exposed by the current app.
+
+---
+
 # Demo verification
 
 36 domain, repository, controller and widget tests passed. Coverage includes persistent shared demo records, persona restoration, reset, mutual family approval, read-only parent enforcement, access removal, exact money parsing, validated transactions/budgets/goals, narrow/large-text layouts, profile/appearance sheets, retained searches, empty-filter recovery, carousel buttons, startup skeleton, calendar boundaries, date/category filters, sorting, exact savings increments, savings persistence and limits, and previous-month budget reuse without overwrites. Analyzer is clean.
