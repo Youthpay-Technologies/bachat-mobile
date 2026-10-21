@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'device_lock.dart';
 import 'package:app_links/app_links.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
@@ -18,7 +19,8 @@ final controllerProvider = ChangeNotifierProvider<AppController>(
 );
 
 class AppController extends ChangeNotifier {
-  AppController(this.repository);
+  AppController(this.repository, {this.deviceLock});
+  final DeviceLock? deviceLock;
   final BachatRepository repository;
   Profile? profile;
   List<FamilyLink> links = [];
