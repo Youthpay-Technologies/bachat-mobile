@@ -1,34 +1,34 @@
-> Current release update: authentication is deferred. The app uses persistent, offline Ayesha/Sana demo personas with shared family data. See [demo experience](DEMO-EXPERIENCE.md). Cloud/OAuth descriptions below are retained for future integration.
-
 # Architecture
 
 ## Boundaries
 
-- `lib/domain`: immutable models, exact paisa parsing, monthly totals, serialization.
-- `lib/data`: native Sembast / browser IndexedDB adapters, secure auth-session persistence, account snapshots, durable sync outbox.
-- `lib/application`: Riverpod controller, role and family gates, mutations, cloud reconciliation.
-- `lib/presentation`: onboarding, guarded dashboard shell, family flows, forms, and settings.
-- `lib/design`: shared semantic color/type themes and reusable surfaces.
-- `supabase`: reproducible schema, RLS, RPCs, and transactional authorization tests.
+- `lib/domain`: immutable models, exact paisa arithmetic, summaries and activity filtering.
+- `lib/data`: Sembast/IndexedDB snapshots, persistent account outbox, secure session storage, public backend configuration and paginated Supabase reads.
+- `lib/application`: Riverpod controller, authenticated account lifecycle, validated/serialized mutations and synchronization. Authentication methods live in a separate part of the controller library.
+- `lib/presentation`: onboarding, email/password and recovery forms, profile completion, dashboard tabs and account settings.
+- `lib/design`: shared semantic theme, radius scale and reusable surfaces.
+- `supabase`: reproducible migrations and rollback-scoped authorization tests.
 
-The root gate reacts to authentication, profile, and approved-parent state. A teen cannot reach dashboards through a navigation URL. Native Navigator handles detail sheets and family settings. Tabs are a stateful shell; no routing package is required for the initial small scope.
+## Authentication
 
-## Offline synchronization
+The app initializes Supabase with publishable client configuration, restores its secure local session, then installs auth listeners before handling email callbacks. Password recovery is persisted until the password is changed or the user signs out. Link origins/schemes are constrained. PKCE code verification is performed by the Supabase client.
 
-Each account has its own snapshot and outbox. A mutation writes the current snapshot and pending operation in one local database transaction. Repeated edits coalesce by account/table/record ID. Deletes are tombstones. Synchronization upserts pending records only after refreshing family authorization. An edit queued while an older version uploads is retained by an operation-ID comparison. Pending rows overlay fetched remote rows so a concurrent edit is preserved.
+The root gate separates signed-out onboarding, password recovery, incomplete profiles, account-loading failures and the dashboard. Only teen accounts are enabled. Parent options are disabled, cached parent sessions cannot enter the dashboard, and the server rejects parent profile creation. Sample personas are available only to isolated tests using a repository without a cloud client.
 
-Cloud writes use the signed-in user's JWT and RLS. Authentication session tokens use platform secure storage. On sign-out the account's local snapshot and queue are cleared, after warning if unsynced changes exist. Account changes reset in-memory data before hydration.
+Native tabs retain state through an IndexedStack; sheets and detail pages use native navigation. Account changes invalidate earlier asynchronous loads before they can populate the new account's interface.
 
-The initial conflict policy is last successful upload wins per record. There is no collaborative editing or merge history. A unique budget category/month constraint prevents duplicate active budgets. Cross-device simultaneous creation of the same budget category can produce a sync conflict requiring correction; a future revision can use deterministic category IDs or explicit conflict resolution.
+## Local writes and synchronization
 
-Previously cached parent approval permits offline use. Remote revocation cannot instantly reach a disconnected device; reconnect revalidates and purges restricted views. Offline queued edits for a newly revoked teen remain unsent until approval is restored. Real-time family events and 30-second polling refresh relationship state while online.
+Each account has its own snapshot and durable outbox. Validated mutations are serialized, and the new snapshot plus queued operation are written in one database transaction before visible financial state changes. Persistence failures leave the displayed records unchanged. Deleted records are tombstones.
 
-## Storage and hardening
+Outbox entries coalesce by account/table/record ID. Uploads verify the current session and row owner; an operation ID prevents an older upload from removing a newer queued edit. Paginated owner-filtered reads avoid the server's default page-size truncation. Pending records overlay remote data, and a local revision guard prevents an in-flight fetch from replacing a newer edit. Edits queued during a successful refresh trigger another pass.
 
-Local financial snapshots are isolated per account in the platform app directory (or origin-specific IndexedDB on web); the database is not encrypted at rest by this app. Platform secure storage protects native session persistence. Encrypt financial snapshots and decide offline retention before a production rollout involving minors. Web preview is a development surface, not the planned public product.
+Conflicts use the last successfully uploaded record, rather than an accounting ledger or additive server transaction. Budget synchronization resolves the active owner/month/category identity before uploading; a concurrent unique conflict remains queued and can be retried. Savings increments are serialized on one device; simultaneous edits from separate devices are not merged additively. This is an expense tracker, not a payment or banking system.
 
-Startup uses an explicit public configuration file; no privileged key is present. Role flags in widgets only shape the UI; SQL policies enforce access. The data schema uses integer minor units and bounded amounts, immutable owners, server timestamps, and private consent-code tables.
+Connection failures preserve local snapshots and queued edits. Account settings exposes retry when synchronization needs attention. Sign-out confirms intent, warns if queued edits would be discarded, and clears this device's account cache and queue. Cloud records remain in the owner's account.
 
-## Tests
+## Authorization and tests
 
-Domain tests cover exact money, serialization, monthly filtering, family approval, and savings progress. Repository/controller tests cover atomic coalescing, account isolation, parent write rejection, and revoked teen restrictions. Widget tests cover onboarding, all teen tabs, parent read-only views, last-parent locking, and narrow-screen scaled text. SQL tests exercise real authenticated RLS and rollback their fixtures.
+Postgres RLS enforces verified teen ownership independently of client state. The application never ships a service-role key. Profile roles/signup ages and record ownership are immutable. Parent sharing is disabled at the database boundary for this release.
+
+Domain, repository, auth/controller and widget tests cover financial validation, persistence, role gates, PKCE recovery, session boundaries, pagination, concurrency and narrow/large-text layouts. Live SQL tests use rollback fixtures; successful browser auth/CRUD is verified with an intercepted transport. See [backend setup](BACKEND.md) and [verification notes](VERIFICATION.md) for remaining hosted configuration and live email testing requirements.
