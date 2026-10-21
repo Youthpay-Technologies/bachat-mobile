@@ -30,6 +30,7 @@ Final checks use the normal Flutter 3.47.7 / Dart 3.13.5 CLI with the requested 
 | `flutter build web --release --no-pub` | Passed; release web preview built |
 | `git diff --check` | Passed |
 | PowerShell font installer parser | No syntax errors |
+| APK font payload audit | All four requested font faces and three licenses present; legacy DM Sans excluded |
 | Real Flutter renders with bundled typography | 26 completed, no Flutter exceptions |
 | Launcher generation | Canonical painter rendered all 25 icon files |
 
