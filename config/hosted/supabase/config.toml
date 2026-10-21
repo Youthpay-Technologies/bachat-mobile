@@ -1,0 +1,12 @@
+# Only these hosted Auth settings are managed by the companion script.
+project_id = "bachat-mobile"
+[auth]
+site_url = "http://127.0.0.1:8080"
+additional_redirect_urls = ["http://127.0.0.1:8080", "http://127.0.0.1:8080/", "http://localhost:8080", "http://localhost:8080/", "com.getyouthpay.bachat://auth/callback"]
+enable_signup = true
+enable_anonymous_sign_ins = false
+minimum_password_length = 10
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+double_confirm_changes = true
