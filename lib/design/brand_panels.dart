@@ -56,9 +56,11 @@ class SpendingHero extends StatelessWidget {
         const SizedBox(height: 24),
         Text(
           amount,
-          style: Theme.of(
-            context,
-          ).textTheme.displaySmall?.copyWith(color: Colors.white, fontSize: 44),
+          style: Theme.of(context).textTheme.displaySmall?.copyWith(
+            color: Colors.white,
+            // Allow currency and value to reflow together at large text sizes.
+            fontSize: MediaQuery.textScalerOf(context).scale(14) > 20 ? 28 : 44,
+          ),
         ),
         const SizedBox(height: 24),
         Row(
@@ -109,10 +111,13 @@ class _HabitPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Scale from a single artboard so the composition also fits narrow phones.
-    final scale = (size.width / 320).clamp(0.0, 1.0);
+    final scale = (size.width / 320).clamp(0.0, size.height / 144);
     canvas.save();
-    canvas.translate((size.width - 320 * scale) / 2, 0);
-    canvas.scale(scale, size.height / 144);
+    canvas.translate(
+      (size.width - 320 * scale) / 2,
+      (size.height - 144 * scale) / 2,
+    );
+    canvas.scale(scale);
     final paint = Paint()..color = BachatBrand.sunshine;
     canvas.drawCircle(const Offset(160, 70), 67, paint);
     canvas.drawRRect(
