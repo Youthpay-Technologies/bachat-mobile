@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sembast/sembast_memory.dart';
 import 'package:bachat_mobile/main.dart';
 import 'package:bachat_mobile/presentation/app.dart';
+import 'package:bachat_mobile/presentation/auth_screens.dart';
 import 'package:bachat_mobile/design/components.dart';
 import 'package:bachat_mobile/application/controller.dart';
 import 'package:bachat_mobile/data/repository.dart';
@@ -30,15 +31,81 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('onboarding explains role and required approval', (tester) async {
+  testWidgets('onboarding enables only teen authentication', (tester) async {
     final c = await controller();
     await mount(tester, c);
     expect(find.text('bachat'), findsOneWidget);
     await tester.scrollUntilVisible(find.text('Skip introduction'), 300);
     await tester.tap(find.text('Skip introduction'));
     await tester.pumpAndSettle();
-    expect(find.text('Continue as Ayesha'), findsOneWidget);
-    expect(find.textContaining('Teen'), findsOneWidget);
+    expect(find.text('Continue as a teen'), findsOneWidget);
+    final parent = tester.widget<ChoiceChip>(
+      find.byWidgetPredicate(
+        (w) => w is ChoiceChip && (w.label as Text).data!.contains('parent'),
+      ),
+    );
+    expect(parent.onSelected, isNull);
+    await tester.ensureVisible(find.text('Continue as a teen'));
+    await tester.tap(find.text('Continue as a teen'));
+    await tester.pumpAndSettle();
+    expect(find.text('Sign in'), findsOneWidget);
+    expect(find.text('Create an account'), findsOneWidget);
+  });
+  testWidgets(
+    'auth modes retain email and validate before requesting sign-in',
+    (tester) async {
+      final c = await controller();
+      await mount(tester, c);
+      await tester.scrollUntilVisible(find.text('Skip introduction'), 300);
+      await tester.tap(find.text('Skip introduction'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Continue as a teen'));
+      await tester.tap(find.text('Continue as a teen'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Email'),
+        'teen@example.com',
+      );
+      await tester.ensureVisible(find.text('Create an account'));
+      await tester.tap(find.text('Create an account'));
+      await tester.pumpAndSettle();
+      expect(find.text('teen@example.com'), findsOneWidget);
+      await tester.ensureVisible(find.text('Create account'));
+      await tester.tap(find.text('Create account'));
+      await tester.pumpAndSettle();
+      expect(find.text('Use at least 10 characters.'), findsOneWidget);
+    },
+  );
+  testWidgets('auth and profile setup fit 320px at 200 percent text', (
+    tester,
+  ) async {
+    final c = await controller();
+    tester.view.physicalSize = const Size(320, 740);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    for (final screen in [
+      const AuthScreen(),
+      const AuthScreen(recovery: true),
+      const ProfileSetupScreen(),
+    ]) {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [controllerProvider.overrideWith((ref) => c)],
+          child: MaterialApp(
+            home: MediaQuery(
+              data: const MediaQueryData(
+                size: Size(320, 740),
+                textScaler: TextScaler.linear(2),
+              ),
+              child: screen,
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+    }
   });
   testWidgets('teen dashboard and all tabs render', (tester) async {
     final c = await controller();

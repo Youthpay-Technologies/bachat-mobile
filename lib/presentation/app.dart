@@ -9,6 +9,7 @@ import '../domain/models.dart';
 import '../domain/activity_filter.dart';
 import 'activity_filters.dart';
 import 'forms.dart';
+import 'auth_screens.dart';
 
 class AppGate extends ConsumerWidget {
   const AppGate({super.key});
@@ -18,11 +19,43 @@ class AppGate extends ConsumerWidget {
     if (!c.ready) {
       return const DashboardSkeleton();
     }
+    if (c.recoveringPassword && c.signedIn) {
+      return const AuthScreen(recovery: true);
+    }
     if (!c.signedIn) return const WelcomeScreen();
+    if (!c.preview && c.isParent) {
+      return Scaffold(
+        body: SafeArea(
+          child: PageBody(
+            children: [
+              const Text('Parent accounts are coming soon.'),
+              TextButton(onPressed: c.signOut, child: const Text('Sign out')),
+            ],
+          ),
+        ),
+      );
+    }
     if (c.profile == null && c.syncing) {
       return const DashboardSkeleton();
     }
-    if (c.profile == null) return const WelcomeScreen();
+    if (c.profile == null && !c.profileChecked) {
+      return Scaffold(
+        body: SafeArea(
+          child: PageBody(
+            children: [
+              const Text('Unable to load your account'),
+              AppError(c),
+              FilledButton(
+                onPressed: c.syncing ? null : c.refresh,
+                child: const Text('Try again'),
+              ),
+              TextButton(onPressed: c.signOut, child: const Text('Sign out')),
+            ],
+          ),
+        ),
+      );
+    }
+    if (c.profile == null) return const ProfileSetupScreen();
     if (c.needsApproval) {
       return const Scaffold(body: SafeArea(child: FamilyPage(locked: true)));
     }
@@ -74,10 +107,12 @@ class WelcomeScreen extends ConsumerStatefulWidget {
 
 class _WelcomeState extends ConsumerState<WelcomeScreen> {
   int step = 0;
+  bool authenticating = false;
   UserRole role = UserRole.teen;
   @override
   Widget build(BuildContext context) {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
+    if (authenticating) return const AuthScreen();
     return Scaffold(
       body: SafeArea(
         child: PageBody(
@@ -88,7 +123,7 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
               step == 0
                   ? 'Make money\nmake sense.'
                   : step == 1
-                  ? 'Grow together.\nStay independent.'
+                  ? 'Small habits.\nReal progress.'
                   : 'Your money.\nYour way.',
               style: t.displaySmall,
             ),
@@ -97,7 +132,7 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
               step == 0
                   ? 'Track the everyday. Make a plan. Save for something good.'
                   : step == 1
-                  ? 'Teens track their own money. Parents stay in the loop, with access both of you approve.'
+                  ? 'See where your money goes and make a little room for what matters.'
                   : 'Track spending, build a budget and save for what matters.',
               style: t.bodyLarge,
             ),
@@ -120,7 +155,7 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
                     step == 0
                         ? 'Your everyday, in perspective'
                         : step == 1
-                        ? 'Connected, by choice'
+                        ? 'Build a habit that lasts'
                         : 'A plan worth looking forward to',
                     style: t.titleLarge,
                   ),
@@ -129,7 +164,7 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
                     step == 0
                         ? 'Food, rides, a little treat. Give every rupee a place.'
                         : step == 1
-                        ? 'One family code. Two confirmations. A shared view of transactions, budgets, and goals.'
+                        ? 'A simple budget and a saving goal can make everyday choices easier.'
                         : 'Start with a small saving goal. Keep your progress close.',
                   ),
                 ],
@@ -176,20 +211,14 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
                 onChanged: (value) => setState(() => role = value),
               ),
               const SizedBox(height: 20),
-              Text(
-                role == UserRole.teen ? 'Ayesha, 16 · Teen' : 'Sana · Parent',
-              ),
-              const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: c.busy ? null : () => c.startDemo(role),
+                  onPressed: c.busy
+                      ? null
+                      : () => setState(() => authenticating = true),
                   icon: const Icon(Icons.arrow_forward_rounded),
-                  label: Text(
-                    role == UserRole.teen
-                        ? 'Continue as Ayesha'
-                        : 'Continue as Sana',
-                  ),
+                  label: const Text('Continue as a teen'),
                 ),
               ),
             ],
@@ -337,8 +366,10 @@ class HomePage extends ConsumerWidget {
               ),
               IconButton(
                 onPressed: () => accountSheet(context, c),
-                tooltip: 'Switch profile',
-                icon: const Icon(Icons.swap_horiz_rounded),
+                tooltip: c.preview ? 'Switch profile' : 'Account',
+                icon: Icon(
+                  c.preview ? Icons.swap_horiz_rounded : Icons.person_outline,
+                ),
               ),
             ],
           ),
@@ -1332,7 +1363,7 @@ class SettingsPage extends ConsumerWidget {
             contentPadding: EdgeInsets.zero,
             leading: CircleAvatar(child: Text(c.profile!.name.substring(0, 1))),
             title: Text(c.profile!.name, style: t.titleLarge),
-            subtitle: Text(c.isParent ? 'Parent' : 'Teen · 16'),
+            subtitle: Text(c.isParent ? 'Parent' : 'Teen · ${c.profile!.age}'),
             trailing: const Icon(Icons.unfold_more_rounded),
             onTap: () => accountSheet(context, c),
           ),
@@ -1354,21 +1385,22 @@ class SettingsPage extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => appearanceSheet(context, c),
               ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.people_outline),
-                title: const Text('Family connections'),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) => Scaffold(
-                      appBar: AppBar(title: const Text('Family')),
-                      body: const SafeArea(child: FamilyPage()),
+              if (c.preview)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.people_outline),
+                  title: const Text('Family connections'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => Scaffold(
+                        appBar: AppBar(title: const Text('Family')),
+                        body: const SafeArea(child: FamilyPage()),
+                      ),
                     ),
                   ),
                 ),
-              ),
               const ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(Icons.language_outlined),
@@ -1379,21 +1411,23 @@ class SettingsPage extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 32),
-        TextButton.icon(
-          onPressed: () async {
-            if (await confirmAction(
-              context,
-              title: 'Reset sample data?',
-              body:
-                  'Your changes will be replaced with the original transactions, budgets, goals and family connection.',
-              action: 'Reset data',
-            )) {
-              await c.resetDemo();
-            }
-          },
-          icon: const Icon(Icons.restart_alt),
-          label: const Text('Reset sample data'),
-        ),
+        if (c.preview)
+          TextButton.icon(
+            onPressed: () async {
+              if (await confirmAction(
+                context,
+                title: 'Reset sample data?',
+                body:
+                    'Your changes will be replaced with the original transactions, budgets, goals and family connection.',
+                action: 'Reset data',
+              )) {
+                await c.resetDemo();
+              }
+            },
+            icon: const Icon(Icons.restart_alt),
+            label: const Text('Reset sample data'),
+          ),
+        if (!c.preview) AccountActions(c),
         AppError(c),
         const SizedBox(height: 32),
         Text('Bachat by YouthPay', style: t.bodySmall),
@@ -1402,46 +1436,51 @@ class SettingsPage extends ConsumerWidget {
   }
 }
 
-Future<void> accountSheet(
-  BuildContext context,
-  AppController c,
-) => showModalBottomSheet<void>(
-  context: context,
-  sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
-      ? AnimationStyle.noAnimation
-      : null,
-  showDragHandle: true,
-  useSafeArea: true,
-  isScrollControlled: true,
-  builder: (sheetContext) => SheetBody(
-    children: [
-      Text('Switch profile', style: Theme.of(context).textTheme.headlineMedium),
-      const SizedBox(height: 24),
-      ...UserRole.values.map(
-        (role) => Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Surface(
-            child: ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: CircleAvatar(
-                child: Text(role == UserRole.teen ? 'A' : 'S'),
-              ),
-              title: Text(role == UserRole.teen ? 'Ayesha' : 'Sana'),
-              subtitle: Text(role == UserRole.teen ? 'Teen · 16' : 'Parent'),
-              trailing: c.profile!.role == role
-                  ? const Icon(Icons.check_circle_outline)
-                  : const Icon(Icons.chevron_right),
-              onTap: () async {
-                Navigator.pop(sheetContext);
-                await c.startDemo(role);
-              },
+Future<void> accountSheet(BuildContext context, AppController c) =>
+    showModalBottomSheet<void>(
+      context: context,
+      sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+          ? AnimationStyle.noAnimation
+          : null,
+      showDragHandle: true,
+      useSafeArea: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => !c.preview
+          ? AccountDetails(c)
+          : SheetBody(
+              children: [
+                Text(
+                  'Switch profile',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 24),
+                ...UserRole.values.map(
+                  (role) => Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Surface(
+                      child: ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: CircleAvatar(
+                          child: Text(role == UserRole.teen ? 'A' : 'S'),
+                        ),
+                        title: Text(role == UserRole.teen ? 'Ayesha' : 'Sana'),
+                        subtitle: Text(
+                          role == UserRole.teen ? 'Teen · 16' : 'Parent',
+                        ),
+                        trailing: c.profile!.role == role
+                            ? const Icon(Icons.check_circle_outline)
+                            : const Icon(Icons.chevron_right),
+                        onTap: () async {
+                          Navigator.pop(sheetContext);
+                          await c.startDemo(role);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ),
-      ),
-    ],
-  ),
-);
+    );
 
 Future<void> appearanceSheet(BuildContext context, AppController c) =>
     showModalBottomSheet<void>(
@@ -1494,7 +1533,10 @@ class RoleChoices extends StatelessWidget {
                   : Icons.people_outline,
             ),
             selected: value == role,
-            onSelected: (_) => onChanged(role),
+            onSelected: role == UserRole.parent ? null : (_) => onChanged(role),
+            tooltip: role == UserRole.parent
+                ? 'Parent accounts are coming soon'
+                : null,
           ),
         )
         .toList(),

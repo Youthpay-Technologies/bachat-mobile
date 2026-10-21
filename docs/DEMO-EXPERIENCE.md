@@ -1,3 +1,5 @@
+> Historical design/demo notes. The current app uses authenticated teen accounts; see [the current release](TEEN-AUTH-RELEASE.md). Sample personas are retained only in isolated tests.
+
 # Reference-led demo experience
 
 The October 10 reference supersedes the earlier cream/forest direction. The reference establishes the cool gray canvas, restrained green accents and 24px page margins. The subsequent shape refinement uses 12px controls, 16px cards and 20px sheets/navigation with subtle shadows; current tokens are documented in DESIGN.md. This is an adaptation for expense tracking, not a bank wallet.

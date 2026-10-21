@@ -1,3 +1,53 @@
+# Teen authentication verification - 2026-10-21
+
+Analyzer is clean and **all 52 tests pass** for the final source, including the new legacy recovery regression alongside PKCE recovery. Final-source Android arm64 debug APK and web release compilation pass locally. CI also runs formatting, analysis, tests and both platform builds. iOS signing and physical-device tests have not been performed.
+
+## Live backend and browser
+
+Supabase migrations are applied through MCP. `supabase/tests/teen_authorization.sql` passes with rollback fixtures: verified owner CRUD, other-user isolation, unverified write rejection, parent/family blocking, immutable identity/age, category/amount/goal limits and budget uniqueness. RLS is enabled on all exposed application tables; no account-deletion RPC exists. Security advisors reported no warnings/errors, with informational notices for private deny-by-default family tables and unused indexes.
+
+With the owner's explicit approval, two disposable users exercised real Supabase HTTP sign-in, unconfirmed-email rejection, confirmation-token exchange, teen profile creation, parent rejection, CRUD and spoofed-owner rejection for transactions/budgets/goals, recovery verification, password update, old-password rejection, refresh and logout invalidation. `scripts/check_live_auth.py` accepts fixture credentials only through hidden input or stdin; no credentials were saved to disk.
+
+Chrome at 390 x 844 then used the actual Flutter interface and live backend for sign-in; a Rs 125.50 expense; a Rs 2,000 budget; a Rs 5,000 goal; exact savings from Rs 100 to Rs 150.25; offline transaction creation, reload and reconnection sync; sign-out and account isolation; and password recovery followed by new-password sign-in. Successful Auth/REST responses were not intercepted. Only the offline segment temporarily aborted backend requests. Zero browser page errors were reported. Screenshots below were visually inspected.
+
+Recovery testing exposed callback loss during initial Flutter routing. The app now captures the entry URL before routing and handles it after auth listeners are installed. The successful browser recovery run loaded the real issued session into a fresh app startup.
+
+Sessions were revoked and both temporary users deleted after testing. Queries confirmed zero fixture users, profiles, transactions, budgets, savings goals, sessions, refresh tokens or one-time tokens. No permanent sample users remain.
+
+| Live dashboard | Saved plan |
+|---|---|
+| ![Dashboard](screenshots/live-home.png) | ![Plan](screenshots/live-plan.png) |
+
+| Separate account | Password recovery |
+|---|---|
+| ![Separate account](screenshots/live-second-account.png) | ![Recovery](screenshots/live-recovery.png) |
+
+## Deployment boundaries
+
+Tokens were prepared for the approved fixtures, so these checks establish Auth/session behavior rather than delivery to an inbox. A request to their reserved invalid email domain returned `email_address_invalid`; this does not establish real-recipient SMTP readiness. Real inbox confirmation and recovery remain unverified.
+
+The hosted server honored localhost callbacks but rejected `com.getyouthpay.bachat://auth/callback` and fell back to the web site URL. Apply the prepared configuration using an authenticated Supabase CLI session; available MCP tools cannot change Auth settings. CLI is currently signed out. Native email links cannot be claimed complete until this is applied and tested on a device. See [backend setup](BACKEND.md).
+
+The earlier Android CI failure occurred during artifact upload because GitHub's account storage quota was exhausted; compilation succeeded. Uploads are now opt-in for manually dispatched runs, while Android compilation remains mandatory for every PR.
+
+## Earlier isolated browser checks
+
+Before the approved live fixtures, isolated browser transport simulations covered sign-in, profile completion, empty records, CRUD, offline edits and sign-out. They also reported zero page errors. The live invalid-credential response and greyed-out parent onboarding were checked separately. Those earlier screenshots follow.
+
+| Teen onboarding | Sign in | Live invalid credentials |
+|---|---|---|
+| ![Onboarding](screenshots/auth-onboarding.png) | ![Sign in](screenshots/auth-sign-in.png) | ![Error](screenshots/auth-error.png) |
+
+| Profile completion | Empty dashboard | Plan |
+|---|---|---|
+| ![Profile](screenshots/auth-profile-setup.png) | ![Dashboard](screenshots/auth-empty-dashboard.png) | ![Plan](screenshots/auth-plan.png) |
+
+![Account settings](screenshots/auth-settings.png)
+
+The previous local Next.js application was removed at the owner's request. Flutter and sibling brand assets remain. Earlier verification notes below are historical and include sample personas that are not exposed by the current app.
+
+---
+
 # Demo verification
 
 36 domain, repository, controller and widget tests passed. Coverage includes persistent shared demo records, persona restoration, reset, mutual family approval, read-only parent enforcement, access removal, exact money parsing, validated transactions/budgets/goals, narrow/large-text layouts, profile/appearance sheets, retained searches, empty-filter recovery, carousel buttons, startup skeleton, calendar boundaries, date/category filters, sorting, exact savings increments, savings persistence and limits, and previous-month budget reuse without overwrites. Analyzer is clean.
