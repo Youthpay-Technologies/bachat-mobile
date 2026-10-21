@@ -16,7 +16,7 @@ Future<void> main() async {
     if (!_backendReady) {
       await Supabase.initialize(
         url: BackendConfig.url,
-        anonKey: BackendConfig.publishableKey,
+        publishableKey: BackendConfig.publishableKey,
         authOptions: const FlutterAuthClientOptions(
           localStorage: SecureSessionStorage(),
         ),

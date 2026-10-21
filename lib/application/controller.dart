@@ -42,6 +42,7 @@ class AppController extends ChangeNotifier {
   StreamSubscription<List<ConnectivityResult>>? _connection;
   Timer? _poll;
   RealtimeChannel? _familyChannel;
+  Future<void> _mutationTail = Future<void>.value();
   int _generation = 0;
   int _localRevision = 0;
   String? _loadedAccount;
@@ -214,6 +215,7 @@ class AppController extends ChangeNotifier {
   Future<void> _hydrate() async {
     final account = accountId;
     if (account == null) return;
+    if (_loadedAccount == account && profile != null) return;
     if (_loadedAccount != account) {
       _generation++;
       _reset();
@@ -391,7 +393,8 @@ class AppController extends ChangeNotifier {
       if (generation != _generation) return;
       offline = false;
       error = null;
-      await repository.save(id, snapshot());
+      if (localRevision == _localRevision)
+        await repository.save(id, snapshot());
     } catch (e) {
       if (generation != _generation) return;
       offline = e is! PostgrestException;
@@ -406,69 +409,148 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  Future<void> saveEntry(MoneyEntry entry) async {
-    _requireEdit();
-    if (entry.ownerId != profile!.id) {
-      throw const FormatException('You can only edit your own records.');
-    }
-    _localRevision++;
-    allEntries.removeWhere((e) => e.id == entry.id);
-    allEntries.add(entry);
-    await _persist('transactions', entry.toJson());
+  Future<void> _serialize(Future<void> Function() action) {
+    final account = accountId;
+    final generation = _generation;
+    final next = _mutationTail.then((_) async {
+      if (account != accountId || generation != _generation || _disposed) {
+        throw const FormatException('Your account changed. Try again.');
+      }
+      _requireEdit();
+      await action();
+    });
+    _mutationTail = next.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace __) {},
+    );
+    return next;
   }
 
-  Future<void> saveBudget(CategoryBudget budget) async {
-    _requireEdit();
-    if (budget.ownerId != profile!.id) {
-      throw const FormatException('You can only edit your own records.');
+  Future<void> _commitRecord(
+    String table,
+    Map<String, dynamic> row, {
+    List<MoneyEntry>? entries,
+    List<CategoryBudget>? budgets,
+    List<SavingsGoal>? goals,
+  }) async {
+    final id = profile!.id;
+    final generation = _generation;
+    final next = snapshot();
+    if (entries != null)
+      next['entries'] = entries.map((e) => e.toJson()).toList();
+    if (budgets != null)
+      next['budgets'] = budgets.map((e) => e.toJson()).toList();
+    if (goals != null) next['goals'] = goals.map((e) => e.toJson()).toList();
+    _localRevision++;
+    if (preview) {
+      await repository.save(demoKey, next);
+    } else {
+      await repository.queue(id, table, row, next);
     }
-    if (budget.limitMinor <= 0 || !categories.contains(budget.category)) {
+    if (generation != _generation || accountId != id) return;
+    if (entries != null) allEntries = entries;
+    if (budgets != null) allBudgets = budgets;
+    if (goals != null) allGoals = goals;
+    pendingCount = preview ? 0 : (await repository.pending(id)).length;
+    notifyListeners();
+    if (!preview) unawaited(refresh());
+  }
+
+  void _validateOwner(String owner) {
+    if (owner != profile!.id)
+      throw const FormatException('You can only edit your own records.');
+  }
+
+  Future<void> saveEntry(MoneyEntry entry) => _serialize(() async {
+    _validateOwner(entry.ownerId);
+    final now = DateTime.now();
+    if (entry.merchant.trim().isEmpty ||
+        entry.merchant.length > 100 ||
+        entry.note.length > 500 ||
+        entry.amountMinor <= 0 ||
+        entry.amountMinor > 999999999999 ||
+        !categories.contains(entry.category) ||
+        entry.occurredAt.isBefore(DateTime(2000)) ||
+        !entry.occurredAt.isBefore(
+          DateTime(now.year, now.month, now.day + 1),
+        )) {
       throw const FormatException(
-        'Choose a category and a limit greater than zero.',
+        'Check the amount, category, date and transaction details.',
       );
     }
-    _localRevision++;
-    allBudgets.removeWhere((b) => b.id == budget.id);
-    allBudgets.add(budget);
-    await _persist('budgets', budget.toJson());
-  }
+    await _commitRecord(
+      'transactions',
+      entry.toJson(),
+      entries: [...allEntries.where((e) => e.id != entry.id), entry],
+    );
+  });
 
-  Future<void> saveGoal(SavingsGoal goal) async {
-    _requireEdit();
-    if (goal.ownerId != profile!.id) {
-      throw const FormatException('You can only edit your own records.');
+  Future<void> saveBudget(CategoryBudget budget) => _serialize(() async {
+    _validateOwner(budget.ownerId);
+    if (budget.limitMinor <= 0 ||
+        budget.limitMinor > 999999999999 ||
+        !categories.contains(budget.category) ||
+        !RegExp(r'^\d{4}-(0[1-9]|1[0-2])-01$').hasMatch(budget.month)) {
+      throw const FormatException(
+        'Choose a valid category, month and positive limit.',
+      );
     }
+    if (!budget.deleted &&
+        allBudgets.any(
+          (b) =>
+              !b.deleted &&
+              b.id != budget.id &&
+              b.ownerId == budget.ownerId &&
+              b.category == budget.category &&
+              b.month == budget.month,
+        )) {
+      throw const FormatException(
+        'A budget already exists for this category. Edit its limit instead.',
+      );
+    }
+    await _commitRecord(
+      'budgets',
+      budget.toJson(),
+      budgets: [...allBudgets.where((e) => e.id != budget.id), budget],
+    );
+  });
+
+  Future<void> saveGoal(SavingsGoal goal) => _serialize(() => _saveGoal(goal));
+  Future<void> _saveGoal(SavingsGoal goal) async {
+    _validateOwner(goal.ownerId);
     if (goal.targetMinor <= 0 ||
+        goal.targetMinor > 999999999999 ||
         goal.savedMinor < 0 ||
         goal.savedMinor > goal.targetMinor ||
-        goal.title.trim().isEmpty) {
+        goal.title.trim().isEmpty ||
+        goal.title.length > 80) {
       throw const FormatException(
-        'Use a positive target and a saved amount between zero and the target.',
+        'Use a goal name, positive target and a saved amount between zero and the target.',
       );
     }
-    _localRevision++;
-    allGoals.removeWhere((g) => g.id == goal.id);
-    allGoals.add(goal);
-    await _persist('savings_goals', goal.toJson());
+    await _commitRecord(
+      'savings_goals',
+      goal.toJson(),
+      goals: [...allGoals.where((e) => e.id != goal.id), goal],
+    );
   }
 
-  Future<void> addSavings(String goalId, int amountMinor) async {
-    _requireEdit();
+  Future<void> addSavings(
+    String goalId,
+    int amountMinor,
+  ) => _serialize(() async {
     final goal = allGoals
         .where((g) => g.id == goalId && g.ownerId == profile!.id && !g.deleted)
         .firstOrNull;
-    if (goal == null) {
+    if (goal == null)
       throw const FormatException('This goal is no longer available.');
-    }
-    if (goal.savedMinor >= goal.targetMinor) {
+    if (goal.savedMinor >= goal.targetMinor)
       throw const FormatException('This goal has already reached its target.');
-    }
-    if (amountMinor <= 0 || amountMinor > goal.targetMinor - goal.savedMinor) {
+    if (amountMinor <= 0 || amountMinor > goal.targetMinor - goal.savedMinor)
       throw FormatException(
         'Enter an amount between Rs 0.01 and ${money(goal.targetMinor - goal.savedMinor)}.',
       );
-    }
-    await saveGoal(
+    await _saveGoal(
       SavingsGoal(
         id: goal.id,
         ownerId: goal.ownerId,
@@ -477,7 +559,7 @@ class AppController extends ChangeNotifier {
         savedMinor: goal.savedMinor + amountMinor,
       ),
     );
-  }
+  });
 
   List<CategoryBudget> get reusableBudgets {
     final now = DateTime.now();
@@ -521,18 +603,6 @@ class AppController extends ChangeNotifier {
         'Sign in with a teen account to make changes.',
       );
     }
-  }
-
-  Future<void> _persist(String table, Map<String, dynamic> row) async {
-    final id = profile!.id;
-    if (!preview) {
-      await repository.queue(id, table, row, snapshot());
-      pendingCount = (await repository.pending(id)).length;
-    } else {
-      await repository.save(demoKey, snapshot());
-    }
-    notifyListeners();
-    if (!preview) unawaited(refresh());
   }
 
   Future<void> generateCode() => run(() async {
