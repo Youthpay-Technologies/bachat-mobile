@@ -500,7 +500,8 @@ class AppController extends ChangeNotifier {
     }
   }
 
-  Future<void> saveEntry(MoneyEntry entry) => _serialize(() async {
+  Future<void> saveEntry(MoneyEntry value) => _serialize(() async {
+    final entry = normalizeEntry(value);
     _validateOwner(entry.ownerId);
     final now = DateTime.now();
     if (entry.merchant.trim().isEmpty ||
@@ -508,7 +509,9 @@ class AppController extends ChangeNotifier {
         entry.note.length > 500 ||
         entry.amountMinor <= 0 ||
         entry.amountMinor > 999999999999 ||
-        !categories.contains(entry.category) ||
+        !categoriesFor(entry.direction).contains(entry.category) ||
+        entry.customCategory.length > 40 ||
+        (entry.category != 'Other' && entry.customCategory.isNotEmpty) ||
         entry.occurredAt.isBefore(DateTime(2000)) ||
         !entry.occurredAt.isBefore(
           DateTime(now.year, now.month, now.day + 1),
