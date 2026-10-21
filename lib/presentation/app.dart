@@ -211,7 +211,172 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
                 onChanged: (value) => setState(() => role = value),
               ),
               const SizedBox(height: 20),
-              MoneyActions(c),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: c.busy
+                      ? null
+                      : () => setState(() => authenticating = true),
+                  icon: const Icon(Icons.arrow_forward_rounded),
+                  label: const Text('Continue as a teen'),
+                ),
+              ),
+            ],
+            AppError(c),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class DashboardShell extends ConsumerStatefulWidget {
+  const DashboardShell({super.key});
+  @override
+  ConsumerState<DashboardShell> createState() => _ShellState();
+}
+
+class _ShellState extends ConsumerState<DashboardShell> {
+  int tab = 0;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: IndexedStack(
+                index: tab,
+                children: [
+                  HomePage(
+                    onActivity: () => setState(() => tab = 1),
+                    onPlan: () => setState(() => tab = 2),
+                  ),
+                  const ActivityPage(),
+                  const PlanPage(),
+                  const LearnPage(),
+                  const SettingsPage(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(BachatRadii.sheet),
+          child: NavigationBar(
+            selectedIndex: tab,
+            animationDuration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 150),
+            onDestinationSelected: (value) => setState(() => tab = value),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.grid_view_outlined),
+                selectedIcon: Icon(Icons.grid_view_rounded),
+                label: 'Home',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.receipt_long_outlined),
+                label: 'Activity',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.savings_outlined),
+                label: 'Plan',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.auto_stories_outlined),
+                label: 'Learn',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.person_outline),
+                label: 'You',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ChildPicker extends StatelessWidget {
+  const ChildPicker(this.c, {super.key});
+  final AppController c;
+  @override
+  Widget build(BuildContext context) => !c.isParent || c.children.isEmpty
+      ? const SizedBox.shrink()
+      : Padding(
+          padding: const EdgeInsets.only(bottom: 24),
+          child: DropdownButtonFormField<String>(
+            initialValue: c.selectedChildId,
+            decoration: const InputDecoration(labelText: 'Child · Read only'),
+            items: c.children
+                .map(
+                  (l) => DropdownMenuItem(
+                    value: l.teenId,
+                    child: Text(l.teenName),
+                  ),
+                )
+                .toList(),
+            onChanged: (id) {
+              if (id != null) c.selectChild(id);
+            },
+          ),
+        );
+}
+
+class HomePage extends ConsumerWidget {
+  const HomePage({super.key, required this.onActivity, required this.onPlan});
+  final VoidCallback onActivity, onPlan;
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
+    final summary = MoneySummary(c.entries, DateTime.now());
+    return RefreshIndicator(
+      onRefresh: c.refresh,
+      child: PageBody(
+        children: [
+          Row(
+            children: [
+              const BachatSymbol(size: 48),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Good to see you',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(c.profile!.name, style: t.titleMedium),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () => accountSheet(context, c),
+                tooltip: c.preview ? 'Switch profile' : 'Account',
+                icon: Icon(
+                  c.preview ? Icons.swap_horiz_rounded : Icons.person_outline,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 28),
+          ChildPicker(c),
+          if (c.isParent && c.children.isEmpty)
+            const FamilyPage(embedded: true)
+          else ...[
+            SpendingHero(
+              month: DateFormat.MMMM().format(DateTime.now()),
+              amount: money(summary.spentMinor),
+            ),
+            const SizedBox(height: 16),
+            if (!c.isParent) MoneyActions(c),
             const SectionHeading('Overview'),
             Surface(
               tone: Theme.of(context).colorScheme.primaryContainer,
@@ -222,7 +387,11 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
                   _Metric('Money in', money(summary.incomeMinor)),
                   _Metric(
                     'Net flow',
-                    money(summary.incomeMinor - summary.spentMinor - summary.savedMinor),
+                    money(
+                      summary.incomeMinor -
+                          summary.spentMinor -
+                          summary.savedMinor,
+                    ),
                   ),
                 ],
               ),
@@ -340,27 +509,37 @@ class MoneyActions extends StatelessWidget {
   const MoneyActions(this.controller, {super.key});
   final AppController controller;
   @override
-  Widget build(BuildContext context) => LayoutBuilder(builder: (context, size) {
-    final buttons = [
-      FilledButton.icon(
-        onPressed: () => entryForm(context, controller),
-        icon: const Icon(Icons.north_east_rounded),
-        label: const Text('Spend'),
-      ),
-      OutlinedButton.icon(
-        onPressed: () => entryForm(context, controller, direction: EntryDirection.income),
-        icon: const Icon(Icons.south_west_rounded),
-        label: const Text('Receive'),
-      ),
-    ];
-    if (size.maxWidth < 300 || MediaQuery.textScalerOf(context).scale(14) > 21) {
-      return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        buttons.first, const SizedBox(height: 12), buttons.last,
-      ]);
-    }
-    return Row(children: [Expanded(child: buttons.first),
-      const SizedBox(width: 12), Expanded(child: buttons.last)]);
-  });
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, size) {
+      final buttons = [
+        FilledButton.icon(
+          onPressed: () => entryForm(context, controller),
+          icon: const Icon(Icons.north_east_rounded),
+          label: const Text('Spend'),
+        ),
+        OutlinedButton.icon(
+          onPressed: () =>
+              entryForm(context, controller, direction: EntryDirection.income),
+          icon: const Icon(Icons.south_west_rounded),
+          label: const Text('Receive'),
+        ),
+      ];
+      if (size.maxWidth < 300 ||
+          MediaQuery.textScalerOf(context).scale(14) > 21) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [buttons.first, const SizedBox(height: 12), buttons.last],
+        );
+      }
+      return Row(
+        children: [
+          Expanded(child: buttons.first),
+          const SizedBox(width: 12),
+          Expanded(child: buttons.last),
+        ],
+      );
+    },
+  );
 }
 
 class EntryTile extends StatelessWidget {
@@ -545,8 +724,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
             ),
           ),
         const SizedBox(height: 20),
-        if (!c.isParent)
-          MoneyActions(c),
+        if (!c.isParent) MoneyActions(c),
         const SizedBox(height: 16),
         if (entries.isEmpty)
           EmptyState(
@@ -646,19 +824,28 @@ class PlanPage extends ConsumerWidget {
         ChildPicker(c),
         const SectionHeading('Set aside'),
         Surface(
-          child: Row(children: [
-            const Icon(Icons.savings_outlined),
-            const SizedBox(width: 16),
-            Expanded(child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(money(c.entries.where((e) => e.direction == EntryDirection.savings)
-                    .fold<int>(0, (total, e) => total + e.amountMinor)),
-                    style: t.headlineMedium),
-                const Text('Recorded savings'),
-              ],
-            )),
-          ]),
+          child: Row(
+            children: [
+              const Icon(Icons.savings_outlined),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      money(
+                        c.entries
+                            .where((e) => e.direction == EntryDirection.savings)
+                            .fold<int>(0, (total, e) => total + e.amountMinor),
+                      ),
+                      style: t.headlineMedium,
+                    ),
+                    const Text('Recorded savings'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
         SectionHeading(
           'Monthly budgets',
