@@ -19,30 +19,34 @@ void main() {
     'PIN overlay covers sheets, locks on background and confirms reset',
     (tester) async {
       final db = await databaseFactoryMemory.openDatabase('pin-widget');
-      final client = SupabaseClient(
-        'https://example.supabase.co',
-        'public-key',
-        authOptions: const AuthClientOptions(autoRefreshToken: false),
-        httpClient: MockClient(
-          (r) async => http.Response(
-            jsonEncode(
-              r.url.path.endsWith('/profiles')
-                  ? [
-                      {
-                        'id': fixtureAccount,
-                        'name': 'Teen',
-                        'role': 'teen',
-                        'age': 16,
-                      },
-                    ]
-                  : [],
+      final client = (await tester.runAsync(
+        () async => SupabaseClient(
+          'https://example.supabase.co',
+          'public-key',
+          authOptions: const AuthClientOptions(autoRefreshToken: false),
+          httpClient: MockClient(
+            (r) async => http.Response(
+              jsonEncode(
+                r.url.path.endsWith('/profiles')
+                    ? [
+                        {
+                          'id': fixtureAccount,
+                          'name': 'Teen',
+                          'role': 'teen',
+                          'age': 16,
+                        },
+                      ]
+                    : [],
+              ),
+              200,
+              headers: {'content-type': 'application/json'},
             ),
-            200,
-            headers: {'content-type': 'application/json'},
           ),
         ),
+      ))!;
+      await tester.runAsync(
+        () => client.auth.recoverSession(jsonEncode(fixtureSession())),
       );
-      await client.auth.recoverSession(jsonEncode(fixtureSession()));
       final lock = DeviceLock(MemoryPinStorage());
       addTearDown(lock.dispose);
       addTearDown(client.dispose);
