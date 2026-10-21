@@ -1378,6 +1378,71 @@ class SettingsPage extends ConsumerWidget {
             ],
           ),
         ),
+
+        if (!c.isParent) ...[
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: c.busy
+                  ? null
+                  : () async {
+                      final scaffoldMessenger = ScaffoldMessenger.of(context);
+                      final controller = ref.read(controllerProvider);
+
+                      // FIX: Stop execution immediately if button clicked in demo status
+                      if (controller.preview) {
+                        scaffoldMessenger.showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Email sync is disabled in local demo mode.',
+                            ),
+                            backgroundColor: Colors.orange,
+                          ),
+                        );
+                        return;
+                      }
+
+                      try {
+                        scaffoldMessenger.showSnackBar(
+                          const SnackBar(
+                            content: Text('Syncing Gmail transactions...'),
+                            duration: Duration(seconds: 1),
+                          ),
+                        );
+
+                        // FIX: Await execution to capture outcomes natively
+                        await controller.syncEmailTransactions();
+
+                        scaffoldMessenger.showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Email transactions synced successfully!',
+                            ),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      } catch (e) {
+                        // FIX: Catch actual cancellation or parsing faults to show clean validation message
+                        scaffoldMessenger.showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              e is FormatException
+                                  ? e.message
+                                  : 'Sync failed. Please check credentials or try again.',
+                            ),
+                            backgroundColor: Theme.of(
+                              context,
+                            ).colorScheme.error,
+                          ),
+                        );
+                      }
+                    },
+              icon: const Icon(Icons.email),
+              label: const Text('Sync Gmail Receipts'),
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
         const SizedBox(height: 32),
         TextButton.icon(
           onPressed: () async {

@@ -4,8 +4,15 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:crypto/crypto.dart';
 import '../data/repository.dart';
 import '../domain/models.dart';
+import 'package:another_telephony/telephony.dart';
+
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:googleapis/gmail/v1.dart' as gmail;
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 final controllerProvider = ChangeNotifierProvider<AppController>(
   (ref) => throw StateError('AppController must be provided at startup.'),
@@ -77,15 +84,6 @@ class AppController extends ChangeNotifier {
 
   static const demoKey = 'demo-family-v1';
 
-  Future<void> startDemo(UserRole role) async {
-    if (!preview) {
-      final saved = await repository.load(demoKey);
-      if (saved != null) _restoreDemo(saved);
-    }
-    startPreview(role);
-    await repository.save(demoKey, snapshot());
-  }
-
   void _restoreDemo(Map<String, dynamic> saved) {
     preview = true;
     profile = Profile.fromJson(
@@ -109,6 +107,15 @@ class AppController extends ChangeNotifier {
     familyCode = saved['family_code'] as String?;
   }
 
+  Future<void> startDemo(UserRole role) async {
+    if (!preview) {
+      final saved = await repository.load(demoKey);
+      if (saved != null) _restoreDemo(saved);
+    }
+    startPreview(role);
+    await repository.save(demoKey, snapshot());
+  }
+
   Future<void> resetDemo() async {
     final role = profile?.role ?? UserRole.teen;
     _reset();
@@ -129,6 +136,8 @@ class AppController extends ChangeNotifier {
     if (accountId != null) await _hydrate();
     ready = true;
     notifyListeners();
+
+    await initSmsListener();
     _auth = client?.auth.onAuthStateChange.listen((event) async {
       if (preview) return;
       if (event.event == AuthChangeEvent.signedOut) {
@@ -752,4 +761,340 @@ class AppController extends ChangeNotifier {
     _familyChannel?.unsubscribe();
     super.dispose();
   }
+
+  // SMS INTEGRATION
+
+  final Telephony _telephony = Telephony.instance;
+
+  Future<void> initSmsListener() async {
+    if (preview || isParent || !approved || profile == null) return;
+
+    bool? permissionsGranted = await _telephony.requestPhoneAndSmsPermissions;
+    if (permissionsGranted == true) {
+      await _loadPastSmsTransactions();
+
+      _telephony.listenIncomingSms(
+        onNewMessage: _onNewSmsMessage,
+        onBackgroundMessage: backgroundSmsHandler,
+        listenInBackground: true,
+      );
+    }
+  }
+
+  Future<void> _onNewSmsMessage(SmsMessage message) async {
+    if (preview) return;
+    final body = message.body ?? '';
+    final address = message.address ?? '';
+
+    if (_isTransactionSms(body, address)) {
+      final occurredTime = message.date != null
+          ? DateTime.fromMillisecondsSinceEpoch(message.date!)
+          : DateTime.now();
+
+      final entry = _parseSmsToMoneyEntry(body, timestamp: occurredTime);
+      if (entry != null) {
+        try {
+          await saveEntry(entry);
+        } catch (_) {}
+      }
+    }
+  }
+
+  Future<void> _loadPastSmsTransactions() async {
+    try {
+      List<SmsMessage> messages = await _telephony.getInboxSms(
+        columns: [SmsColumn.ADDRESS, SmsColumn.BODY, SmsColumn.DATE],
+        filter: SmsFilter.where(SmsColumn.BODY)
+            .like("%debited%")
+            .or(SmsColumn.BODY)
+            .like("%credited%")
+            .or(SmsColumn.BODY)
+            .like("%spent%")
+            .or(SmsColumn.BODY)
+            .like("%paid%"),
+      );
+
+      for (var message in messages) {
+        final body = message.body ?? '';
+        final entry = _parseSmsToMoneyEntry(
+          body,
+          timestamp: message.date != null
+              ? DateTime.fromMillisecondsSinceEpoch(message.date!)
+              : null,
+        );
+        if (entry != null) {
+          bool exists = allEntries.any(
+            (e) =>
+                e.merchant == entry.merchant &&
+                e.amountMinor == entry.amountMinor &&
+                e.occurredAt.difference(entry.occurredAt).inMinutes.abs() < 5,
+          );
+          if (!exists) {
+            await saveEntry(entry);
+          }
+        }
+      }
+      notifyListeners();
+    } catch (_) {}
+  }
+
+  bool _isTransactionSms(String body, String sender) {
+    final lower = body.toLowerCase();
+    return lower.contains('debited') ||
+        lower.contains('credited') ||
+        lower.contains('spent') ||
+        lower.contains('paid') ||
+        lower.contains('rs.') ||
+        lower.contains('pkr');
+  }
+
+  MoneyEntry? _parseSmsToMoneyEntry(String smsBody, {DateTime? timestamp}) {
+    final lower = smsBody.toLowerCase();
+
+    EntryDirection direction = EntryDirection.expense;
+    if (lower.contains('credited') ||
+        lower.contains('received') ||
+        lower.contains('deposited')) {
+      direction = EntryDirection.income;
+    }
+
+    final amountRegExp = RegExp(
+      r'(?:rs\.?|pkr)\s*([\d,]+\.?\d*)',
+      caseSensitive: false,
+    );
+    final match = amountRegExp.firstMatch(smsBody);
+    if (match == null) return null;
+
+    String cleanAmount = match.group(1)!.replaceAll(',', '');
+    double parsedAmount = double.tryParse(cleanAmount) ?? 0.0;
+    if (parsedAmount <= 0) return null;
+
+    int amountMinor = (parsedAmount * 100).round();
+    String merchant = _extractMerchantName(smsBody);
+    String category = _categorizeTransaction(merchant, smsBody);
+
+    return MoneyEntry(
+      id: const Uuid().v4(),
+      ownerId: profile!.id,
+      merchant: merchant,
+      amountMinor: amountMinor,
+      direction: direction,
+      category: category,
+      occurredAt: timestamp ?? DateTime.now(),
+    );
+  }
+
+  String _extractMerchantName(String body) {
+    final atRegExp = RegExp(
+      r'(?:at|to|from|infovisa\*|pos\*)\s+([A-Za-z0-9\s]+?)(?:\s+on|\s+avail|\s+avl|\.|$)',
+      caseSensitive: false,
+    );
+    final match = atRegExp.firstMatch(body);
+    if (match != null) {
+      String found = match.group(1)!.trim();
+      if (found.isNotEmpty && found.length < 30) return found;
+    }
+    return 'Bank Transaction';
+  }
+
+  String _categorizeTransaction(String merchant, String body) {
+    final combined = '$merchant $body'.toLowerCase();
+
+    if (combined.contains('foodpanda') ||
+        combined.contains('mcdonalds') ||
+        combined.contains('kfc') ||
+        combined.contains('restaurant') ||
+        combined.contains('cafe')) {
+      return 'Food & dining';
+    } else if (combined.contains('uber') ||
+        combined.contains('careem') ||
+        combined.contains('bykea') ||
+        combined.contains('fuel') ||
+        combined.contains('shell') ||
+        combined.contains('PSO')) {
+      return 'Transport';
+    } else if (combined.contains('daraz') ||
+        combined.contains('imtiaz') ||
+        combined.contains('carrefour') ||
+        combined.contains('grocery')) {
+      return 'Groceries';
+    } else if (combined.contains('readings') ||
+        combined.contains('book') ||
+        combined.contains('tuition') ||
+        combined.contains('school')) {
+      return 'Education';
+    }
+
+    return 'Other';
+  }
+
+  // GMAIL INTEGRATION
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: [gmail.GmailApi.gmailReadonlyScope],
+  );
+
+  Future<void> syncEmailTransactions() async {
+    if (preview || isParent || !approved || profile == null) {
+      throw const FormatException(
+        'Cannot run sync integrations while in local Demo mode.',
+      );
+    }
+
+    final account =
+        await _googleSignIn.signInSilently() ?? await _googleSignIn.signIn();
+    if (account == null) {
+      throw const FormatException(
+        'Google authentication flow cancelled or skipped by the user.',
+      );
+    }
+
+    final authHeaders = await account.authHeaders;
+    final httpClient = GoogleAuthClient(authHeaders);
+    final gmailApi = gmail.GmailApi(httpClient);
+
+    final query =
+        'subject:(debited OR credited OR receipt OR order OR invoice OR paid OR payment)';
+    final listResponse = await gmailApi.users.messages.list(
+      'me',
+      q: query,
+      maxResults: 15,
+    );
+
+    final messages = listResponse.messages ?? [];
+    for (var msgRef in messages) {
+      final msg = await gmailApi.users.messages.get('me', msgRef.id!);
+
+      DateTime transactionDate = DateTime.now();
+      if (msg.internalDate != null) {
+        transactionDate = DateTime.fromMillisecondsSinceEpoch(
+          int.parse(msg.internalDate!),
+        );
+      }
+
+      final body = _extractEmailBody(msg);
+      final snippet = msg.snippet ?? '';
+
+      final entry = _parseEmailToMoneyEntry(
+        snippet,
+        body,
+        messageId: msg.id,
+        timestamp: transactionDate,
+      );
+      if (entry != null) {
+        bool exists = allEntries.any(
+          (e) =>
+              e.id == entry.id ||
+              (e.merchant == entry.merchant &&
+                  e.amountMinor == entry.amountMinor &&
+                  e.occurredAt.difference(entry.occurredAt).inHours.abs() < 24),
+        );
+        if (!exists) {
+          await saveEntry(entry);
+        }
+      }
+    }
+    notifyListeners();
+  }
+
+  String _extractEmailBody(gmail.Message message) {
+    if (message.payload?.body?.data != null) {
+      try {
+        return String.fromCharCodes(
+          base64Url.decode(message.payload!.body!.data!),
+        );
+      } catch (_) {}
+    }
+    final parts = message.payload?.parts ?? [];
+    for (var part in parts) {
+      if (part.body?.data != null) {
+        try {
+          return String.fromCharCodes(base64Url.decode(part.body!.data!));
+        } catch (_) {}
+      }
+    }
+    return message.snippet ?? '';
+  }
+
+  MoneyEntry? _parseEmailToMoneyEntry(
+    String snippet,
+    String body, {
+    String? messageId,
+    DateTime? timestamp,
+  }) {
+    final content = '$snippet $body'.toLowerCase();
+
+    EntryDirection direction = EntryDirection.expense;
+    if (content.contains('credited') ||
+        content.contains('received payment') ||
+        content.contains('refund')) {
+      direction = EntryDirection.income;
+    }
+
+    final amountRegExp = RegExp(
+      r'(?:rs\.?|pkr|\$)\s*([\d,]+\.?\d*)',
+      caseSensitive: false,
+    );
+    final match = amountRegExp.firstMatch(content);
+    if (match == null) return null;
+
+    final matchedText = match.group(0)?.toLowerCase() ?? '';
+    if (matchedText.contains('\$')) {
+      return null;
+    }
+
+    String cleanAmount = match.group(1)!.replaceAll(',', '');
+    double parsedAmount = double.tryParse(cleanAmount) ?? 0.0;
+    if (parsedAmount <= 0) return null;
+
+    int amountMinor = (parsedAmount * 100).round();
+    String merchant = 'Email Receipt';
+    if (content.contains('foodpanda')) {
+      merchant = 'Foodpanda';
+    } else if (content.contains('uber') || content.contains('careem')) {
+      merchant = 'Careem / Uber';
+    } else if (content.contains('daraz')) {
+      merchant = 'Daraz';
+    } else if (content.contains('netflix')) {
+      merchant = 'Netflix';
+    }
+
+    String category = _categorizeTransaction(merchant, content);
+
+    // Generate unique ID deterministically via md5 to handle deduplication seamlessly
+    String generatedId = const Uuid().v4();
+    if (messageId != null) {
+      try {
+        // v5 creates an identical, valid UUID string every time for the same input text
+        generatedId = const Uuid().v5(Uuid.NAMESPACE_URL, messageId);
+      } catch (_) {}
+    }
+    return MoneyEntry(
+      id: generatedId,
+      ownerId: profile!.id,
+      merchant: merchant,
+      amountMinor: amountMinor,
+      direction: direction,
+      category: category,
+      occurredAt: timestamp ?? DateTime.now(),
+    );
+  }
+}
+
+class GoogleAuthClient extends http.BaseClient {
+  final Map<String, String> _headers;
+  final http.Client _client = http.Client();
+
+  GoogleAuthClient(this._headers);
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) {
+    request.headers.addAll(_headers);
+    return _client.send(request);
+  }
+}
+
+@pragma('vm:entry-point')
+void backgroundSmsHandler(SmsMessage message) {
+  // Foreground sync processes handle batch synchronization routines natively when context mounts
 }
