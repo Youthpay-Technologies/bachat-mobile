@@ -1,39 +1,48 @@
 import 'package:flutter/material.dart';
+import 'brand.dart';
 
 abstract final class BachatRadii {
-  static const compact = 8.0;
-  static const control = 12.0;
-  static const surface = 16.0;
-  static const sheet = 20.0;
+  static const compact = 10.0;
+  static const control = 16.0;
+  static const surface = 24.0;
+  static const sheet = 32.0;
 }
 
 abstract final class BachatTheme {
   static ThemeData build(Brightness brightness) {
     final dark = brightness == Brightness.dark;
-    final accent = Color(dark ? 0xFF67DE70 : 0xFF34C642);
-    final text = Color(dark ? 0xFFF3F5F7 : 0xFF14171C);
-    final canvas = Color(dark ? 0xFF14171C : 0xFFEEF0F4);
+    final accent = dark ? const Color(0xFFB5C8FF) : BachatBrand.cobalt;
+    final text = dark ? const Color(0xFFF2F5FF) : BachatBrand.ink;
+    final canvas = dark ? const Color(0xFF0D1529) : BachatBrand.canvas;
     final scheme =
         ColorScheme.fromSeed(
           seedColor: accent,
           brightness: brightness,
         ).copyWith(
           primary: accent,
-          onPrimary: const Color(0xFF102314),
-          surface: Color(dark ? 0xFF20252D : 0xFFF7F8FA),
+          onPrimary: dark ? const Color(0xFF10275E) : Colors.white,
+          surface: Color(dark ? 0xFF17233D : 0xFFFFFFFF),
           onSurface: text,
-          onSurfaceVariant: Color(dark ? 0xFFBAC2CE : 0xFF596171),
-          outline: Color(dark ? 0xFF8290A1 : 0xFF7A8494),
-          outlineVariant: Color(dark ? 0xFF3B4452 : 0xFFD8DEE7),
-          primaryContainer: Color(dark ? 0xFF243D2B : 0xFFE0F3E3),
-          onPrimaryContainer: text,
+          onSurfaceVariant: Color(dark ? 0xFFB7C3DE : 0xFF566480),
+          outline: Color(dark ? 0xFF8393B3 : 0xFF73819A),
+          outlineVariant: Color(dark ? 0xFF2C3C5C : 0xFFDEE4F0),
+          primaryContainer: Color(dark ? 0xFF243A6A : 0xFFE9EFFF),
+          onPrimaryContainer: dark ? const Color(0xFFDCE5FF) : BachatBrand.cobalt,
+          secondary: BachatBrand.sunshine,
+          onSecondary: BachatBrand.ink,
+          secondaryContainer: Color(dark ? 0xFF40391E : 0xFFFFF5CB),
+          onSecondaryContainer: Color(dark ? 0xFFFFE68B : 0xFF514000),
+          tertiary: BachatBrand.tangerine,
+          onTertiary: BachatBrand.ink,
+          tertiaryContainer: Color(dark ? 0xFF4B2C1D : 0xFFFFEBDD),
+          onTertiaryContainer: Color(dark ? 0xFFFFCBA9 : 0xFF853900),
           error: Color(dark ? 0xFFFFB4AB : 0xFFA13636),
         );
     final base = ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       brightness: brightness,
-      fontFamily: 'DM Sans',
+      fontFamily: BachatBrand.interfaceFont,
     );
     return base.copyWith(
       bottomSheetTheme: BottomSheetThemeData(
@@ -46,10 +55,13 @@ abstract final class BachatTheme {
         ),
       ),
       scaffoldBackgroundColor: canvas,
-      textTheme: base.textTheme.copyWith(
+      textTheme: base.textTheme.apply(
+        bodyColor: text,
+        displayColor: text,
+      ).copyWith(
         displaySmall: TextStyle(
-          fontFamily: 'DM Sans',
-          fontSize: 44,
+          fontFamily: BachatBrand.headingFont,
+          fontSize: 48,
           fontWeight: FontWeight.w700,
           height: 1.1,
           letterSpacing: -1.4,
@@ -57,6 +69,7 @@ abstract final class BachatTheme {
           fontFeatures: const [FontFeature.tabularFigures()],
         ),
         headlineLarge: TextStyle(
+          fontFamily: BachatBrand.headingFont,
           fontSize: 30,
           fontWeight: FontWeight.w700,
           height: 1.2,
@@ -64,12 +77,14 @@ abstract final class BachatTheme {
           color: text,
         ),
         headlineMedium: TextStyle(
+          fontFamily: BachatBrand.headingFont,
           fontSize: 28,
           fontWeight: FontWeight.w700,
           height: 1.2,
           color: text,
         ),
         titleLarge: TextStyle(
+          fontFamily: BachatBrand.headingFont,
           fontSize: 20,
           fontWeight: FontWeight.w700,
           height: 1.3,
@@ -98,7 +113,7 @@ abstract final class BachatTheme {
             borderRadius: BorderRadius.circular(BachatRadii.control),
           ),
           textStyle: const TextStyle(
-            fontFamily: 'DM Sans',
+            fontFamily: BachatBrand.interfaceFont,
             fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
@@ -119,7 +134,7 @@ abstract final class BachatTheme {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(BachatRadii.control),
           borderSide: BorderSide(
-            color: dark ? scheme.primary : const Color(0xFF216D2C),
+            color: scheme.primary,
             width: 2,
           ),
         ),
@@ -129,27 +144,27 @@ abstract final class BachatTheme {
         backgroundColor: scheme.surface,
         elevation: 0,
         height: 74,
-        indicatorColor: scheme.primary,
+        indicatorColor: scheme.primaryContainer,
         indicatorShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BachatRadii.compact),
         ),
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             color: states.contains(WidgetState.selected)
-                ? scheme.onPrimary
+                ? scheme.onPrimaryContainer
                 : scheme.onSurfaceVariant,
           ),
         ),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
-        color: dark ? scheme.primary : const Color(0xFF22852E),
+        color: scheme.primary,
         linearTrackColor: scheme.outlineVariant,
         borderRadius: BorderRadius.circular(12),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: dark ? scheme.primary : const Color(0xFF216D2C),
+          foregroundColor: scheme.primary,
           minimumSize: const Size(48, 48),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(BachatRadii.control),
@@ -215,3 +230,4 @@ abstract final class BachatTheme {
     );
   }
 }
+
