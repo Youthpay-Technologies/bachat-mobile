@@ -5,7 +5,6 @@ import 'package:sembast/sembast_memory.dart';
 import 'package:bachat_mobile/main.dart';
 import 'package:bachat_mobile/presentation/app.dart';
 import 'package:bachat_mobile/presentation/auth_screens.dart';
-import 'package:bachat_mobile/presentation/forms.dart';
 import 'package:bachat_mobile/design/components.dart';
 import 'package:bachat_mobile/application/controller.dart';
 import 'package:bachat_mobile/data/repository.dart';
@@ -47,7 +46,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Pocket money'), findsWidgets);
     expect(find.text('Salary'), findsWidgets);
-    expect(find.text('Food & dining'), findsNothing);
+    final receiveCategories = tester.widget<DropdownButtonFormField<String>>(
+      find.byType(DropdownButtonFormField<String>).last,
+    );
+    expect(
+      receiveCategories.items!.map((item) => item.value),
+      isNot(contains('Food & dining')),
+    );
     await tester.tap(find.text('Gift').last);
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -92,6 +97,7 @@ void main() {
       find.widgetWithText(TextFormField, 'Category name'),
       ' savings ',
     );
+    await tester.pump();
     expect(
       find.text('Added to savings, outside your spending totals.'),
       findsOneWidget,
