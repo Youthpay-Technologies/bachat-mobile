@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../application/controller.dart';
 import '../design/components.dart';
 import '../design/theme.dart';
+import '../design/brand.dart';
+import '../design/brand_panels.dart';
 import '../domain/models.dart';
 import '../domain/activity_filter.dart';
 import 'activity_filters.dart';
@@ -118,14 +120,18 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
         child: PageBody(
           children: [
             const BachatMark(large: true),
-            const SizedBox(height: 52),
-            Text(
-              step == 0
-                  ? 'Make money\nmake sense.'
+            const SizedBox(height: 40),
+            BrandHeadline(
+              lead: step == 0
+                  ? 'Make money'
                   : step == 1
-                  ? 'Small habits.\nReal progress.'
-                  : 'Your money.\nYour way.',
-              style: t.displaySmall,
+                  ? 'Small habits.'
+                  : 'Your money.',
+              accent: step == 0
+                  ? 'make sense.'
+                  : step == 1
+                  ? 'Real progress.'
+                  : 'Your way.',
             ),
             const SizedBox(height: 18),
             Text(
@@ -136,21 +142,14 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
                   : 'Track spending, build a budget and save for what matters.',
               style: t.bodyLarge,
             ),
-            const SizedBox(height: 36),
+            const SizedBox(height: 28),
             Surface(
-              tinted: true,
+              tone: Theme.of(context).colorScheme.secondaryContainer,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    step == 0
-                        ? Icons.account_balance_wallet_outlined
-                        : step == 1
-                        ? Icons.people_outline
-                        : Icons.savings_outlined,
-                    size: 40,
-                  ),
-                  const SizedBox(height: 24),
+                  const HabitIllustration(compact: true),
+                  const SizedBox(height: 20),
                   Text(
                     step == 0
                         ? 'Your everyday, in perspective'
