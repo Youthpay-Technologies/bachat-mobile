@@ -40,8 +40,9 @@ class SpendingHero extends StatelessWidget {
             Expanded(
               child: Text(
                 '$month spending',
-                style: Theme.of(context).textTheme.titleSmall
-                    ?.copyWith(color: Colors.white),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(color: Colors.white),
               ),
             ),
             const ExcludeSemantics(
@@ -55,8 +56,9 @@ class SpendingHero extends StatelessWidget {
         const SizedBox(height: 24),
         Text(
           amount,
-          style: Theme.of(context).textTheme.displaySmall
-              ?.copyWith(color: Colors.white, fontSize: 44),
+          style: Theme.of(
+            context,
+          ).textTheme.displaySmall?.copyWith(color: Colors.white, fontSize: 44),
         ),
         const SizedBox(height: 24),
         Row(
