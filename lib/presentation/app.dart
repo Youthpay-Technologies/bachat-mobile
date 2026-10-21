@@ -23,6 +23,18 @@ class AppGate extends ConsumerWidget {
       return const AuthScreen(recovery: true);
     }
     if (!c.signedIn) return const WelcomeScreen();
+    if (!c.preview && c.isParent) {
+      return Scaffold(
+        body: SafeArea(
+          child: PageBody(
+            children: [
+              const Text('Parent accounts are coming soon.'),
+              TextButton(onPressed: c.signOut, child: const Text('Sign out')),
+            ],
+          ),
+        ),
+      );
+    }
     if (c.profile == null && c.syncing) {
       return const DashboardSkeleton();
     }

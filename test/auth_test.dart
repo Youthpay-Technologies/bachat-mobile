@@ -22,7 +22,18 @@ void main() {
       'https://example.supabase.co',
       'public-test-key',
       authOptions: const AuthClientOptions(autoRefreshToken: false),
-      httpClient: MockClient(handler),
+      httpClient: MockClient((request) async {
+        final response = await handler(request);
+        return http.Response(
+          response.body,
+          response.statusCode,
+          headers: {
+            ...response.headers,
+            'x-supabase-api-version': '2024-01-01',
+          },
+          request: request,
+        );
+      }),
     );
     addTearDown(client.dispose);
     if (signedIn)
