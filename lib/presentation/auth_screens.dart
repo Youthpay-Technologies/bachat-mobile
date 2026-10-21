@@ -199,7 +199,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       reset || create ? 'Back to sign in' : 'Create an account',
                     ),
                   ),
-                  if (!create && !reset)
+                  if (!create &&
+                      !reset &&
+                      (c.pendingEmail != null ||
+                          (c.error?.startsWith('Verify your email') ?? false)))
                     TextButton(
                       onPressed: c.busy
                           ? null
