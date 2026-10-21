@@ -187,12 +187,13 @@ class AppController extends ChangeNotifier {
     if (accountId != null) await _hydrate();
     ready = true;
     notifyListeners();
-    if (observeConnectivity)
+    if (observeConnectivity) {
       _connection = Connectivity().onConnectivityChanged.listen((results) {
         offline = results.contains(ConnectivityResult.none);
         notifyListeners();
         if (!offline) unawaited(refresh());
       });
+    }
     _poll = Timer.periodic(const Duration(seconds: 30), (_) {
       if (signedIn && !preview) unawaited(refresh());
     });

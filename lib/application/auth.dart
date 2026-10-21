@@ -49,16 +49,18 @@ extension TeenAuthentication on AppController {
         ? uri.origin != Uri.base.origin
         : (uri.scheme != 'com.getyouthpay.bachat' ||
               uri.host != 'auth' ||
-              uri.path != '/callback'))
+              uri.path != '/callback')) {
       return;
+    }
     final parameters = {
       ...uri.queryParameters,
       ...Uri.splitQueryString(uri.fragment),
     };
     if (!parameters.containsKey('code') &&
         !parameters.containsKey('access_token') &&
-        !parameters.containsKey('error'))
+        !parameters.containsKey('error')) {
       return;
+    }
     _handledLink = uri.toString();
     try {
       final response = await client!.auth.getSessionFromUrl(uri);

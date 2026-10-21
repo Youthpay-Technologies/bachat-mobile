@@ -39,8 +39,9 @@ void main() {
       }),
     );
     addTearDown(client.dispose);
-    if (signedIn)
+    if (signedIn) {
       await client.auth.recoverSession(jsonEncode(fixtureSession()));
+    }
     final c = AppController(BachatRepository(db, client));
     addTearDown(c.dispose);
     return c;
@@ -174,10 +175,11 @@ void main() {
     var pages = 0;
     final c = await setup((r) async {
       pages++;
-      if (r.url.queryParameters.containsKey('id'))
+      if (r.url.queryParameters.containsKey('id')) {
         return json([
           {'id': 'last', 'owner_id': fixtureAccount},
         ]);
+      }
       return json(
         List.generate(
           500,
