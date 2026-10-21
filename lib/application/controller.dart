@@ -11,6 +11,7 @@ import '../data/repository.dart';
 import '../domain/models.dart';
 
 part 'auth.dart';
+part 'sync.dart';
 
 final controllerProvider = ChangeNotifierProvider<AppController>(
   (ref) => throw StateError('AppController must be provided at startup.'),
@@ -46,6 +47,10 @@ class AppController extends ChangeNotifier {
   StreamSubscription<List<ConnectivityResult>>? _connection;
   Timer? _poll;
   RealtimeChannel? _familyChannel;
+  RealtimeChannel? _moneyChannel;
+  String? _subscribedAccount;
+  bool _observeRealtime = false, _refreshAgain = false;
+  Timer? _syncDebounce;
   Future<void> _mutationTail = Future<void>.value();
   int _generation = 0;
   int _localRevision = 0;
@@ -146,7 +151,9 @@ class AppController extends ChangeNotifier {
     Uri? initialAuthLink,
     bool observeConnectivity = true,
     bool observeLinks = true,
+    bool observeRealtime = true,
   }) async {
+    _observeRealtime = observeRealtime;
     theme = await repository.loadTheme();
     chosenRole = UserRole.teen;
     pendingEmail = await repository.loadPendingEmail();
@@ -249,6 +256,7 @@ class AppController extends ChangeNotifier {
       _reset();
       _loadedAccount = account;
     }
+    _ensureMoneySubscription(account);
     final generation = _generation;
     final cached = await repository.load(account);
     if (accountId != account || generation != _generation) return;
@@ -347,7 +355,11 @@ class AppController extends ChangeNotifier {
       });
   Future<void> refresh() async {
     final id = accountId, cloud = client;
-    if (id == null || cloud == null || preview || syncing) return;
+    if (id == null || cloud == null || preview || _disposed) return;
+    if (syncing) {
+      _refreshAgain = true;
+      return;
+    }
     final generation = _generation;
     final localRevision = _localRevision;
     syncing = true;
@@ -437,7 +449,9 @@ class AppController extends ChangeNotifier {
     } finally {
       if (generation == _generation) {
         syncing = false;
-        if (pendingCount > 0 && !offline && error == null) {
+        final followUp = _refreshAgain || (pendingCount > 0 && !offline && error == null);
+        _refreshAgain = false;
+        if (followUp) {
           unawaited(Future<void>.microtask(refresh));
         }
       }
@@ -784,6 +798,8 @@ class AppController extends ChangeNotifier {
   }
 
   void _reset() {
+    _stopMoneySubscription();
+    _refreshAgain = false;
     _loadedAccount = null;
     profileChecked = false;
     syncing = false;
@@ -913,6 +929,7 @@ class AppController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _stopMoneySubscription();
     _auth?.cancel();
     _deepLinks?.cancel();
     _connection?.cancel();
