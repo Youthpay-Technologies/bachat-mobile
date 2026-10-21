@@ -2,7 +2,7 @@
 
 ## Product
 
-Build a separate Flutter app for Android and iOS. Keep the existing web app intact. Teen and parent journeys have distinct onboarding and dashboards. Learning is coming soon. Record confirmed product decisions in docs/PRODUCT-BRIEF.md and distinguish proposals from implementation.
+Develop the Flutter app for Android and iOS as the active Bachat project. The owner requested removal of the former local Next.js app on 2026-10-21; do not recreate it. The current release enables authenticated teen accounts only; parent onboarding is disabled until a later release. Learning is coming soon. Record confirmed product decisions in docs/PRODUCT-BRIEF.md and distinguish proposals from implementation.
 
 ## Git workflow
 
