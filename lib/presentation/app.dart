@@ -340,14 +340,7 @@ class HomePage extends ConsumerWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: Text(
-                  c.profile!.name.substring(0, 1),
-                  style: t.titleLarge,
-                ),
-              ),
+              const BachatSymbol(size: 48),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -372,31 +365,16 @@ class HomePage extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 40),
+          const SizedBox(height: 28),
           ChildPicker(c),
           if (c.isParent && c.children.isEmpty)
             const FamilyPage(embedded: true)
           else ...[
-            Center(
-              child: Column(
-                children: [
-                  Text(
-                    '${DateFormat.MMMM().format(DateTime.now())} spending',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    money(summary.spentMinor),
-                    style: t.displaySmall,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              ),
+            SpendingHero(
+              month: DateFormat.MMMM().format(DateTime.now()),
+              amount: money(summary.spentMinor),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
             if (!c.isParent)
               SizedBox(
                 width: double.infinity,
@@ -408,6 +386,7 @@ class HomePage extends ConsumerWidget {
               ),
             const SectionHeading('Overview'),
             Surface(
+              tone: Theme.of(context).colorScheme.primaryContainer,
               child: Wrap(
                 spacing: 32,
                 runSpacing: 16,
@@ -557,9 +536,7 @@ class EntryTile extends StatelessWidget {
                   entry.direction == EntryDirection.income
                       ? Icons.south_west
                       : categoryIcon(entry.category),
-                  color: Theme.of(context).brightness == Brightness.light
-                      ? const Color(0xFF216D2C)
-                      : Theme.of(context).colorScheme.primary,
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
               ),
               const SizedBox(width: 12),
