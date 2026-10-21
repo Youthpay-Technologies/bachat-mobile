@@ -1,3 +1,31 @@
+# Device sync, personal PIN and money flows - 2026-10-21
+
+The updated suite has **62 passing tests**, including separate Receive categories, custom-tag search/serialization, savings classification and correction, a remote notification arriving mid-refresh, and personal PIN persistence/account isolation, salted digests, cooldowns, storage failures, PIN changes and background privacy covering an open sheet. Analyzer is clean. Android arm64 debug and web release compilation pass locally; physical Android/iOS device testing is not claimed.
+
+Two independent Chrome instances at 1024 x 900 and 390 x 844 signed into the same disposable account with different device PINs. Actual Supabase calls verified custom spending and Receive creation, automatic savings and unchanged expense totals, reload locking, rejection of the other device's PIN, correct unlock, Lock now, reset confirmation/cancellation and changing the PIN. No successful API responses were mocked. The complete flow reported zero page errors.
+
+A focused live run changed a transaction, budget, savings goal and profile and observed their updates on both clients within the test's 10-second window. Each client received five actual Postgres-change WebSocket events, including the later offline transaction. An offline Receive was saved locally; after reconnecting and reloading through the PIN gate it uploaded and appeared on the other client. Backend requests were aborted only during the offline segment.
+
+Both live rollback SQL suites pass for existing authorization and new taxonomy/tag/savings constraints. The approved disposable account's sessions were revoked and the account deleted. Follow-up counts for users, profiles, transactions, budgets, goals, sessions and refresh tokens were zero. Its credentials were never saved to disk. The screenshots below were visually inspected.
+
+| Phone dashboard | PIN lock |
+|---|---|
+| ![Dashboard](screenshots/device-home.png) | ![PIN lock](screenshots/device-locked.png) |
+
+| Custom spending tag | Receive categories |
+|---|---|
+| ![Custom tag](screenshots/device-custom-spend.png) | ![Receive](screenshots/device-receive.png) |
+
+| Personal PIN setup | Recorded savings |
+|---|---|
+| ![Setup](screenshots/device-pin-setup.png) | ![Savings](screenshots/device-savings-plan.png) |
+
+Existing hosted email/native-callback setup requirements remain in [BACKEND.md](BACKEND.md). PINs are local app access protection, not a replacement for platform security. Profile/money sync uses the same signed-in account; device PINs and appearance intentionally remain local. Concurrent edits to the same record retain the documented last-upload rule; savings-goal additions on separate devices are not an additive server ledger.
+
+---
+
+## Earlier authentication release verification
+
 # Teen authentication verification - 2026-10-21
 
 Analyzer is clean and **all 52 tests pass** for the final source, including the new legacy recovery regression alongside PKCE recovery. Final-source Android arm64 debug APK and web release compilation pass locally. CI also runs formatting, analysis, tests and both platform builds. iOS signing and physical-device tests have not been performed.
