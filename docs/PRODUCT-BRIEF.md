@@ -26,7 +26,7 @@ The app must remain usable offline after account setup and a verified approval. 
 
 ## Branding
 
-Confirmed October 2026 mobile identity: cobalt #0C38A9, sunshine #FFDE59 and tangerine #FF751E; Instrument Sans headings, Inter interface text and selective Instrument Serif Italic editorial accents. The new lowercase-b symbol replaces the YP tile, with “by YouthPay” retained as endorsement. Use semantic light/dark themes, flat surfaces and native accessible controls. Instrument font bundling is still blocked by network access; see DESIGN.md and BRAND-REDESIGN.md.
+Confirmed October 2026 mobile identity: cobalt #0C38A9, sunshine #FFDE59 and tangerine #FF751E; Instrument Sans headings, Inter interface text and selective Instrument Serif Italic editorial accents. The new lowercase-b symbol replaces the YP tile, with “by YouthPay” retained as endorsement. Use semantic light/dark themes, flat surfaces and native accessible controls. All requested font families are bundled for offline use; see DESIGN.md and BRAND-REDESIGN.md.
 
 ## Architecture decisions
 

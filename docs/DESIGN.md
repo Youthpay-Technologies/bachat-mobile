@@ -23,7 +23,7 @@ Light canvas is #F6F7FB with white surfaces, #142344 text and #566480 secondary 
 - **Inter:** interface text, controls, descriptions, transaction lists and supporting figures. Inter is bundled with its SIL Open Font License; no proprietary SF Pro file is redistributed.
 - **Instrument Serif Italic:** short editorial accents in onboarding, Plan and Learn. Financial values, controls and long descriptions stay in a sans serif.
 
-**Font delivery remains incomplete:** Instrument downloads are blocked in the current restricted session. Their family tokens and placements are implemented, but Instrument Sans currently falls back to bundled Inter, and Instrument Serif to the platform serif. The screenshots therefore show fallback typography. Run `./scripts/install-brand-fonts.ps1` in a network-enabled session to download the requested fonts and licenses and register them in `pubspec.yaml`; then rerun verification and refresh the screenshots before merging.
+All three requested families are bundled with their SIL Open Font Licenses and registered in `pubspec.yaml`, including Instrument Serif regular and italic. The app does not need a font network request. `scripts/install-brand-fonts.ps1` can provision the Instrument assets when maintaining the brand; its manifest edit is anchored to the top-level font list.
 
 Financial display uses tabular figures. The normal amount is 44 logical pixels; at large text settings the display adopts a smaller base size and reflows the currency/value so ordinary amounts remain readable. No essential value is ellipsized. Native text scaling remains enabled.
 
