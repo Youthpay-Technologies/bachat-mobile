@@ -27,7 +27,7 @@ Final checks use the normal Flutter 3.47.7 / Dart 3.13.5 CLI with the requested 
 | `flutter analyze --no-pub` | Passed, no issues |
 | `flutter test --no-pub` | 51 passed |
 | `flutter build apk --debug --no-pub` | Passed; debug APK built |
-| `flutter build web --release --no-pub` | Running |
+| `flutter build web --release --no-pub` | Passed; release web preview built |
 | `git diff --check` | Passed |
 | PowerShell font installer parser | No syntax errors |
 | Real Flutter renders with bundled typography | 26 completed, no Flutter exceptions |
