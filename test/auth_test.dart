@@ -251,8 +251,9 @@ void main() {
         if (r.method == 'POST') {
           final row = Map<String, dynamic>.from(jsonDecode(r.body) as Map);
           rows[table]!.add(row);
-          if (table == 'savings_goals' && !goalUploaded.isCompleted)
+          if (table == 'savings_goals' && !goalUploaded.isCompleted) {
             goalUploaded.complete();
+          }
           return json({}, 201);
         }
         if (table == 'transactions' && pause) {
