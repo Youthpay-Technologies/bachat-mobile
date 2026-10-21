@@ -10,7 +10,7 @@ The project was restored from its paused state on 2026-10-21. Email sign-up is e
 
 ## Hosted Auth configuration
 
-The connected Supabase MCP tools expose database operations but no Auth settings update. The CLI was signed out during implementation. Sign in with `supabase login`, then review and apply the narrow hosted configuration:
+The connected Supabase MCP tools expose database operations but no Auth settings update. The CLI was signed out during implementation. Sign in with `npx supabase@2.120.0 login`, then review and apply the narrow hosted configuration:
 
 ```powershell
 ./scripts/configure-auth.ps1
