@@ -44,6 +44,9 @@ void main() {
       );
       await client.auth.recoverSession(jsonEncode(fixtureSession()));
       final lock = DeviceLock(MemoryPinStorage());
+      addTearDown(lock.dispose);
+      addTearDown(client.dispose);
+      addTearDown(db.close);
       await tester.runAsync(() async {
         await lock.bind(fixtureAccount);
         await lock.createPin('654321');
@@ -90,11 +93,6 @@ void main() {
       expect(find.text('Spend money'), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
-      lock.dispose();
-      await tester.runAsync(() async {
-        await client.dispose();
-        await db.close();
-      });
     },
   );
 }
