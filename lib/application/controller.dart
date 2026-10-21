@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:app_links/app_links.dart';
+import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +41,8 @@ class AppController extends ChangeNotifier {
       syncing = false;
   int pendingCount = 0;
   StreamSubscription<AuthState>? _auth;
+  StreamSubscription<Uri>? _deepLinks;
+  String? _handledLink;
   StreamSubscription<List<ConnectivityResult>>? _connection;
   Timer? _poll;
   RealtimeChannel? _familyChannel;
@@ -138,7 +142,10 @@ class AppController extends ChangeNotifier {
     await repository.save(demoKey, snapshot());
   }
 
-  Future<void> initialize() async {
+  Future<void> initialize({
+    bool observeConnectivity = true,
+    bool observeLinks = true,
+  }) async {
     theme = await repository.loadTheme();
     chosenRole = UserRole.teen;
     pendingEmail = await repository.loadPendingEmail();
@@ -161,14 +168,31 @@ class AppController extends ChangeNotifier {
         notifyListeners();
       },
     );
+    if (observeLinks) {
+      if (kIsWeb) {
+        await handleAuthLink(Uri.base);
+      } else {
+        final appLinks = AppLinks();
+        _deepLinks = appLinks.uriLinkStream.listen(
+          (uri) => unawaited(handleAuthLink(uri)),
+          onError: (Object _) {
+            error = 'Unable to open this email link. Request a new one.';
+            notifyListeners();
+          },
+        );
+        final initial = await appLinks.getInitialLink();
+        if (initial != null) await handleAuthLink(initial);
+      }
+    }
     if (accountId != null) await _hydrate();
     ready = true;
     notifyListeners();
-    _connection = Connectivity().onConnectivityChanged.listen((results) {
-      offline = results.contains(ConnectivityResult.none);
-      notifyListeners();
-      if (!offline) unawaited(refresh());
-    });
+    if (observeConnectivity)
+      _connection = Connectivity().onConnectivityChanged.listen((results) {
+        offline = results.contains(ConnectivityResult.none);
+        notifyListeners();
+        if (!offline) unawaited(refresh());
+      });
     _poll = Timer.periodic(const Duration(seconds: 30), (_) {
       if (signedIn && !preview) unawaited(refresh());
     });
@@ -879,6 +903,7 @@ class AppController extends ChangeNotifier {
   void dispose() {
     _disposed = true;
     _auth?.cancel();
+    _deepLinks?.cancel();
     _connection?.cancel();
     _poll?.cancel();
     _familyChannel?.unsubscribe();

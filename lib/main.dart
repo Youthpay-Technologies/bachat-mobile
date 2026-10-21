@@ -19,6 +19,7 @@ Future<void> main() async {
         publishableKey: BackendConfig.publishableKey,
         authOptions: const FlutterAuthClientOptions(
           localStorage: SecureSessionStorage(),
+          detectSessionInUri: false,
         ),
       );
       _backendReady = true;

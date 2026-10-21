@@ -43,6 +43,49 @@ extension TeenAuthentication on AppController {
       ? Uri.base.replace(path: '/', query: '', fragment: '').toString()
       : 'com.getyouthpay.bachat://auth/callback';
 
+  Future<void> handleAuthLink(Uri uri) async {
+    if (_handledLink == uri.toString()) return;
+    if (kIsWeb
+        ? uri.origin != Uri.base.origin
+        : (uri.scheme != 'com.getyouthpay.bachat' ||
+              uri.host != 'auth' ||
+              uri.path != '/callback'))
+      return;
+    final parameters = {
+      ...uri.queryParameters,
+      ...Uri.splitQueryString(uri.fragment),
+    };
+    if (!parameters.containsKey('code') &&
+        !parameters.containsKey('access_token') &&
+        !parameters.containsKey('error'))
+      return;
+    _handledLink = uri.toString();
+    try {
+      final response = await client!.auth.getSessionFromUrl(uri);
+      if (response.redirectType == AuthChangeEvent.passwordRecovery.name ||
+          response.redirectType == 'recovery') {
+        recoveringPassword = true;
+        await repository.saveRecovery(true);
+      }
+      pendingEmail = null;
+      await repository.savePendingEmail(null);
+    } on AuthException catch (e) {
+      error = authMessage(e);
+    } catch (_) {
+      error =
+          'Unable to open this email link. Try opening it on the device where you requested it, or request a new link.';
+    } finally {
+      if (kIsWeb) {
+        final clean = uri.replace(query: '', fragment: '');
+        await SystemNavigator.routeInformationUpdated(
+          uri: clean,
+          replace: true,
+        );
+      }
+      notifyListeners();
+    }
+  }
+
   void clearAuthFeedback() {
     error = null;
     authNotice = null;
@@ -62,6 +105,8 @@ extension TeenAuthentication on AppController {
       email: email.trim(),
       password: password,
     );
+    recoveringPassword = false;
+    await repository.saveRecovery(false);
     pendingEmail = null;
     await repository.savePendingEmail(null);
     await _hydrate();
