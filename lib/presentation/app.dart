@@ -1425,6 +1425,21 @@ class SettingsPage extends ConsumerWidget {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => appearanceSheet(context, c),
               ),
+              if (!c.preview && c.deviceLock != null) ...[
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.pin_outlined),
+                  title: const Text('Change PIN'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => c.deviceLock!.lock(changePin: true),
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.lock_outline),
+                  title: const Text('Lock now'),
+                  onTap: () => c.deviceLock!.lock(),
+                ),
+              ],
               if (c.preview)
                 ListTile(
                   contentPadding: EdgeInsets.zero,

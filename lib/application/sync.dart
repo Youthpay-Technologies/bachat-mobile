@@ -17,11 +17,17 @@ extension DeviceSynchronization on AppController {
   }
 
   void _ensureMoneySubscription(String account) {
-    if (!_observeRealtime || _subscribedAccount == account || client == null) return;
+    if (!_observeRealtime || _subscribedAccount == account || client == null)
+      return;
     _stopMoneySubscription();
     _subscribedAccount = account;
     final channel = client!.channel('account:$account:money');
-    for (final table in ['profiles', 'transactions', 'budgets', 'savings_goals']) {
+    for (final table in [
+      'profiles',
+      'transactions',
+      'budgets',
+      'savings_goals',
+    ]) {
       channel.onPostgresChanges(
         event: PostgresChangeEvent.all,
         schema: 'public',
@@ -38,7 +44,8 @@ extension DeviceSynchronization on AppController {
     }
     _moneyChannel = channel;
     channel.subscribe((status, error) {
-      if (status == RealtimeSubscribeStatus.subscribed && _subscribedAccount == account) {
+      if (status == RealtimeSubscribeStatus.subscribed &&
+          _subscribedAccount == account) {
         requestRefresh(); // Also catch changes missed during a reconnect.
       }
     });

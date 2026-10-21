@@ -81,7 +81,8 @@ class BachatApp extends ConsumerWidget {
       darkTheme: BachatTheme.build(Brightness.dark),
       themeMode: controller.themeMode,
       themeAnimationDuration: Duration.zero,
-      builder: (context, child) => DevicePrivacyGate(controller: controller, child: child!),
+      builder: (context, child) =>
+          DevicePrivacyGate(controller: controller, child: child!),
       home: const AppGate(),
     );
   }

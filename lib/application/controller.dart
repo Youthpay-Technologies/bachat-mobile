@@ -451,7 +451,8 @@ class AppController extends ChangeNotifier {
     } finally {
       if (generation == _generation) {
         syncing = false;
-        final followUp = _refreshAgain || (pendingCount > 0 && !offline && error == null);
+        final followUp =
+            _refreshAgain || (pendingCount > 0 && !offline && error == null);
         _refreshAgain = false;
         if (followUp) {
           unawaited(Future<void>.microtask(refresh));
