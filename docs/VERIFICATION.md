@@ -1,6 +1,6 @@
 # Teen authentication verification - 2026-10-21
 
-Analyzer is clean. The original 51-test suite passes after the startup callback fix, and the new legacy recovery regression test passes alongside all 13 existing auth/controller tests (52 tests in total). Web release compilation passes for the callback fix. Android builds passed locally before that fix and in CI; final branch CI runs both platform builds again. iOS signing and physical-device tests have not been performed.
+Analyzer is clean and **all 52 tests pass** for the final source, including the new legacy recovery regression alongside PKCE recovery. Final-source Android arm64 debug APK and web release compilation pass locally. CI also runs formatting, analysis, tests and both platform builds. iOS signing and physical-device tests have not been performed.
 
 ## Live backend and browser
 
