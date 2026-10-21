@@ -20,6 +20,7 @@ class BachatMark extends StatelessWidget {
               'bachat',
               style: TextStyle(
                 fontFamily: BachatBrand.headingFont,
+                fontFamilyFallback: const [BachatBrand.interfaceFont],
                 fontSize: large ? 32 : 25,
                 fontWeight: FontWeight.w700,
                 letterSpacing: -1.1,
@@ -270,7 +271,7 @@ class DashboardSkeleton extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        block(48, 48),
+                        const BachatSymbol(size: 48),
                         const SizedBox(width: 16),
                         block(120, 20),
                       ],
