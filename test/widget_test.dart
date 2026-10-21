@@ -5,6 +5,7 @@ import 'package:sembast/sembast_memory.dart';
 import 'package:bachat_mobile/main.dart';
 import 'package:bachat_mobile/presentation/app.dart';
 import 'package:bachat_mobile/presentation/auth_screens.dart';
+import 'package:bachat_mobile/presentation/forms.dart';
 import 'package:bachat_mobile/design/components.dart';
 import 'package:bachat_mobile/application/controller.dart';
 import 'package:bachat_mobile/data/repository.dart';
@@ -30,6 +31,78 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  testWidgets('Spend and Receive open fixed flows with separate categories', (
+    tester,
+  ) async {
+    final c = await controller();
+    c.startPreview(UserRole.teen);
+    await mount(tester, c);
+    await tester.ensureVisible(find.text('Receive').first);
+    await tester.tap(find.text('Receive').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Receive money'), findsOneWidget);
+    expect(find.byType(SegmentedButton<EntryDirection>), findsNothing);
+    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.pumpAndSettle();
+    expect(find.text('Pocket money'), findsWidgets);
+    expect(find.text('Salary'), findsWidgets);
+    expect(find.text('Food & dining'), findsNothing);
+    await tester.tap(find.text('Gift').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Amount'),
+      '2000',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Where did it come from?'),
+      'Birthday',
+    );
+    await tester.ensureVisible(find.text('Save transaction'));
+    await tester.tap(find.text('Save transaction'));
+    await tester.pumpAndSettle();
+    expect(c.entries.first.direction, EntryDirection.income);
+    expect(c.entries.first.category, 'Gift');
+  });
+
+  testWidgets('Other savings is recorded once and excluded from spending', (
+    tester,
+  ) async {
+    final c = await controller();
+    c.startPreview(UserRole.teen);
+    final before = MoneySummary(c.entries, DateTime.now()).spentMinor;
+    await mount(tester, c);
+    await tester.ensureVisible(find.text('Spend').first);
+    await tester.tap(find.text('Spend').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Other').last);
+    await tester.tap(find.text('Other').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Amount'),
+      '125.50',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Where or what was it?'),
+      'Put aside',
+    );
+    await tester.enterText(
+      find.widgetWithText(TextFormField, 'Category name'),
+      ' savings ',
+    );
+    expect(
+      find.text('Added to savings, outside your spending totals.'),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(find.text('Save transaction'));
+    await tester.tap(find.text('Save transaction'));
+    await tester.pumpAndSettle();
+    expect(c.entries.first.direction, EntryDirection.savings);
+    expect(MoneySummary(c.entries, DateTime.now()).spentMinor, before);
+    expect(MoneySummary(c.entries, DateTime.now()).savedMinor, 12550);
+  });
 
   testWidgets('onboarding enables only teen authentication', (tester) async {
     final c = await controller();
