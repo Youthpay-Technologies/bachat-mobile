@@ -111,9 +111,9 @@ class _PinSessionState extends State<_PinSession> {
         ? Future.value()
         : Future.microtask(() => lock.bind(id));
     ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted && lock.waitSeconds > 0)
+      if (mounted && lock.waitSeconds > 0) {
         setState(() {});
-      else if (mounted)
+      } else if (mounted)
         setState(() {});
     });
   }
@@ -131,10 +131,11 @@ class _PinSessionState extends State<_PinSession> {
     if (signingOut || lock.busy || !form.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
     final wasSetup = lock.needsSetup;
-    if (wasSetup)
+    if (wasSetup) {
       await lock.createPin(pin.text);
-    else
+    } else {
       await lock.unlock(pin.text);
+    }
     if (!mounted) return;
     pin.clear();
     confirm.clear();

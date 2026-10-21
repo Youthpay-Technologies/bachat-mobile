@@ -26,7 +26,7 @@ const incomeCategories = [
   'Other',
 ];
 const spendCategories = [...categories, 'Savings'];
-const transactionCategories = {...spendCategories, ...incomeCategories};
+final transactionCategories = {...spendCategories, ...incomeCategories};
 List<String> categoriesFor(EntryDirection direction) => switch (direction) {
   EntryDirection.expense => spendCategories,
   EntryDirection.income => incomeCategories,

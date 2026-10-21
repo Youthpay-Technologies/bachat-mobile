@@ -17,8 +17,9 @@ extension DeviceSynchronization on AppController {
   }
 
   void _ensureMoneySubscription(String account) {
-    if (!_observeRealtime || _subscribedAccount == account || client == null)
+    if (!_observeRealtime || _subscribedAccount == account || client == null) {
       return;
+    }
     _stopMoneySubscription();
     _subscribedAccount = account;
     final channel = client!.channel('account:$account:money');
