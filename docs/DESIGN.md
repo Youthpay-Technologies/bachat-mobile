@@ -1,24 +1,40 @@
-# Bachat design system
+# Bachat mobile identity
 
-The supplied three-phone image sets the visual direction. At an assumed 390px logical phone width, retain 24px page padding and generous section spacing. Following the requested refinement, shared radii are 8px for badges/chips and navigation selection, 12px for controls/fields, 16px for cards, and 20px for sheets/dialogs and the navigation container. Cards use a single restrained 12px blur shadow at 2.5% black with a 3px vertical offset. These values adapt the reference into a cleaner expense-tracking interface.
+The October 2026 mobile redesign replaces the previous green/DM Sans direction. Bachat is the product name; “by YouthPay” remains the endorsement. The Next.js application is outside this redesign.
 
-Light: canvas #EEF0F4, surface #F7F8FA, text #14171C, secondary text #596171, primary #34C642, primary text #102314, readable green #216D2C. Dark: canvas #14171C, surface #20252D, text #F3F5F7, primary #67DE70. Buttons use dark text; focus borders and meaningful icons use readable green in light mode.
+## Brand
 
-DM Sans is bundled. Large amounts use tabular figures. Home centers recorded monthly spending, followed by explicit actions and supporting metrics. Activity, Plan, Learn, You, onboarding, forms and family settings share tokens and components. Native Material controls provide semantics, focus and selection behavior. Forms use native numeric keyboards, persistent labels and inline validation; deletion/reset require confirmation. Parent controls remain read-only in both the UI and controller. Layouts scroll and adapt to large text rather than truncating financial records.
+The mark is a rounded lowercase **b** with an orange dot, drawn by `BachatSymbolPainter` in `lib/design/brand.dart`. The in-app mark and Android, iOS and Flutter web-preview launcher assets share this geometry. Regenerate launcher assets with `flutter test tool/generate_icons_test.dart`.
 
-The reference does not define dark, error, loading or large-text states; these are Bachat adaptations required by the user's request for an integrated usable app. No bank transfers, payment keypad or unsupported banking action is implied.
+| Brand color | Value | Role |
+| --- | --- | --- |
+| Cobalt | #0C38A9 | Identity, spending summary, primary light-theme actions |
+| Sunshine | #FFDE59 | Savings identity and illustration highlights |
+| Tangerine | #FF751E | Small identity and illustration accents |
+| Ink | #142344 | Primary light-theme text |
 
-## Minimal interface polish
+Components use Material `ColorScheme` roles. Brand primitives are reserved for the identity and fixed cobalt spending panel. Yellow and orange never carry financial status by themselves. Warnings and destructive actions retain their labeled error treatment.
 
-Headings are concise, amounts use a 44px tabular display style, and section spacing is 36px above / 18px below. One primary action per screen replaces duplicate navigation actions. Repeated demo/storage notices and explanatory paragraphs are removed. Identity remains visible through names and roles; read-only child access is labeled.
+Light canvas is #F6F7FB with white surfaces, #142344 text and #566480 secondary text. Dark canvas is #0D1529 with #17233D surfaces, #F2F5FF text and #B7C3DE secondary text. Dark primary actions use #B5C8FF with #10275E text. Savings surfaces use #FFF5CB / #40391E in light / dark appearance.
 
-Profile and appearance settings open native modal sheets. Forms share drag handles, rounded sheet surfaces, keyboard-aware padding and dismissible confirmation feedback. Learning uses a compact coming-soon badge; savings and over-budget badges carry meaningful status. Multiple home goals become a horizontally scrollable carousel with visible continuation and keyboard-accessible previous/next controls. A single goal remains a card.
+## Typography
 
-Navigation retains each tab’s state and uses a restrained 150ms selection animation. Reduced motion disables sheet/carousel movement and selection animation; theme swaps are instantaneous. The static startup skeleton reflects actual initialization without introducing a delay or perpetual shimmer.
+- **Instrument Sans:** wordmark, headings, financial display and section hierarchy.
+- **Inter:** interface text, controls, descriptions, transaction lists and supporting figures. Inter is bundled with its SIL Open Font License; no proprietary SF Pro file is redistributed.
+- **Instrument Serif Italic:** short editorial accents in onboarding, Plan and Learn. Financial values, controls and long descriptions stay in a sans serif.
 
-Activity filters live in a dismissible bottom sheet with staged choices and an explicit Apply action. The active count and a concise summary keep the current view visible; clearing advanced filters preserves search and transaction type. Date sorting groups entries by day, while amount sorting uses one ordered list. Empty results offer recovery.
+**Font delivery remains incomplete:** Instrument downloads are blocked in the current restricted session. Their family tokens and placements are implemented, but Instrument Sans currently falls back to bundled Inter, and Instrument Serif to the platform serif. The screenshots therefore show fallback typography. Run `./scripts/install-brand-fonts.ps1` in a network-enabled session to download the requested fonts and licenses and register them in `pubspec.yaml`; then rerun verification and refresh the screenshots before merging.
 
-Savings additions use a focused amount sheet with the remaining target visible, exact paisa validation, duplicate-submit protection and completion feedback. Completed goals and parent views omit the action. Reusing previous-month budgets is optional and only appears when a missing category can be copied; existing current-month limits are preserved.
+Financial display uses tabular figures. The normal amount is 44 logical pixels; at large text settings the display adopts a smaller base size and reflows the currency/value so ordinary amounts remain readable. No essential value is ellipsized. Native text scaling remains enabled.
 
+## Layout and interaction
 
-The radius scale lives in `BachatRadii` and applies in both themes. Filled, outlined and text actions share the control radius; focus, error and enabled field borders retain the same geometry. Person avatars remain circular. Touch targets remain at least 48px for buttons; visual refinement does not reduce tap areas. Skeletons use the control radius, and glow-like surface shadows are removed.
+Page content keeps 24px gutters and a 600px maximum width. Radii are 10px for compact elements, 16px for controls, 24px for surfaces and 32px for sheets/navigation. Surfaces are flat; color and spacing establish grouping rather than shadows. Section headings expose heading semantics.
+
+Home leads with recorded monthly spending in a cobalt panel, then the existing transaction action, supporting net-flow metrics and breakdowns. The summary never claims to be a bank balance. Savings cards use a quiet sunshine surface. Onboarding and Learn share a static geometric habit illustration with no invented financial data or continuous animation.
+
+Native buttons, inputs, chips, navigation, focus handling and sheets remain in place. Keyboard entry, persistent field labels, inline validation, destructive confirmations, read-only parent controls and reduced-motion behavior are retained. Loading uses the Bachat symbol; empty, error and unavailable states share the theme. Authentication and business rules are outside the redesign.
+
+## Verification and limitations
+
+See [the redesign verification record](BRAND-REDESIGN.md) and [screen renders](screenshots/brand/). The screenshots come from the real Flutter rendering engine with local preview personas; they are development artifacts, not an authenticated release or device-build verification.
