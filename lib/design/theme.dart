@@ -92,12 +92,34 @@ abstract final class BachatTheme {
               height: 1.3,
               color: text,
             ),
+            titleMedium: TextStyle(
+              fontFamily: BachatBrand.headingFont,
+              fontFamilyFallback: const [BachatBrand.interfaceFont],
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              height: 1.3,
+              color: text,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+            titleSmall: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              height: 1.4,
+              color: text,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
             bodyLarge: TextStyle(fontSize: 16, height: 1.5, color: text),
             bodyMedium: TextStyle(fontSize: 14, height: 1.5, color: text),
+            bodySmall: TextStyle(
+              fontSize: 13,
+              height: 1.5,
+              color: scheme.onSurfaceVariant,
+            ),
             labelLarge: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
               color: text,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
       appBarTheme: AppBarTheme(
@@ -155,6 +177,18 @@ abstract final class BachatTheme {
           ),
         ),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            fontFamily: BachatBrand.interfaceFont,
+            fontSize: 12,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w700
+                : FontWeight.w500,
+            color: states.contains(WidgetState.selected)
+                ? scheme.onSurface
+                : scheme.onSurfaceVariant,
+          ),
+        ),
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: scheme.primary,
