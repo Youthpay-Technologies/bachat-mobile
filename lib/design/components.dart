@@ -168,6 +168,7 @@ Future<bool> confirmAction(
   required String title,
   required String body,
   required String action,
+  bool destructive = false,
 }) async =>
     await showDialog<bool>(
       context: context,
@@ -180,6 +181,12 @@ Future<bool> confirmAction(
             child: const Text('Cancel'),
           ),
           FilledButton(
+            style: destructive
+                ? FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                    foregroundColor: Theme.of(context).colorScheme.onError,
+                  )
+                : null,
             onPressed: () => Navigator.pop(context, true),
             child: Text(action),
           ),

@@ -96,6 +96,7 @@ class _EntryFormState extends State<EntryForm> {
                 controller: amount,
                 style: Theme.of(context).textTheme.headlineLarge,
                 textAlign: TextAlign.center,
+                textInputAction: TextInputAction.next,
                 readOnly: readOnly,
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
@@ -103,6 +104,7 @@ class _EntryFormState extends State<EntryForm> {
                 decoration: const InputDecoration(
                   labelText: 'Amount',
                   prefixText: 'Rs ',
+                  hintText: '0.00',
                 ),
                 validator: validateAmount,
               ),
@@ -112,6 +114,7 @@ class _EntryFormState extends State<EntryForm> {
                 readOnly: readOnly,
                 maxLength: 100,
                 textCapitalization: TextCapitalization.sentences,
+                textInputAction: TextInputAction.next,
                 decoration: InputDecoration(
                   labelText: direction == EntryDirection.income
                       ? 'Where did it come from?'
@@ -122,6 +125,8 @@ class _EntryFormState extends State<EntryForm> {
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
                 initialValue: category,
+                isExpanded: true,
+                itemHeight: null,
                 decoration: const InputDecoration(labelText: 'Category'),
                 items: categoriesFor(direction)
                     .map((v) => DropdownMenuItem(value: v, child: Text(v)))
@@ -137,6 +142,7 @@ class _EntryFormState extends State<EntryForm> {
                   readOnly: readOnly,
                   maxLength: 40,
                   textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.next,
                   decoration: const InputDecoration(labelText: 'Category name'),
                   validator: requiredText,
                   onChanged: (_) => setState(() {}),
@@ -227,6 +233,9 @@ class _EntryFormState extends State<EntryForm> {
           ),
         if (widget.existing != null && !readOnly)
           TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             onPressed: saving
                 ? null
                 : () async {
@@ -236,6 +245,7 @@ class _EntryFormState extends State<EntryForm> {
                       body:
                           'This transaction will be removed from your totals and activity.',
                       action: 'Delete',
+                      destructive: true,
                     )) {
                       try {
                         await widget.c.saveEntry(
@@ -468,6 +478,8 @@ class _PlanFormState extends State<PlanForm> {
             if (widget.isBudget)
               DropdownButtonFormField<String>(
                 initialValue: category,
+                isExpanded: true,
+                itemHeight: null,
                 decoration: const InputDecoration(labelText: 'Category'),
                 items: categories
                     .map((v) => DropdownMenuItem(value: v, child: Text(v)))
@@ -479,6 +491,8 @@ class _PlanFormState extends State<PlanForm> {
             else
               TextFormField(
                 controller: title,
+                textInputAction: TextInputAction.next,
+                textCapitalization: TextCapitalization.sentences,
                 maxLength: 80,
                 decoration: const InputDecoration(labelText: 'Goal name'),
                 validator: requiredText,
@@ -486,6 +500,12 @@ class _PlanFormState extends State<PlanForm> {
             const SizedBox(height: 16),
             TextFormField(
               controller: amount,
+              textInputAction: widget.isBudget
+                  ? TextInputAction.done
+                  : TextInputAction.next,
+              onFieldSubmitted: (_) {
+                if (widget.isBudget && !saving) save();
+              },
               keyboardType: const TextInputType.numberWithOptions(
                 decimal: true,
               ),
@@ -499,6 +519,10 @@ class _PlanFormState extends State<PlanForm> {
               const SizedBox(height: 16),
               TextFormField(
                 controller: saved,
+                textInputAction: TextInputAction.done,
+                onFieldSubmitted: (_) {
+                  if (!saving) save();
+                },
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
@@ -540,6 +564,9 @@ class _PlanFormState extends State<PlanForm> {
       ),
       if (widget.budget != null || widget.goal != null)
         TextButton(
+          style: TextButton.styleFrom(
+            foregroundColor: Theme.of(context).colorScheme.error,
+          ),
           onPressed: saving
               ? null
               : () async {
@@ -549,6 +576,7 @@ class _PlanFormState extends State<PlanForm> {
                         'Remove this ${widget.isBudget ? 'budget' : 'goal'}?',
                     body: 'Your transactions will stay unchanged.',
                     action: 'Remove',
+                    destructive: true,
                   )) {
                     await save(deleted: true);
                   }
