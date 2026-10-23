@@ -207,6 +207,9 @@ void main() {
     await capture('10-first-expense');
     await tap('Save transaction');
     expect(controller.entries.single.amountMinor, 25000);
+    // Show the settled Home state after the transient save toast disappears.
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
     await tester.drag(
       find.byType(SingleChildScrollView).first,
       const Offset(0, 3000),
