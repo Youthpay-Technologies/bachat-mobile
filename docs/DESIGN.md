@@ -29,12 +29,16 @@ Financial display uses tabular figures. The normal amount is 44 logical pixels; 
 
 ## Layout and interaction
 
-Page content keeps 24px gutters and a 600px maximum width. Radii are 10px for compact elements, 16px for controls, 24px for surfaces and 32px for sheets/navigation. Surfaces are flat; color and spacing establish grouping rather than shadows. Section headings expose heading semantics.
+Page content keeps 24px gutters (16px below 360px) and a 600px maximum width. Radii are 10px for compact elements, 16px for controls, 24px for surfaces and 32px for sheets/navigation. Surfaces are flat with a quiet outline; color and spacing establish grouping rather than shadows. Section headings expose heading semantics. Primary and outlined actions share a 54px minimum height and grow with their text. Home, Activity and Plan retain independent scroll positions; dragging a page dismisses the keyboard.
 
-Home leads with recorded monthly spending in a cobalt panel, then the existing transaction action, supporting net-flow metrics and breakdowns. The summary never claims to be a bank balance. Savings cards use a quiet sunshine surface. Onboarding and Learn share a static geometric habit illustration with no invented financial data or continuous animation.
+Home leads with recorded monthly spending in a cobalt panel, then Spend/Receive, net-flow metrics and recent activity before category analysis. The summary explains recorded spending and never claims to be a bank balance. Empty states offer direct entry and goal actions. Activity reports counts and direction totals for the currently filtered records. Transactions name their direction in text; budgets and goals expose named progress with numeric percentages. Savings cards use a quiet sunshine surface. Learn retains the static habit illustration.
 
-Native buttons, inputs, chips, navigation, focus handling and sheets remain in place. Keyboard entry, persistent field labels, inline validation, destructive confirmations, read-only parent controls and reduced-motion behavior are retained. Loading uses the Bachat symbol; empty, error and unavailable states share the theme. Authentication and business rules are outside the redesign.
+The introduction has three interactive example-only previews: spending categories, an adjustable budget and a savings choice. These choices remain local to the introduction and do not create records. Labeled step controls, Back, Skip and direct sign-in allow free navigation. Step changes use a 220ms fade/short slide and become instant under reduced motion. There is no automatic progression or continuous animation. Sign-in uses a native route and returns to the selected introduction step on Back; an authenticated session dismisses that route to the account/profile gate. Account creation and profile setup explain the verification sequence. Teen accounts remain the only enabled role.
+
+Native buttons, inputs, chips, navigation, focus handling and sheets remain in place. Keyboard entry, persistent field labels, inline validation, destructive confirmations, read-only parent controls and reduced-motion behavior are retained. Delete/remove actions and their confirmation buttons use error colors with explicit labels. Loading uses the Bachat symbol; empty, error and unavailable states share the theme. Authentication and business rules are outside the redesign.
 
 ## Verification and limitations
 
 See [the redesign verification record](BRAND-REDESIGN.md) and [screen renders](screenshots/brand/). The screenshots come from the real Flutter rendering engine with local preview personas; they are development artifacts, not an authenticated release or device-build verification.
+
+The later expense/onboarding pass is tracked in [the UX plan](UX-REVAMP.md). Regenerate its screenshots with `flutter test tool/ux_preview_test.dart`; the tool covers the introduction and all five tabs in light/dark appearance at 390px and at 320px with doubled text.
