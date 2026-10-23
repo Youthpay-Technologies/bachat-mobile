@@ -221,7 +221,16 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
-    final summary = MoneySummary(c.entries, DateTime.now());
+    final now = DateTime.now();
+    final summary = MoneySummary(c.entries, now);
+    final expenseCount = c.entries
+        .where(
+          (entry) =>
+              entry.direction == EntryDirection.expense &&
+              entry.occurredAt.year == now.year &&
+              entry.occurredAt.month == now.month,
+        )
+        .length;
     return RefreshIndicator(
       onRefresh: c.refresh,
       child: PageBody(
@@ -260,11 +269,11 @@ class HomePage extends ConsumerWidget {
             const FamilyPage(embedded: true)
           else ...[
             SpendingHero(
-              month: DateFormat.MMMM().format(DateTime.now()),
+              month: DateFormat.MMMM().format(now),
               amount: money(summary.spentMinor),
-              contextLabel: summary.spentMinor == 0
-                  ? 'No spending recorded this month. Start with one expense.'
-                  : 'Recorded expenses this month. This is not a bank balance.',
+              contextLabel: expenseCount == 0
+                  ? 'Start this month with your first expense.'
+                  : '$expenseCount ${expenseCount == 1 ? 'expense' : 'expenses'} recorded this month.',
             ),
             const SizedBox(height: 16),
             if (!c.isParent) MoneyActions(c),
@@ -494,13 +503,25 @@ class EntryTile extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      '${switch (entry.direction) {
-                        EntryDirection.expense => 'Spent',
-                        EntryDirection.income => 'Received',
-                        EntryDirection.savings => 'Set aside',
-                      }} · ${entry.categoryLabel} · ${DateFormat.MMMd().format(entry.occurredAt)}',
-                      style: Theme.of(context).textTheme.bodySmall,
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          '${switch (entry.direction) {
+                            EntryDirection.expense => 'Spent',
+                            EntryDirection.income => 'Received',
+                            EntryDirection.savings => 'Set aside',
+                          }} · ${entry.categoryLabel}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          DateFormat.MMMd()
+                              .format(entry.occurredAt)
+                              .replaceAll(' ', '\u00a0'),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
                     ),
                     if (compact)
                       Padding(
