@@ -69,11 +69,20 @@ class AppGate extends ConsumerWidget {
 }
 
 class PageBody extends StatelessWidget {
-  const PageBody({super.key, required this.children});
+  const PageBody({super.key, required this.children, this.storageKey});
   final List<Widget> children;
+  final String? storageKey;
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
-    padding: const EdgeInsets.fromLTRB(24, 24, 24, 36),
+    key: storageKey == null ? null : PageStorageKey(storageKey),
+    physics: const AlwaysScrollableScrollPhysics(),
+    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+    padding: EdgeInsets.fromLTRB(
+      MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
+      24,
+      MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
+      36,
+    ),
     child: Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600),
@@ -154,18 +163,22 @@ class _ShellState extends ConsumerState<DashboardShell> {
               ),
               NavigationDestination(
                 icon: Icon(Icons.receipt_long_outlined),
+                selectedIcon: Icon(Icons.receipt_long_rounded),
                 label: 'Activity',
               ),
               NavigationDestination(
                 icon: Icon(Icons.savings_outlined),
+                selectedIcon: Icon(Icons.savings_rounded),
                 label: 'Plan',
               ),
               NavigationDestination(
                 icon: Icon(Icons.auto_stories_outlined),
+                selectedIcon: Icon(Icons.auto_stories_rounded),
                 label: 'Learn',
               ),
               NavigationDestination(
                 icon: Icon(Icons.person_outline),
+                selectedIcon: Icon(Icons.person_rounded),
                 label: 'You',
               ),
             ],
@@ -212,6 +225,7 @@ class HomePage extends ConsumerWidget {
     return RefreshIndicator(
       onRefresh: c.refresh,
       child: PageBody(
+        storageKey: 'home',
         children: [
           Row(
             children: [
@@ -248,6 +262,9 @@ class HomePage extends ConsumerWidget {
             SpendingHero(
               month: DateFormat.MMMM().format(DateTime.now()),
               amount: money(summary.spentMinor),
+              contextLabel: summary.spentMinor == 0
+                  ? 'No spending recorded this month. Start with one expense.'
+                  : 'Recorded expenses this month. This is not a bank balance.',
             ),
             const SizedBox(height: 16),
             if (!c.isParent) MoneyActions(c),
@@ -271,12 +288,46 @@ class HomePage extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              'Net flow is money in minus spending and money set aside.',
+              style: t.bodySmall,
+            ),
+            SectionHeading(
+              'Recent activity',
+              action: 'See all',
+              onAction: onActivity,
+            ),
+            if (c.entries.isEmpty)
+              EmptyState(
+                icon: Icons.receipt_long_outlined,
+                title: 'Your story starts with one entry',
+                body:
+                    'Add a purchase or allowance. Your recent activity will appear here.',
+                action: c.isParent ? null : 'Add your first expense',
+                onAction: () => entryForm(context, c),
+              )
+            else
+              Surface(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Column(
+                  children: c.entries
+                      .take(3)
+                      .map((e) => EntryTile(e, c))
+                      .toList(),
+                ),
+              ),
             const SectionHeading('Spending breakdown'),
             if (summary.byCategory.isEmpty)
-              const EmptyState(
+              EmptyState(
                 icon: Icons.pie_chart_outline,
                 title: 'A clearer picture starts here',
                 body: 'Record an expense to see your spending by category.',
+                action: c.isParent ? null : 'Record an expense',
+                onAction: () => entryForm(context, c),
               )
             else
               Surface(
@@ -287,9 +338,12 @@ class HomePage extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Column(
                             children: [
-                              Row(
+                              Wrap(
+                                alignment: WrapAlignment.spaceBetween,
+                                spacing: 16,
+                                runSpacing: 4,
                                 children: [
-                                  Expanded(child: Text(e.key)),
+                                  Text(e.key),
                                   Text(money(e.value), style: t.titleSmall),
                                 ],
                               ),
@@ -310,41 +364,18 @@ class HomePage extends ConsumerWidget {
                 ),
               ),
             SectionHeading(
-              'Recent activity',
-              action: 'See all',
-              onAction: onActivity,
-            ),
-            if (c.entries.isEmpty)
-              const EmptyState(
-                icon: Icons.receipt_long_outlined,
-                title: 'Your story starts with one entry',
-                body:
-                    'Add a purchase or allowance. Your recent activity will appear here.',
-              )
-            else
-              Surface(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Column(
-                  children: c.entries
-                      .take(3)
-                      .map((e) => EntryTile(e, c))
-                      .toList(),
-                ),
-              ),
-            SectionHeading(
               'Savings goals',
               action: 'Your plan',
               onAction: onPlan,
             ),
             if (c.goals.isEmpty)
-              const EmptyState(
+              EmptyState(
                 icon: Icons.flag_outlined,
                 title: 'Give your savings a purpose',
                 body:
                     'Create a goal in Plan and take it one small step at a time.',
+                action: c.isParent ? null : 'Create a savings goal',
+                onAction: () => goalForm(context, c),
               )
             else
               GoalCarousel(c),
@@ -441,12 +472,16 @@ class EntryTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                backgroundColor: entry.direction == EntryDirection.savings
+                    ? Theme.of(context).colorScheme.secondaryContainer
+                    : Theme.of(context).colorScheme.primaryContainer,
                 child: Icon(
                   entry.direction == EntryDirection.income
                       ? Icons.south_west
                       : categoryIcon(entry.category),
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  color: entry.direction == EntryDirection.savings
+                      ? Theme.of(context).colorScheme.onSecondaryContainer
+                      : Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
               ),
               const SizedBox(width: 12),
@@ -460,7 +495,11 @@ class EntryTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${entry.categoryLabel} · ${DateFormat.MMMd().format(entry.occurredAt)}',
+                      '${switch (entry.direction) {
+                        EntryDirection.expense => 'Spent',
+                        EntryDirection.income => 'Received',
+                        EntryDirection.savings => 'Set aside',
+                      }} · ${entry.categoryLabel} · ${DateFormat.MMMd().format(entry.occurredAt)}',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                     if (compact)
@@ -478,6 +517,44 @@ class EntryTile extends StatelessWidget {
       );
     },
   );
+}
+
+class ActivityTotals extends StatelessWidget {
+  const ActivityTotals(this.entries, {super.key});
+  final List<MoneyEntry> entries;
+
+  @override
+  Widget build(BuildContext context) {
+    int total(EntryDirection direction) => entries
+        .where((entry) => entry.direction == direction)
+        .fold(0, (sum, entry) => sum + entry.amountMinor);
+    return Surface(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${entries.length} ${entries.length == 1 ? 'transaction' : 'transactions'} · Current results',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 24,
+            runSpacing: 12,
+            children: [
+              for (final direction in EntryDirection.values)
+                if (entries.any((entry) => entry.direction == direction))
+                  _Metric(switch (direction) {
+                    EntryDirection.expense => 'Spent',
+                    EntryDirection.income => 'Received',
+                    EntryDirection.savings => 'Set aside',
+                  }, money(total(direction))),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class ActivityPage extends ConsumerStatefulWidget {
@@ -517,6 +594,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
           .add(entry);
     }
     return PageBody(
+      storageKey: 'activity',
       children: [
         Row(
           children: [
@@ -602,6 +680,10 @@ class _ActivityState extends ConsumerState<ActivityPage> {
         const SizedBox(height: 20),
         if (!c.isParent) MoneyActions(c),
         const SizedBox(height: 16),
+        if (entries.isNotEmpty) ...[
+          ActivityTotals(entries),
+          const SizedBox(height: 8),
+        ],
         if (entries.isEmpty)
           EmptyState(
             icon: Icons.receipt_long_outlined,
@@ -689,6 +771,7 @@ class PlanPage extends ConsumerWidget {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
     final summary = MoneySummary(c.entries, DateTime.now());
     return PageBody(
+      storageKey: 'plan',
       children: [
         Text('Plan', style: t.headlineLarge),
         const SizedBox(height: 8),
@@ -697,6 +780,10 @@ class PlanPage extends ConsumerWidget {
           style: BachatBrand.editorial(context, size: 30),
         ),
         const SizedBox(height: 16),
+        Text(
+          '${DateFormat.yMMMM().format(DateTime.now())} · Your monthly plan',
+          style: t.bodySmall,
+        ),
         ChildPicker(c),
         const SectionHeading('Set aside'),
         Surface(
@@ -729,11 +816,13 @@ class PlanPage extends ConsumerWidget {
           onAction: () => budgetForm(context, c),
         ),
         if (c.budgets.isEmpty)
-          const EmptyState(
+          EmptyState(
             icon: Icons.donut_large_outlined,
             title: 'Make a little room',
             body:
                 'Set a monthly category limit to keep everyday spending in perspective.',
+            action: c.isParent ? null : 'Set your first budget',
+            onAction: () => budgetForm(context, c),
           ),
         if (!c.isParent && c.reusableBudgets.isNotEmpty) ReuseBudgetsButton(c),
         ...c.budgets.map((b) {
@@ -766,6 +855,9 @@ class PlanPage extends ConsumerWidget {
                   ],
                   const SizedBox(height: 16),
                   LinearProgressIndicator(
+                    semanticsLabel: '${b.category} monthly budget',
+                    semanticsValue:
+                        '${money(spent)} spent of ${money(b.limitMinor)}',
                     value: (spent / b.limitMinor).clamp(0, 1),
                     minHeight: 6,
                     color: spent > b.limitMinor
@@ -911,6 +1003,9 @@ class GoalCard extends StatelessWidget {
         Text('${money(goal.savedMinor)} of ${money(goal.targetMinor)}'),
         const SizedBox(height: 12),
         LinearProgressIndicator(
+          semanticsLabel: '${goal.title} savings goal',
+          semanticsValue:
+              '${money(goal.savedMinor)} saved of ${money(goal.targetMinor)}',
           value: goal.progress,
           minHeight: 6,
           borderRadius: BorderRadius.circular(6),

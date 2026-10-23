@@ -21,8 +21,14 @@ class BrandHeadline extends StatelessWidget {
 }
 
 class SpendingHero extends StatelessWidget {
-  const SpendingHero({super.key, required this.month, required this.amount});
+  const SpendingHero({
+    super.key,
+    required this.month,
+    required this.amount,
+    required this.contextLabel,
+  });
   final String month, amount;
+  final String contextLabel;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -75,10 +81,10 @@ class SpendingHero extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
             ),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Your everyday, in perspective.',
-                style: TextStyle(
+                contextLabel,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 13,
                   height: 1.5,
