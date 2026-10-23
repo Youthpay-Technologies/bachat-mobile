@@ -105,7 +105,9 @@ void main() {
         );
         expect(
           tester
-              .widget<AnimatedSwitcher>(find.byType(AnimatedSwitcher))
+              .widget<AnimatedSwitcher>(
+                find.byKey(const ValueKey('onboarding-transition')),
+              )
               .duration,
           Duration.zero,
         );

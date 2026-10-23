@@ -115,6 +115,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             ),
                           ),
                           AnimatedSwitcher(
+                            key: const ValueKey('onboarding-transition'),
                             duration: duration,
                             switchInCurve: Curves.easeOutCubic,
                             switchOutCurve: Curves.easeInCubic,
@@ -122,7 +123,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               alignment: Alignment.topLeft,
                               children: [
                                 for (final child in previous)
-                                  Positioned.fill(
+                                  Positioned(
+                                    top: 0,
+                                    left: 0,
+                                    right: 0,
                                     child: IgnorePointer(
                                       child: ExcludeSemantics(child: child),
                                     ),
