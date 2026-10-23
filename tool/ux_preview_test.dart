@@ -29,7 +29,6 @@ void main() {
             ..ready = true
             ..theme = dark ? 'dark' : 'light';
           addTearDown(db.close);
-          addTearDown(controller.dispose);
           await tester.runAsync(() async {
             for (final font in {
               'Instrument Sans': 'InstrumentSans.ttf',

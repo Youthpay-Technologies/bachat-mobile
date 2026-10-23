@@ -17,7 +17,6 @@ void main() {
   }) async {
     final db = await databaseFactoryMemory.openDatabase('onboarding');
     final controller = AppController(BachatRepository(db, null))..ready = true;
-    addTearDown(controller.dispose);
     addTearDown(db.close);
     await tester.pumpWidget(
       ProviderScope(
