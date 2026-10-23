@@ -133,6 +133,13 @@ void main() {
         expect(created, isTrue);
         lock.lock();
         await capture('pin-unlock');
+        final unlocked = await tester.runAsync(() => lock.unlock('654321'));
+        expect(unlocked, isTrue);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('You').last);
+        await capture('account-settings');
+        await tester.ensureVisible(find.text('Sign out'));
+        await capture('account-actions');
         await tester.pumpWidget(const SizedBox.shrink());
       },
     );

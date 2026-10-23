@@ -5,6 +5,7 @@ import 'package:bachat_mobile/application/controller.dart';
 import 'package:bachat_mobile/data/repository.dart';
 import 'package:bachat_mobile/domain/models.dart';
 import 'package:bachat_mobile/main.dart';
+import 'package:bachat_mobile/design/theme.dart';
 import 'package:bachat_mobile/presentation/forms.dart' show SheetBody;
 import 'package:bachat_mobile/presentation/app.dart' show EntryTile;
 import 'package:flutter/material.dart';
@@ -37,6 +38,10 @@ void main() {
               child: RepaintBoundary(
                 key: previewBoundaryKey,
                 child: MaterialApp(
+                  debugShowCheckedModeBanner: false,
+                  theme: BachatTheme.build(
+                    dark ? Brightness.dark : Brightness.light,
+                  ),
                   home: MediaQuery(
                     data: MediaQueryData(
                       size: Size(large ? 320 : 390, 844),
