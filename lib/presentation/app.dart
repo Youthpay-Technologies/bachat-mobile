@@ -855,9 +855,8 @@ class PlanPage extends ConsumerWidget {
                   ],
                   const SizedBox(height: 16),
                   LinearProgressIndicator(
-                    semanticsLabel: '${b.category} monthly budget',
-                    semanticsValue:
-                        '${money(spent)} spent of ${money(b.limitMinor)}',
+                    semanticsLabel:
+                        '${b.category} monthly budget: ${money(spent)} spent of ${money(b.limitMinor)}',
                     value: (spent / b.limitMinor).clamp(0, 1),
                     minHeight: 6,
                     color: spent > b.limitMinor
@@ -1003,9 +1002,8 @@ class GoalCard extends StatelessWidget {
         Text('${money(goal.savedMinor)} of ${money(goal.targetMinor)}'),
         const SizedBox(height: 12),
         LinearProgressIndicator(
-          semanticsLabel: '${goal.title} savings goal',
-          semanticsValue:
-              '${money(goal.savedMinor)} saved of ${money(goal.targetMinor)}',
+          semanticsLabel:
+              '${goal.title} savings goal: ${money(goal.savedMinor)} saved of ${money(goal.targetMinor)}',
           value: goal.progress,
           minHeight: 6,
           borderRadius: BorderRadius.circular(6),
