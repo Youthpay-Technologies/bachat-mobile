@@ -61,6 +61,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<bool>(controllerProvider.select((c) => c.signedIn), (
+      _,
+      signedIn,
+    ) {
+      if (signedIn && !widget.recovery) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+        });
+      }
+    });
     final c = ref.watch(controllerProvider);
     final title = widget.recovery
         ? 'Choose a new password'
@@ -70,6 +82,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         ? 'Make room for your goals'
         : 'Welcome back';
     return Scaffold(
+      appBar: !widget.recovery && Navigator.of(context).canPop()
+          ? AppBar(
+              leading: const BackButton(),
+              title: const Text('Your account'),
+            )
+          : null,
       body: SafeArea(
         child: AutofillGroup(
           child: Form(

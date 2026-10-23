@@ -13,6 +13,8 @@ import '../domain/activity_filter.dart';
 import 'activity_filters.dart';
 import 'forms.dart';
 import 'auth_screens.dart';
+import 'onboarding.dart';
+export 'onboarding.dart' show WelcomeScreen;
 
 class AppGate extends ConsumerWidget {
   const AppGate({super.key});
@@ -100,134 +102,6 @@ class AppError extends StatelessWidget {
             ),
           ),
         );
-}
-
-class WelcomeScreen extends ConsumerStatefulWidget {
-  const WelcomeScreen({super.key});
-  @override
-  ConsumerState<WelcomeScreen> createState() => _WelcomeState();
-}
-
-class _WelcomeState extends ConsumerState<WelcomeScreen> {
-  int step = 0;
-  bool authenticating = false;
-  UserRole role = UserRole.teen;
-  @override
-  Widget build(BuildContext context) {
-    final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
-    if (authenticating) return const AuthScreen();
-    return Scaffold(
-      body: SafeArea(
-        child: PageBody(
-          children: [
-            const BachatMark(large: true),
-            const SizedBox(height: 40),
-            BrandHeadline(
-              lead: step == 0
-                  ? 'Make money'
-                  : step == 1
-                  ? 'Small habits.'
-                  : 'Your money.',
-              accent: step == 0
-                  ? 'make sense.'
-                  : step == 1
-                  ? 'Real progress.'
-                  : 'Your way.',
-            ),
-            const SizedBox(height: 18),
-            Text(
-              step == 0
-                  ? 'Track the everyday. Make a plan. Save for something good.'
-                  : step == 1
-                  ? 'See where your money goes and make a little room for what matters.'
-                  : 'Track spending, build a budget and save for what matters.',
-              style: t.bodyLarge,
-            ),
-            const SizedBox(height: 28),
-            Surface(
-              tone: Theme.of(context).colorScheme.secondaryContainer,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const HabitIllustration(compact: true),
-                  const SizedBox(height: 20),
-                  Text(
-                    step == 0
-                        ? 'Your everyday, in perspective'
-                        : step == 1
-                        ? 'Build a habit that lasts'
-                        : 'A plan worth looking forward to',
-                    style: t.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    step == 0
-                        ? 'Food, rides, a little treat. Give every rupee a place.'
-                        : step == 1
-                        ? 'A simple budget and a saving goal can make everyday choices easier.'
-                        : 'Start with a small saving goal. Keep your progress close.',
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-            if (step < 2) ...[
-              Semantics(
-                label: 'Introduction ${step + 1} of 3',
-                child: Row(
-                  children: List.generate(
-                    3,
-                    (i) => Container(
-                      margin: const EdgeInsets.only(right: 6),
-                      width: i == step ? 28 : 8,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: i == step
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outlineVariant,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => setState(() => step++),
-                  child: const Text('Continue'),
-                ),
-              ),
-              Center(
-                child: TextButton(
-                  onPressed: () => setState(() => step = 2),
-                  child: const Text('Skip introduction'),
-                ),
-              ),
-            ] else ...[
-              RoleChoices(
-                value: role,
-                onChanged: (value) => setState(() => role = value),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: c.busy
-                      ? null
-                      : () => setState(() => authenticating = true),
-                  icon: const Icon(Icons.arrow_forward_rounded),
-                  label: const Text('Continue as a teen'),
-                ),
-              ),
-            ],
-            AppError(c),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 class DashboardShell extends ConsumerStatefulWidget {
