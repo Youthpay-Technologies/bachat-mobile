@@ -121,8 +121,9 @@ PAGES = [
 
 
 class Report:
-    def __init__(self, output: Path, verification: dict):
+    def __init__(self, output: Path, verification: dict, *, label="BACHAT  /  APP REVIEW"):
         self.data = verification
+        self.label = label
         self.page = 0
         self.canvas = Canvas(str(output), pagesize=A4, pageCompression=1)
         self.canvas.setTitle("Bachat — Latest app visual review")
@@ -145,7 +146,7 @@ class Report:
         self.canvas.rect(0, 0, WIDTH, HEIGHT, fill=1, stroke=0)
         self.canvas.bookmarkPage(f"page-{self.page}")
         self.canvas.addOutlineEntry(title, f"page-{self.page}")
-        self.text("BACHAT  /  APP REVIEW", MARGIN, HEIGHT - 34, 400, 8, COBALT)
+        self.text(self.label, MARGIN, HEIGHT - 34, 400, 8, COBALT)
 
     def finish(self):
         self.canvas.setStrokeColor(LINE)

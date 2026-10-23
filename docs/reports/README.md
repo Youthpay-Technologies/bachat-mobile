@@ -1,5 +1,16 @@
 # Latest app visual report
 
+[Open the concise, complete onboarding report](Bachat-Complete-Onboarding-2026-10-23.pdf): **six pages, twelve screenshots**, in the order a new teen experiences them. It covers the introduction, account creation, the email-verification prompt, sign-in, profile, device PIN, first Home screen, first expense and unlocking on return. Screens come from one continuous new-account journey using isolated fixtures. The external email step is described; no email-provider screen or live delivery is claimed.
+
+Regenerate the onboarding report with:
+
+```sh
+flutter test tool/onboarding_preview_test.dart
+python scripts/generate_onboarding_report.py
+```
+
+The capture verifies registration remains signed out until the modeled email-confirmation step, completes profile and PIN setup, and records the first expense through the real app forms. No real account is created, no email is sent, and no backend is accessed. This adds twelve dedicated screenshots to the archive described below. The PDF was checked for all six pages, twelve image placements, bookmarks, searchable text and page bounds, and the rendered pages were visually inspected.
+
 [Open the 23-page Bachat app review](Bachat-App-Review-2026-10-23.pdf).
 
 The report contains 43 screenshot placements selected from 78 fresh Flutter captures. It covers the interactive introduction, sign-in and recovery, profile setup, device PINs, Home, Spend/Receive, editing/deleting, Activity search and filters, budgets, savings goals, account settings, both appearances and 320px layouts at 200% text. Captions identify scrolled views and explain the current behavior.
