@@ -87,3 +87,5 @@ Android and web builds are verified locally. iOS signing and device testing requ
 Work on a focused branch, commit each coherent change, and use a pull request for review and merging. Run the checks relevant to the change. Keep credentials, signing keys, personal records, and generated build files out of version control.
 
 See [the working agreement](AGENTS.md), [product brief](docs/PRODUCT-BRIEF.md), [design system](docs/DESIGN.md), and [verification notes](docs/VERIFICATION.md).
+
+For a visual walkthrough of the latest expense-tracking experience, open the [23-page app review PDF](docs/reports/Bachat-App-Review-2026-10-23.pdf). It includes onboarding, money forms, planning, account protection, light/dark appearance and large-text screenshots. See [report regeneration](docs/reports/README.md).

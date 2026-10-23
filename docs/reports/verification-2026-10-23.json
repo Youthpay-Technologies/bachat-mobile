@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-23",
+  "app_revision": "698865d",
+  "branch": "feat/expense-experience-revamp",
+  "checks": [
+    {
+      "label": "Application tests",
+      "result": "71 tests passed with the standard Flutter runner."
+    },
+    {
+      "label": "Screen captures",
+      "result": "6 rendering journeys passed; 78 fresh 2x PNG captures cover forms, account/PIN flows, both themes and narrow screens with 200% text."
+    },
+    {
+      "label": "Analysis and formatting",
+      "result": "Flutter analyze: no issues. Dart formatting: 40 files unchanged."
+    },
+    {
+      "label": "Web",
+      "result": "Release JavaScript web build passed. The existing secure-storage web plugin prevents Wasm compatibility."
+    },
+    {
+      "label": "Android",
+      "result": "Debug APK build passed. This is a compile check, not physical-device or release-signing verification."
+    },
+    {
+      "label": "iOS",
+      "result": "Device testing and signing require the team's macOS/Xcode setup and were not verified here."
+    }
+  ]
+}

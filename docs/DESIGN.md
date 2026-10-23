@@ -42,3 +42,5 @@ Native buttons, inputs, chips, navigation, focus handling and sheets remain in p
 See [the redesign verification record](BRAND-REDESIGN.md) and [screen renders](screenshots/brand/). The screenshots come from the real Flutter rendering engine with local preview personas; they are development artifacts, not an authenticated release or device-build verification.
 
 The later expense/onboarding pass is tracked in [the UX plan](UX-REVAMP.md). Regenerate its screenshots with `flutter test tool/ux_preview_test.dart`; the tool covers the introduction and all five tabs in light/dark appearance at 390px and at 320px with doubled text.
+
+The follow-up adds Android system Back through the introduction, a concise monthly expense count and independently wrapping transaction metadata. The complete [visual report](reports/Bachat-App-Review-2026-10-23.pdf) includes forms, dialogs and authenticated account/PIN screens; run `flutter test tool/ux_preview_test.dart tool/account_preview_test.dart` to refresh its captures.

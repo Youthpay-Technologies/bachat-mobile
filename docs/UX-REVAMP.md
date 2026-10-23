@@ -73,7 +73,7 @@ JUDGMENT: JUSTIFIED. The requested benefits are easier first use and more direct
 
 Resolved verification findings: the first animation implementation constrained outgoing content to the incoming height; real widget tests exposed the overflow and it was corrected in `ef17838`. Flutter's progress semantics require numeric values, so money descriptions moved into the accessible labels in `2233f75`. Test controller disposal is owned by Riverpod; duplicate test teardown was removed in `0122d80`.
 
-### Verification on 23 October 2026
+### Initial restricted-environment verification on 23 October 2026
 
 | Check | Result |
 | --- | --- |
@@ -96,3 +96,26 @@ The fallback compiled `build/ux-review/run_all_tests.dart` with the installed `f
 Normal environments can repeat the checks with `flutter analyze`, `flutter test`, and `flutter test tool/ux_preview_test.dart`. Fresh preview artifacts are under [screenshots/ux](screenshots/ux/): [Home](screenshots/ux/home-light.png), [Activity](screenshots/ux/activity-light.png), [Plan](screenshots/ux/plan-dark.png), and [introduction](screenshots/ux/introduction-1-light.png). These use isolated sample records, not a live account.
 
 Verdict: **Approve within the inspected source and automated rendering scope.** No remaining HIGH finding was observed there. Physical assistive-technology, complete keyboard traversal and release-platform verification remain outside this verdict.
+
+## Full-access follow-up on 23 October 2026
+
+The earlier environment restrictions and push blocker above are historical. With full access restored, the existing commits were pushed, the standard Flutter toolchain was exercised and the interface was refined further:
+
+- Android system Back now retraces introduction steps while keeping the example choices.
+- Home's summary shows the number of recorded monthly expenses, replacing the long repeated context line.
+- Transaction metadata wraps independently, keeping the displayed month/day together.
+- Report capture coverage now includes draft money forms, editing and deletion confirmation, filters, empty states, profile/PIN screens and the authenticated account settings. Root dialogs use the app theme, and capture-only debug chrome is disabled.
+
+| Check | Observed result |
+| --- | --- |
+| `flutter --no-version-check analyze --no-pub` | Passed: no issues |
+| `dart format --output=none --set-exit-if-changed lib test tool` | Passed: 40 files unchanged |
+| `flutter --no-version-check test --no-pub --reporter expanded` | Passed: 71 application tests |
+| Explicit `tool/ux_preview_test.dart` and `tool/account_preview_test.dart` runs | Passed: six rendering journeys, 78 final screenshots |
+| `flutter --no-version-check build web --release --no-pub` | Passed: JavaScript release build; existing secure-storage dependency is not Wasm compatible |
+| `flutter --no-version-check build apk --debug --no-pub` | Passed: debug APK compiled; physical-device and signing checks remain separate |
+| `git diff --check` | Passed |
+| PDF structure and rendered review | Passed: 23 pages, 43 screenshot placements, bookmarks and searchable text; no text outside page bounds |
+| Git delivery | Feature branch pushed to origin; changes are committed separately |
+
+See [the PDF report](reports/Bachat-App-Review-2026-10-23.pdf) and [regeneration instructions](reports/README.md). App source revision `698865d` is recorded in the report; subsequent commits contain reporting artifacts and tooling. The default Flutter version check attempted an SDK tag fetch and stalled, so these local commands use `--no-version-check` to verify the installed SDK without updating it. No product dependency was added. iOS signing, physical-device behavior and complete keyboard/screen-reader audits remain unverified.
