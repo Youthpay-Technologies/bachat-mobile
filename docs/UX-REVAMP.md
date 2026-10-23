@@ -43,3 +43,56 @@ Accessibility, layout, writing, typography, color and polish are reviewed throug
 ## Deferred proposals
 
 Do not enable parent registration, invent learning content, add bank integrations, change authentication rules or add chart/animation packages as part of this UI work. Persisting introduction completion and user research on budget discovery can be evaluated separately; neither is required to give returning users a direct sign-in path.
+
+## Delivered improvements
+
+All ten plan items above have an implementation in this branch. The welcome screen now lives in `presentation/onboarding.dart`; the remaining work uses the existing theme, widgets and native routes. No dependency, database, financial calculation or authentication policy changed.
+
+JUDGMENT: JUSTIFIED. The requested benefits are easier first use and more direct everyday expense tracking. The evidence is the original forward-only introduction, passive empty states, hidden filter totals and implicit keyboard actions. The solution adds one introductory screen module and one results-summary widget while reusing existing controllers and forms. Behavioral acceptance is covered by navigation, example-isolation, filtered-results and empty-state tests.
+
+### Consolidated review
+
+| Domain | Evidence inspected | Result |
+| --- | --- | --- |
+| Accessibility | `onboarding.dart`, `auth_screens.dart`, `forms.dart`, `GoalCard`, budget progress, native controls; reduced-motion and 320px/200% widget tests | Step names, progress labels, wrapping dropdowns and destructive treatment implemented; physical screen-reader and full keyboard traversal not verified |
+| Layout | `PageBody`, Home, Activity, Plan, Learn, You and three introduction steps; 32 Flutter renders | Responsive gutters, preserved scroll identity, keyboard dismissal, wrapping amounts and result summaries implemented; render checks passed |
+| Writing | Introduction examples, account/profile progress, recorded-spending context, direction labels, empty-state actions | Clear example-only scope, direct task verbs and recovery controls retained |
+| Typography | Shared theme, bundled fonts, financial text styles; normal and doubled-text renders | Existing tabular amounts and native scaling retained; no financial value ellipsized by these changes |
+| Color | Semantic color roles in shared surfaces, actions, savings previews and delete confirmations in both themes | Existing palette retained; destructive controls use error roles and labels; no new palette introduced |
+| UI polish | Introduction switcher, native route handoff, selected navigation icons, surface outlines and action heights | 220ms transitions with instant reduced-motion state; no perpetual motion; consistent 54px minimum button heights |
+
+| Severity | Domain | Location | Before | After | Why |
+| --- | --- | --- | --- | --- | --- |
+| MEDIUM | Layout | `presentation/app.dart:71` | Fixed gutters and implicit page scroll identity | Responsive gutters, per-tab storage keys and draggable keyboard dismissal | Narrow screens and repeated task navigation need usable space and retained context |
+| MEDIUM | UI polish | `presentation/onboarding.dart:10` (previously WelcomeScreen in app.dart) | Repeated illustration and forward/skip only | Interactive examples, step controls, Back and direct sign-in | First use explains the actual money tasks and lets people navigate freely |
+| MEDIUM | Writing | `presentation/auth_screens.dart:8` | No visible introduction-to-auth return; limited setup context | Native Back and account/profile progress | Users can recover their place and understand the remaining steps |
+| MEDIUM | Writing | `presentation/app.dart:218` | Passive empty states and category analysis before recent entries | Direct expense/goal actions and recent activity first | Frequent actions are easier to discover and review |
+| MEDIUM | Writing | `presentation/app.dart:522` | Filtered list without an aggregate | Count and totals from the same visible records | Filtering communicates the scope and effect of the results |
+| MEDIUM | Accessibility | `presentation/app.dart:858`, `presentation/app.dart:1005` | Generic progress without goal/budget context | Named money context plus native numeric percentage | Spoken progress identifies what the amount belongs to |
+| LOW | UI polish | `presentation/forms.dart:233`, `design/components.dart:169` | Delete/remove controls shared primary treatment | Labeled error-colored controls and confirmation | Consequential actions are easier to distinguish |
+
+Resolved verification findings: the first animation implementation constrained outgoing content to the incoming height; real widget tests exposed the overflow and it was corrected in `ef17838`. Flutter's progress semantics require numeric values, so money descriptions moved into the accessible labels in `2233f75`. Test controller disposal is owned by Riverpod; duplicate test teardown was removed in `0122d80`.
+
+### Verification on 23 October 2026
+
+| Check | Result |
+| --- | --- |
+| `dart format --output=none --set-exit-if-changed lib test tool/ux_preview_test.dart` using the installed Dart executable | Passed: 37 files unchanged |
+| Dart analysis server, `analysis.setAnalysisRoots` on this project and `analysis.getErrors` on every edited Dart file | Passed: no diagnostics; the normal CLI's subprocess startup is blocked in this sandbox |
+| Direct Flutter frontend compilation of the app and combined test entrypoint | Passed: zero compiler errors |
+| Existing test files plus `onboarding_test.dart`, `expense_ux_test.dart`, and `tool/ux_preview_test.dart`, run with Flutter's actual `flutter_tester.exe` engine | Passed: **74 tests**, including 70 application tests and four rendering journeys; latest run completed in 47 seconds |
+| Introduction Continue/Back/Skip, direct sign-in, account-route dismissal, example isolation, editable example budget and goal choice | Passed |
+| Filtered counts/totals, empty Home goal action and empty Plan budget action | Passed |
+| 390px normal text and 320px doubled text, both appearances, all five tabs and all three introduction steps | Passed: 32 generated PNGs, no Flutter exceptions |
+| Manual image inspection | Home light, Activity light, Plan dark, introduction step 3 light, step 2 dark and Home light at doubled text inspected |
+| `git diff --check` | Passed |
+| Standard `flutter test` / `flutter analyze` launcher | Blocked: SDK-cache writes and child-process startup denied; direct SDK compiler/analyzer/test-engine execution used instead |
+| Web release and Android APK builds | Not verified in this sandbox; standard Flutter build orchestration has the same access restriction |
+| iOS signing/device release, physical TalkBack/VoiceOver and complete keyboard audit | Not verified |
+| PR creation | Blocked: `gh auth status` reports invalid environment and stored GitHub tokens; commits remain on the local feature branch |
+
+The fallback compiled `build/ux-review/run_all_tests.dart` with the installed `frontend_server_aot.dart.snapshot`, `--target=flutter`, `--sdk-root .../flutter_patched_sdk/` and a merged local SDK/project package configuration. It ran the resulting kernel through `flutter_tester.exe --disable-vm-service --enable-software-rendering --skia-deterministic-rendering --non-interactive --use-test-fonts --disable-asset-fonts --packages=build/ux-review/package_config.json --flutter-assets-dir=build/unit_test_assets build/ux-review/all-tests.dill`, with `FLUTTER_TEST=true`. This uses the installed test runner and real Flutter engine; it does not replace the application tests. Fallback entrypoints and logs stay in ignored build output.
+
+Normal environments can repeat the checks with `flutter analyze`, `flutter test`, and `flutter test tool/ux_preview_test.dart`. Fresh preview artifacts are under [screenshots/ux](screenshots/ux/): [Home](screenshots/ux/home-light.png), [Activity](screenshots/ux/activity-light.png), [Plan](screenshots/ux/plan-dark.png), and [introduction](screenshots/ux/introduction-1-light.png). These use isolated sample records, not a live account.
+
+Verdict: **Approve within the inspected source and automated rendering scope.** No remaining HIGH finding was observed there. Physical assistive-technology, complete keyboard traversal and release-platform verification remain outside this verdict.
