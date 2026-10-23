@@ -1,18 +1,17 @@
 // Explicit visual check: flutter test tool/ux_preview_test.dart
 // Uses isolated preview records; never authenticates or changes cloud data.
-import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:bachat_mobile/application/controller.dart';
 import 'package:bachat_mobile/data/repository.dart';
 import 'package:bachat_mobile/domain/models.dart';
 import 'package:bachat_mobile/main.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sembast/sembast_memory.dart';
+
+import 'preview_support.dart';
 
 void main() {
   for (final dark in [false, true]) {
@@ -29,25 +28,7 @@ void main() {
             ..ready = true
             ..theme = dark ? 'dark' : 'light';
           addTearDown(db.close);
-          await tester.runAsync(() async {
-            final icons = FontLoader('MaterialIcons')
-              ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
-            await icons.load();
-            for (final font in {
-              'Instrument Sans': 'InstrumentSans.ttf',
-              'Instrument Serif': 'InstrumentSerif-Italic.ttf',
-              'Inter': 'Inter-Regular.ttf',
-            }.entries) {
-              final loader = FontLoader(font.key)
-                ..addFont(
-                  File(
-                    'assets/fonts/${font.value}',
-                  ).readAsBytes().then(ByteData.sublistView),
-                );
-              await loader.load();
-            }
-          });
-          const boundaryKey = ValueKey('ux-capture');
+          await loadPreviewFonts(tester);
           await tester.pumpWidget(
             ProviderScope(
               overrides: [controllerProvider.overrideWith((ref) => controller)],
@@ -59,7 +40,7 @@ void main() {
                     disableAnimations: true,
                   ),
                   child: const RepaintBoundary(
-                    key: boundaryKey,
+                    key: previewBoundaryKey,
                     child: BachatApp(),
                   ),
                 ),
@@ -68,24 +49,8 @@ void main() {
           );
           await tester.pumpAndSettle();
 
-          Future<void> capture(String name) async {
-            expect(tester.takeException(), isNull);
-            final boundary = tester.renderObject<RenderRepaintBoundary>(
-              find.byKey(boundaryKey),
-            );
-            await tester.runAsync(() async {
-              final image = await boundary.toImage();
-              final bytes = await image.toByteData(
-                format: ui.ImageByteFormat.png,
-              );
-              final output = File(
-                'docs/screenshots/ux/$name-${dark ? 'dark' : 'light'}${large ? '-large' : ''}.png',
-              );
-              await output.parent.create(recursive: true);
-              await output.writeAsBytes(bytes!.buffer.asUint8List());
-              image.dispose();
-            });
-          }
+          Future<void> capture(String name) =>
+              capturePreview(tester, name, dark: dark, large: large);
 
           for (var step = 0; step < 3; step++) {
             await capture('introduction-${step + 1}');
@@ -107,6 +72,116 @@ void main() {
             await tester.tap(find.text(tab).last);
             await tester.pumpAndSettle();
             await capture(tab.toLowerCase());
+          }
+
+          if (!large) {
+            Future<void> selectTab(String name) async {
+              await tester.tap(find.text(name).last);
+              await tester.pumpAndSettle();
+            }
+
+            Future<void> tapText(String name) async {
+              await tester.ensureVisible(find.text(name).first);
+              await tester.tap(find.text(name).first);
+              await tester.pumpAndSettle();
+            }
+
+            Future<void> dismiss() async {
+              await tester.binding.handlePopRoute();
+              await tester.pumpAndSettle();
+            }
+
+            await selectTab('Home');
+            await tester.ensureVisible(find.text('Spending breakdown'));
+            await tester.drag(
+              find.byType(Scrollable).first,
+              const Offset(0, -300),
+            );
+            await tester.pumpAndSettle();
+            await capture('home-details');
+            await tapText('Spend');
+            await tester.enterText(
+              find.widgetWithText(TextFormField, 'Amount'),
+              '250',
+            );
+            await tester.enterText(
+              find.widgetWithText(TextFormField, 'Where or what was it?'),
+              'Lunch at college',
+            );
+            await capture('spend');
+            await tester.ensureVisible(find.text('Save transaction'));
+            await tester.pumpAndSettle();
+            await capture('spend-details');
+            await dismiss();
+            await tapText('Receive');
+            await tester.enterText(
+              find.widgetWithText(TextFormField, 'Amount'),
+              '5000',
+            );
+            await tester.enterText(
+              find.widgetWithText(TextFormField, 'Where did it come from?'),
+              'Monthly allowance',
+            );
+            await capture('receive');
+            await dismiss();
+            await selectTab('Activity');
+            await tester.enterText(
+              find.widgetWithText(TextField, 'Search transactions'),
+              'Readings',
+            );
+            await tester.pumpAndSettle();
+            await capture('activity-search');
+            await tester.tap(find.byTooltip('Filter activity'));
+            await tester.pumpAndSettle();
+            await capture('activity-filters');
+            await dismiss();
+            await selectTab('Plan');
+            await tapText('Add budget');
+            await tester.enterText(
+              find.widgetWithText(TextFormField, 'Monthly limit'),
+              '2500',
+            );
+            await capture('budget');
+            await dismiss();
+            await tapText('New goal');
+            await tester.enterText(
+              find.widgetWithText(TextFormField, 'Goal name'),
+              'Art supplies',
+            );
+            await tester.enterText(
+              find.widgetWithText(TextFormField, 'Target amount'),
+              '8000',
+            );
+            await tester.enterText(
+              find.widgetWithText(TextFormField, 'Total saved so far'),
+              '500',
+            );
+            await capture('goal');
+            await dismiss();
+            await tester.ensureVisible(find.text('Add savings'));
+            await tester.pumpAndSettle();
+            await capture('plan-goal');
+            await tapText('Add savings');
+            await tester.enterText(
+              find.widgetWithText(TextFormField, 'Amount to add'),
+              '500',
+            );
+            await capture('add-savings');
+            await dismiss();
+            await selectTab('You');
+            await tapText('Appearance');
+            await capture('appearance');
+            await dismiss();
+            controller.allEntries.clear();
+            controller.allBudgets.clear();
+            controller.allGoals.clear();
+            await tester.runAsync(
+              () => controller.setTheme(dark ? 'dark' : 'light'),
+            );
+            await selectTab('Home');
+            await capture('empty-home');
+            await selectTab('Plan');
+            await capture('empty-plan');
           }
         },
       );
