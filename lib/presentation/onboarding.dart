@@ -36,74 +36,80 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       ('Small habits.', 'Real progress.'),
       ('Your money.', 'Your way.'),
     ];
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, viewport) => SingleChildScrollView(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: 600,
-                  minHeight: viewport.maxHeight,
-                ),
-                child: Padding(
-                  padding: EdgeInsets.all(viewport.maxWidth < 360 ? 16 : 24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const BachatMark(),
-                          const SizedBox(height: 20),
-                          Row(
-                            children: [
-                              if (step > 0)
-                                IconButton(
-                                  tooltip: 'Previous introduction step',
-                                  onPressed: () => setState(() => step--),
-                                  icon: const Icon(Icons.arrow_back_rounded),
-                                ),
-                              Expanded(
-                                child: Semantics(
-                                  liveRegion: true,
-                                  child: Text(
-                                    'Step ${step + 1} of 3',
-                                    style: theme.textTheme.labelLarge,
+    return PopScope(
+      canPop: step == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop && step > 0) setState(() => step--);
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, viewport) => SingleChildScrollView(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: 600,
+                    minHeight: viewport.maxHeight,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(viewport.maxWidth < 360 ? 16 : 24),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const BachatMark(),
+                            const SizedBox(height: 20),
+                            Row(
+                              children: [
+                                if (step > 0)
+                                  IconButton(
+                                    tooltip: 'Previous introduction step',
+                                    onPressed: () => setState(() => step--),
+                                    icon: const Icon(Icons.arrow_back_rounded),
+                                  ),
+                                Expanded(
+                                  child: Semantics(
+                                    liveRegion: true,
+                                    child: Text(
+                                      'Step ${step + 1} of 3',
+                                      style: theme.textTheme.labelLarge,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: List.generate(
-                              3,
-                              (index) => Expanded(
-                                child: Semantics(
-                                  label: 'Introduction step ${index + 1}',
-                                  selected: index == step,
-                                  child: Tooltip(
-                                    message: 'Go to step ${index + 1}',
-                                    child: InkWell(
-                                      onTap: () => setState(() => step = index),
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 4,
-                                          vertical: 21,
-                                        ),
-                                        child: AnimatedContainer(
-                                          duration: duration,
-                                          height: 6,
-                                          decoration: BoxDecoration(
-                                            color: index <= step
-                                                ? theme.colorScheme.primary
-                                                : theme
-                                                      .colorScheme
-                                                      .outlineVariant,
-                                            borderRadius: BorderRadius.circular(
-                                              3,
+                              ],
+                            ),
+                            Row(
+                              children: List.generate(
+                                3,
+                                (index) => Expanded(
+                                  child: Semantics(
+                                    label: 'Introduction step ${index + 1}',
+                                    selected: index == step,
+                                    child: Tooltip(
+                                      message: 'Go to step ${index + 1}',
+                                      child: InkWell(
+                                        onTap: () =>
+                                            setState(() => step = index),
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 4,
+                                            vertical: 21,
+                                          ),
+                                          child: AnimatedContainer(
+                                            duration: duration,
+                                            height: 6,
+                                            decoration: BoxDecoration(
+                                              color: index <= step
+                                                  ? theme.colorScheme.primary
+                                                  : theme
+                                                        .colorScheme
+                                                        .outlineVariant,
+                                              borderRadius:
+                                                  BorderRadius.circular(3),
                                             ),
                                           ),
                                         ),
@@ -113,110 +119,110 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                 ),
                               ),
                             ),
-                          ),
-                          AnimatedSwitcher(
-                            key: const ValueKey('onboarding-transition'),
-                            duration: duration,
-                            switchInCurve: Curves.easeOutCubic,
-                            switchOutCurve: Curves.easeInCubic,
-                            layoutBuilder: (current, previous) => Stack(
-                              alignment: Alignment.topLeft,
-                              children: [
-                                for (final child in previous)
-                                  Positioned(
-                                    top: 0,
-                                    left: 0,
-                                    right: 0,
-                                    child: IgnorePointer(
-                                      child: ExcludeSemantics(child: child),
+                            AnimatedSwitcher(
+                              key: const ValueKey('onboarding-transition'),
+                              duration: duration,
+                              switchInCurve: Curves.easeOutCubic,
+                              switchOutCurve: Curves.easeInCubic,
+                              layoutBuilder: (current, previous) => Stack(
+                                alignment: Alignment.topLeft,
+                                children: [
+                                  for (final child in previous)
+                                    Positioned(
+                                      top: 0,
+                                      left: 0,
+                                      right: 0,
+                                      child: IgnorePointer(
+                                        child: ExcludeSemantics(child: child),
+                                      ),
+                                    ),
+                                  ?current,
+                                ],
+                              ),
+                              transitionBuilder: (child, animation) =>
+                                  FadeTransition(
+                                    opacity: animation,
+                                    child: reducedMotion
+                                        ? child
+                                        : SlideTransition(
+                                            position: Tween<Offset>(
+                                              begin: const Offset(0.04, 0),
+                                              end: Offset.zero,
+                                            ).animate(animation),
+                                            child: child,
+                                          ),
+                                  ),
+                              child: Column(
+                                key: ValueKey(step),
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Semantics(
+                                    header: true,
+                                    child: BrandHeadline(
+                                      lead: titles[step].$1,
+                                      accent: titles[step].$2,
                                     ),
                                   ),
-                                ?current,
-                              ],
-                            ),
-                            transitionBuilder: (child, animation) =>
-                                FadeTransition(
-                                  opacity: animation,
-                                  child: reducedMotion
-                                      ? child
-                                      : SlideTransition(
-                                          position: Tween<Offset>(
-                                            begin: const Offset(0.04, 0),
-                                            end: Offset.zero,
-                                          ).animate(animation),
-                                          child: child,
-                                        ),
-                                ),
-                            child: Column(
-                              key: ValueKey(step),
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Semantics(
-                                  header: true,
-                                  child: BrandHeadline(
-                                    lead: titles[step].$1,
-                                    accent: titles[step].$2,
+                                  const SizedBox(height: 16),
+                                  Text(switch (step) {
+                                    0 =>
+                                      'Track the everyday. See where each rupee goes.',
+                                    1 =>
+                                      'Give your everyday spending a little direction.',
+                                    _ =>
+                                      'Save for something that matters to you.',
+                                  }, style: theme.textTheme.bodyLarge),
+                                  const SizedBox(height: 24),
+                                  Surface(
+                                    tone: theme.colorScheme.secondaryContainer,
+                                    child: preview(context),
                                   ),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(switch (step) {
-                                  0 =>
-                                    'Track the everyday. See where each rupee goes.',
-                                  1 =>
-                                    'Give your everyday spending a little direction.',
-                                  _ =>
-                                    'Save for something that matters to you.',
-                                }, style: theme.textTheme.bodyLarge),
-                                const SizedBox(height: 24),
-                                Surface(
-                                  tone: theme.colorScheme.secondaryContainer,
-                                  child: preview(context),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 28),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            if (step == 2) ...[
-                              RoleChoices(
-                                value: UserRole.teen,
-                                onChanged: (_) {},
-                              ),
-                              const SizedBox(height: 12),
-                              const Text(
-                                'For teens aged 13–18. Parent accounts are coming soon.',
-                              ),
-                              const SizedBox(height: 16),
-                            ],
-                            FilledButton.icon(
-                              onPressed: step == 2
-                                  ? openAuth
-                                  : () => setState(() => step++),
-                              icon: const Icon(Icons.arrow_forward_rounded),
-                              label: Text(
-                                step == 2 ? 'Continue as a teen' : 'Continue',
-                              ),
-                            ),
-                            if (step < 2)
-                              TextButton(
-                                onPressed: () => setState(() => step = 2),
-                                child: const Text('Skip introduction'),
-                              ),
-                            TextButton(
-                              onPressed: openAuth,
-                              child: const Text(
-                                'Already have an account? Sign in',
+                                ],
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                        Padding(
+                          padding: const EdgeInsets.only(top: 28),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              if (step == 2) ...[
+                                RoleChoices(
+                                  value: UserRole.teen,
+                                  onChanged: (_) {},
+                                ),
+                                const SizedBox(height: 12),
+                                const Text(
+                                  'For teens aged 13–18. Parent accounts are coming soon.',
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                              FilledButton.icon(
+                                onPressed: step == 2
+                                    ? openAuth
+                                    : () => setState(() => step++),
+                                icon: const Icon(Icons.arrow_forward_rounded),
+                                label: Text(
+                                  step == 2 ? 'Continue as a teen' : 'Continue',
+                                ),
+                              ),
+                              if (step < 2)
+                                TextButton(
+                                  onPressed: () => setState(() => step = 2),
+                                  child: const Text('Skip introduction'),
+                                ),
+                              TextButton(
+                                onPressed: openAuth,
+                                child: const Text(
+                                  'Already have an account? Sign in',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

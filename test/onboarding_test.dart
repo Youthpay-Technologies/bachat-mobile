@@ -56,6 +56,23 @@ void main() {
     expect(find.byType(HomePage), findsOneWidget);
   });
 
+  testWidgets('system Back retraces the introduction without losing choices', (
+    tester,
+  ) async {
+    await mount(tester);
+    await tap(tester, 'Rides');
+    await tap(tester, 'Continue');
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Step 1 of 3'), findsOneWidget);
+    expect(
+      tester
+          .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, 'Rides'))
+          .selected,
+      isTrue,
+    );
+  });
+
   testWidgets('tour interactions survive Back and never create money records', (
     tester,
   ) async {
