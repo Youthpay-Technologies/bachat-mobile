@@ -2,7 +2,6 @@ import 'package:bachat_mobile/application/controller.dart';
 import 'package:bachat_mobile/data/repository.dart';
 import 'package:bachat_mobile/design/theme.dart';
 import 'package:bachat_mobile/presentation/auth_screens.dart';
-import 'package:bachat_mobile/presentation/onboarding.dart';
 import 'package:bachat_mobile/presentation/app.dart' show AppGate, HomePage;
 import 'package:bachat_mobile/domain/models.dart';
 import 'package:flutter/material.dart';
