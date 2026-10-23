@@ -30,6 +30,9 @@ void main() {
             ..theme = dark ? 'dark' : 'light';
           addTearDown(db.close);
           await tester.runAsync(() async {
+            final icons = FontLoader('MaterialIcons')
+              ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
+            await icons.load();
             for (final font in {
               'Instrument Sans': 'InstrumentSans.ttf',
               'Instrument Serif': 'InstrumentSerif-Italic.ttf',

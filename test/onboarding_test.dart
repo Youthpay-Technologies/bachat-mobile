@@ -3,6 +3,8 @@ import 'package:bachat_mobile/data/repository.dart';
 import 'package:bachat_mobile/design/theme.dart';
 import 'package:bachat_mobile/presentation/auth_screens.dart';
 import 'package:bachat_mobile/presentation/onboarding.dart';
+import 'package:bachat_mobile/presentation/app.dart' show AppGate, HomePage;
+import 'package:bachat_mobile/domain/models.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -30,7 +32,7 @@ void main() {
             ),
             child: child!,
           ),
-          home: const WelcomeScreen(),
+          home: const AppGate(),
         ),
       ),
     );
@@ -42,6 +44,18 @@ void main() {
     await tester.tap(find.text(text));
     await tester.pumpAndSettle();
   }
+
+  testWidgets('an authenticated session dismisses the sign-in route', (
+    tester,
+  ) async {
+    final controller = await mount(tester);
+    await tap(tester, 'Already have an account? Sign in');
+    expect(find.byType(AuthScreen), findsOneWidget);
+    controller.startPreview(UserRole.teen);
+    await tester.pumpAndSettle();
+    expect(find.byType(AuthScreen), findsNothing);
+    expect(find.byType(HomePage), findsOneWidget);
+  });
 
   testWidgets('tour interactions survive Back and never create money records', (
     tester,
