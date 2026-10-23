@@ -161,6 +161,7 @@ abstract final class BachatTheme {
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
+        errorMaxLines: 6,
         filled: true,
         fillColor: scheme.surface,
         contentPadding: const EdgeInsets.all(18),
@@ -224,7 +225,8 @@ abstract final class BachatTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: scheme.onSurface,
-          minimumSize: const Size(48, 52),
+          minimumSize: const Size(48, 54),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(BachatRadii.control),
           ),

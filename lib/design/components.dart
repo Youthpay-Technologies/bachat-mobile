@@ -64,6 +64,7 @@ class Surface extends StatelessWidget {
         color: tone ?? (tinted ? colors.primaryContainer : colors.surface),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BachatRadii.surface),
+          side: BorderSide(color: colors.outlineVariant.withValues(alpha: .65)),
         ),
         clipBehavior: Clip.antiAlias,
         child: SizedBox(
