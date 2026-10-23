@@ -95,7 +95,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             child: PageBody(
               children: [
                 const BachatMark(),
-                const SizedBox(height: 44),
+                const SizedBox(height: 28),
+                if (create) ...[
+                  const StatusBadge(
+                    '1 · Create account   2 · Verify email   3 · Profile',
+                  ),
+                  const SizedBox(height: 20),
+                ],
                 Text(title, style: Theme.of(context).textTheme.headlineLarge),
                 const SizedBox(height: 12),
                 Text(
@@ -113,7 +119,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     controller: email,
                     enabled: !c.busy,
                     keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
+                    textInputAction: reset
+                        ? TextInputAction.done
+                        : TextInputAction.next,
+                    onFieldSubmitted: (_) {
+                      if (reset) submit();
+                    },
                     autofillHints: const [AutofillHints.email],
                     autocorrect: false,
                     decoration: const InputDecoration(labelText: 'Email'),
@@ -191,7 +202,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     onPressed: c.busy ? null : submit,
                     child: Text(
                       c.busy
-                          ? 'Please wait...'
+                          ? 'Please wait…'
                           : widget.recovery
                           ? 'Update password'
                           : reset
@@ -273,7 +284,12 @@ class _ProfileSetupState extends ConsumerState<ProfileSetupScreen> {
           child: PageBody(
             children: [
               const BachatMark(),
-              const SizedBox(height: 44),
+              const SizedBox(height: 28),
+              const StatusBadge(
+                'Email verified · Complete your profile',
+                icon: Icons.check_circle_outline,
+              ),
+              const SizedBox(height: 20),
               Text(
                 'A little about you',
                 style: Theme.of(context).textTheme.headlineLarge,
@@ -289,6 +305,7 @@ class _ProfileSetupState extends ConsumerState<ProfileSetupScreen> {
                 maxLength: 60,
                 textCapitalization: TextCapitalization.words,
                 autofillHints: const [AutofillHints.givenName],
+                textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(labelText: 'Your name'),
                 validator: (v) =>
                     (v ?? '').trim().isEmpty ? 'Enter your name.' : null,
@@ -296,6 +313,8 @@ class _ProfileSetupState extends ConsumerState<ProfileSetupScreen> {
               const SizedBox(height: 20),
               DropdownButtonFormField<int>(
                 initialValue: age,
+                isExpanded: true,
+                itemHeight: null,
                 decoration: const InputDecoration(labelText: 'Age'),
                 items: List.generate(
                   6,
@@ -314,6 +333,7 @@ class _ProfileSetupState extends ConsumerState<ProfileSetupScreen> {
                       ? null
                       : () async {
                           if (form.currentState!.validate()) {
+                            FocusScope.of(context).unfocus();
                             await c.createProfile(
                               name.text,
                               UserRole.teen,
@@ -321,7 +341,7 @@ class _ProfileSetupState extends ConsumerState<ProfileSetupScreen> {
                             );
                           }
                         },
-                  child: Text(c.busy ? 'Saving...' : 'Start tracking'),
+                  child: Text(c.busy ? 'Saving…' : 'Start tracking'),
                 ),
               ),
               TextButton(
