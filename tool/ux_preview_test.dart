@@ -5,6 +5,8 @@ import 'package:bachat_mobile/application/controller.dart';
 import 'package:bachat_mobile/data/repository.dart';
 import 'package:bachat_mobile/domain/models.dart';
 import 'package:bachat_mobile/main.dart';
+import 'package:bachat_mobile/presentation/forms.dart' show SheetBody;
+import 'package:bachat_mobile/presentation/app.dart' show EntryTile;
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,16 +34,16 @@ void main() {
           await tester.pumpWidget(
             ProviderScope(
               overrides: [controllerProvider.overrideWith((ref) => controller)],
-              child: MaterialApp(
-                home: MediaQuery(
-                  data: MediaQueryData(
-                    size: Size(large ? 320 : 390, 844),
-                    textScaler: TextScaler.linear(large ? 2 : 1),
-                    disableAnimations: true,
-                  ),
-                  child: const RepaintBoundary(
-                    key: previewBoundaryKey,
-                    child: BachatApp(),
+              child: RepaintBoundary(
+                key: previewBoundaryKey,
+                child: MaterialApp(
+                  home: MediaQuery(
+                    data: MediaQueryData(
+                      size: Size(large ? 320 : 390, 844),
+                      textScaler: TextScaler.linear(large ? 2 : 1),
+                      disableAnimations: true,
+                    ),
+                    child: const BachatApp(),
                   ),
                 ),
               ),
@@ -87,7 +89,11 @@ void main() {
             }
 
             Future<void> dismiss() async {
-              await tester.binding.handlePopRoute();
+              final dialog = find.byType(AlertDialog);
+              final routeContent = dialog.evaluate().isNotEmpty
+                  ? dialog
+                  : find.byType(SheetBody).last;
+              Navigator.of(tester.element(routeContent)).pop();
               await tester.pumpAndSettle();
             }
 
@@ -131,6 +137,15 @@ void main() {
             );
             await tester.pumpAndSettle();
             await capture('activity-search');
+            await tester.ensureVisible(find.byType(EntryTile).first);
+            await tester.tap(find.byType(EntryTile).first);
+            await tester.pumpAndSettle();
+            await tester.ensureVisible(find.text('Delete transaction'));
+            await capture('edit-transaction');
+            await tapText('Delete transaction');
+            await capture('delete-confirmation');
+            await dismiss();
+            await dismiss();
             await tester.tap(find.byTooltip('Filter activity'));
             await tester.pumpAndSettle();
             await capture('activity-filters');
@@ -179,8 +194,18 @@ void main() {
               () => controller.setTheme(dark ? 'dark' : 'light'),
             );
             await selectTab('Home');
+            await tester.drag(
+              find.byType(SingleChildScrollView).first,
+              const Offset(0, 3000),
+            );
+            await tester.pumpAndSettle();
             await capture('empty-home');
             await selectTab('Plan');
+            await tester.drag(
+              find.byType(SingleChildScrollView).first,
+              const Offset(0, 3000),
+            );
+            await tester.pumpAndSettle();
             await capture('empty-plan');
           }
         },
