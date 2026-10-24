@@ -17,6 +17,8 @@ This repository contains the standalone Flutter mobile app for Android and iOS. 
 - Sync your profile, transactions, budgets and goals across devices signed into the same account. Offline edits queue until reconnecting.
 - Protect each device with its own 6-digit PIN, required when reopening Bachat.
 - Switch between light, dark, and system appearance.
+- See changes waiting to sync from every main screen and retry synchronization.
+- Read how Bachat stores your data and view open-source licenses before signup or in You.
 
 The learning tab is coming soon. Automatic bank, SMS, and Gmail imports are planned for later.
 
@@ -83,6 +85,13 @@ flutter build apk --debug
 Android and web builds are verified locally. iOS signing and device testing require the team's Mac and Apple development setup.
 
 ## Contributing
+
+The [ship-readiness report](docs/SHIP-READINESS.md) records verified app checks and
+remaining public-launch service requirements. The existing Supabase project is
+retained. Check local configuration and generated runtime artifacts with
+`python scripts/check_ship_readiness.py` (Python 3.11+). Add `--check-backend` for
+read-only Auth/anonymous-access/redirect probes; a passing local check does not
+prove native callbacks or real email delivery are configured.
 
 Work on a focused branch, commit each coherent change, and use a pull request for review and merging. Run the checks relevant to the change. Keep credentials, signing keys, personal records, and generated build files out of version control.
 
