@@ -95,7 +95,7 @@ class _EntryFormState extends State<EntryForm> {
               TextFormField(
                 controller: amount,
                 style: Theme.of(context).textTheme.headlineLarge,
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.start,
                 textInputAction: TextInputAction.next,
                 readOnly: readOnly,
                 keyboardType: const TextInputType.numberWithOptions(
@@ -293,9 +293,9 @@ class SheetBody extends StatelessWidget {
   Widget build(BuildContext context) => SingleChildScrollView(
     keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
     padding: EdgeInsets.fromLTRB(
-      24,
+      MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
       8,
-      24,
+      MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
       MediaQuery.viewInsetsOf(context).bottom + 32,
     ),
     child: Center(
