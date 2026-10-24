@@ -6,6 +6,7 @@ import 'data/backend_http_client.dart';
 import 'data/backend_config.dart';
 import 'data/pin_storage.dart';
 import 'application/device_lock.dart';
+import 'application/licenses.dart';
 import 'presentation/device_lock_screen.dart';
 import 'application/controller.dart';
 import 'data/database.dart';
@@ -19,6 +20,7 @@ Future<void> main() async {
   // Capture email callback parameters before Flutter routing can update the URL.
   final initialAuthLink = Uri.base;
   WidgetsFlutterBinding.ensureInitialized();
+  BachatLicenses.register();
   try {
     if (!_backendReady) {
       await Supabase.initialize(
