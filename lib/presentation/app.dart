@@ -122,6 +122,7 @@ class _ShellState extends ConsumerState<DashboardShell> {
   int tab = 0;
   @override
   Widget build(BuildContext context) {
+    final c = ref.watch(controllerProvider);
     final viewport = MediaQuery.sizeOf(context);
     final wide = viewport.width >= 840 && viewport.height >= 600;
     const destinations = [
@@ -180,17 +181,24 @@ class _ShellState extends ConsumerState<DashboardShell> {
               const VerticalDivider(width: 1),
             ],
             Expanded(
-              child: IndexedStack(
-                index: tab,
+              child: Column(
                 children: [
-                  HomePage(
-                    onActivity: () => setState(() => tab = 1),
-                    onPlan: () => setState(() => tab = 2),
+                  SyncStatus(c),
+                  Expanded(
+                    child: IndexedStack(
+                      index: tab,
+                      children: [
+                        HomePage(
+                          onActivity: () => setState(() => tab = 1),
+                          onPlan: () => setState(() => tab = 2),
+                        ),
+                        const ActivityPage(),
+                        const PlanPage(),
+                        const LearnPage(),
+                        const SettingsPage(),
+                      ],
+                    ),
                   ),
-                  const ActivityPage(),
-                  const PlanPage(),
-                  const LearnPage(),
-                  const SettingsPage(),
                 ],
               ),
             ),
@@ -217,6 +225,54 @@ class _ShellState extends ConsumerState<DashboardShell> {
                 destinations: destinations,
               ),
             ),
+    );
+  }
+}
+
+/// A local save is distinct from a completed server sync on every tab.
+class SyncStatus extends StatelessWidget {
+  const SyncStatus(this.controller, {super.key});
+  final AppController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = controller;
+    if (c.preview || (!c.offline && c.pendingCount == 0)) {
+      return const SizedBox.shrink();
+    }
+    final colors = Theme.of(context).colorScheme;
+    final message = c.pendingCount > 0
+        ? 'Saved on this device. ${c.pendingCount} ${c.pendingCount == 1 ? 'change' : 'changes'} waiting to sync.'
+        : 'You are offline. Showing records saved on this device.';
+    final content = Semantics(liveRegion: true, child: Text(message));
+    final retry = TextButton.icon(
+      onPressed: c.syncing ? null : c.refresh,
+      icon: const Icon(Icons.sync_rounded, size: 18),
+      label: Text(c.syncing ? 'Syncing' : 'Retry sync'),
+    );
+    return Material(
+      color: colors.surfaceContainerLow,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: LayoutBuilder(
+          builder: (context, size) {
+            if (size.maxWidth < 360 ||
+                MediaQuery.textScalerOf(context).scale(14) > 21) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [content, retry],
+              );
+            }
+            return Row(
+              children: [
+                Expanded(child: content),
+                const SizedBox(width: 12),
+                retry,
+              ],
+            );
+          },
+        ),
+      ),
     );
   }
 }
