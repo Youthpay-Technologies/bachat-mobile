@@ -33,6 +33,13 @@ Flutter uses Riverpod, native navigation, an account-gated tab shell, and separa
 
 ## Delivery
 
+The October 24 UI Aesthetics pass refines the complete Flutter interface using
+the requested kasonye/ui-aesthetics-skill repository. Home places recent activity
+before supporting totals. Shared page headings, neutral surfaces, consistent
+controls and responsive bottom/side navigation carry the visual system across
+the account and money journeys. See [the revamp record](UI-AESTHETICS-REVAMP.md)
+for current verification and delivery status.
+
 Private repository: https://github.com/saim-x/bachat-mobile. Commit each coherent change and merge through verified PRs. The old local Next.js app has been removed. Mac team members handle iOS signing and physical-device verification.
 
 The development database is deployed and live Auth/REST/browser checks pass with approved temporary fixtures removed afterward. Native callback allowlisting and actual inbox delivery remain deployment requirements; see [backend setup](BACKEND.md) and [verification](VERIFICATION.md).
