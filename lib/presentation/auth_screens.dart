@@ -4,6 +4,7 @@ import '../application/controller.dart';
 import '../design/components.dart';
 import '../domain/models.dart';
 import 'app.dart';
+import 'data_privacy_screen.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key, this.recovery = false});
@@ -195,6 +196,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   const SizedBox(height: 16),
                 ],
                 AppError(c),
+                if (create)
+                  TextButton.icon(
+                    onPressed: () => Navigator.push<void>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const DataPrivacyScreen(),
+                      ),
+                    ),
+                    icon: const Icon(Icons.privacy_tip_outlined),
+                    label: const Text('How Bachat uses your data'),
+                  ),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton(
