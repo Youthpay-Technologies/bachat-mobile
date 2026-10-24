@@ -149,42 +149,44 @@ class _ShellState extends ConsumerState<DashboardShell> {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surface,
           border: Border(
-            top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+            top: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
           ),
         ),
         child: NavigationBar(
-            selectedIndex: tab,
-            animationDuration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : const Duration(milliseconds: 150),
-            onDestinationSelected: (value) => setState(() => tab = value),
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.grid_view_outlined),
-                selectedIcon: Icon(Icons.grid_view_rounded),
-                label: 'Home',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.receipt_long_outlined),
-                selectedIcon: Icon(Icons.receipt_long_rounded),
-                label: 'Activity',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.savings_outlined),
-                selectedIcon: Icon(Icons.savings_rounded),
-                label: 'Plan',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.auto_stories_outlined),
-                selectedIcon: Icon(Icons.auto_stories_rounded),
-                label: 'Learn',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.person_outline),
-                selectedIcon: Icon(Icons.person_rounded),
-                label: 'You',
-              ),
-            ],
+          selectedIndex: tab,
+          animationDuration: MediaQuery.disableAnimationsOf(context)
+              ? Duration.zero
+              : const Duration(milliseconds: 150),
+          onDestinationSelected: (value) => setState(() => tab = value),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.grid_view_outlined),
+              selectedIcon: Icon(Icons.grid_view_rounded),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.receipt_long_outlined),
+              selectedIcon: Icon(Icons.receipt_long_rounded),
+              label: 'Activity',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.savings_outlined),
+              selectedIcon: Icon(Icons.savings_rounded),
+              label: 'Plan',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.auto_stories_outlined),
+              selectedIcon: Icon(Icons.auto_stories_rounded),
+              label: 'Learn',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person_rounded),
+              label: 'You',
+            ),
+          ],
         ),
       ),
     );
@@ -619,22 +621,25 @@ class _ActivityState extends ConsumerState<ActivityPage> {
     return PageBody(
       storageKey: 'activity',
       children: [
-        PageHeading('Activity', action: IconButton.outlined(
-              tooltip: 'Filter activity',
-              icon: Badge(
-                isLabelVisible: options.activeCount > 0,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                textColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                label: Text('${options.activeCount}'),
-                child: const Icon(Icons.tune_rounded),
-              ),
-              onPressed: () async {
-                final selected = await activityFilterSheet(context, options);
-                if (selected != null && mounted) {
-                  setState(() => options = selected);
-                }
-              },
-            )),
+        PageHeading(
+          'Activity',
+          action: IconButton.outlined(
+            tooltip: 'Filter activity',
+            icon: Badge(
+              isLabelVisible: options.activeCount > 0,
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              textColor: Theme.of(context).colorScheme.onPrimaryContainer,
+              label: Text('${options.activeCount}'),
+              child: const Icon(Icons.tune_rounded),
+            ),
+            onPressed: () async {
+              final selected = await activityFilterSheet(context, options);
+              if (selected != null && mounted) {
+                setState(() => options = selected);
+              }
+            },
+          ),
+        ),
         ChildPicker(c),
         TextField(
           controller: search,
@@ -786,7 +791,8 @@ class PlanPage extends ConsumerWidget {
       children: [
         PageHeading(
           'Plan',
-          subtitle: '${DateFormat.yMMMM().format(DateTime.now())} · Your monthly plan',
+          subtitle:
+              '${DateFormat.yMMMM().format(DateTime.now())} · Your monthly plan',
         ),
         ChildPicker(c),
         const SectionHeading('Set aside'),
