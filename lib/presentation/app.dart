@@ -123,10 +123,62 @@ class _ShellState extends ConsumerState<DashboardShell> {
   int tab = 0;
   @override
   Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= 840;
+    const destinations = [
+      NavigationDestination(
+        icon: Icon(Icons.grid_view_outlined),
+        selectedIcon: Icon(Icons.grid_view_rounded),
+        label: 'Home',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.receipt_long_outlined),
+        selectedIcon: Icon(Icons.receipt_long_rounded),
+        label: 'Activity',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.savings_outlined),
+        selectedIcon: Icon(Icons.savings_rounded),
+        label: 'Plan',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.auto_stories_outlined),
+        selectedIcon: Icon(Icons.auto_stories_rounded),
+        label: 'Learn',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.person_outline),
+        selectedIcon: Icon(Icons.person_rounded),
+        label: 'You',
+      ),
+    ];
     return Scaffold(
       body: SafeArea(
-        child: Column(
+        child: Row(
           children: [
+            if (wide) ...[
+              NavigationRail(
+                selectedIndex: tab,
+                onDestinationSelected: (value) => setState(() => tab = value),
+                minWidth: MediaQuery.textScalerOf(context).scale(12) > 18
+                    ? 160
+                    : 104,
+                labelType: NavigationRailLabelType.all,
+                leading: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: BachatSymbol(),
+                ),
+                destinations: destinations
+                    .map(
+                      (destination) => NavigationRailDestination(
+                        icon: destination.icon,
+                        selectedIcon: destination.selectedIcon,
+                        label: Text(destination.label),
+                      ),
+                    )
+                    .toList(),
+              ),
+              const VerticalDivider(width: 1),
+            ],
             Expanded(
               child: IndexedStack(
                 index: tab,
@@ -145,50 +197,26 @@ class _ShellState extends ConsumerState<DashboardShell> {
           ],
         ),
       ),
-      bottomNavigationBar: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          border: Border(
-            top: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
+      bottomNavigationBar: wide
+          ? null
+          : DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                border: Border(
+                  top: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
+              ),
+              child: NavigationBar(
+                selectedIndex: tab,
+                animationDuration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 150),
+                onDestinationSelected: (value) => setState(() => tab = value),
+                destinations: destinations,
+              ),
             ),
-          ),
-        ),
-        child: NavigationBar(
-          selectedIndex: tab,
-          animationDuration: MediaQuery.disableAnimationsOf(context)
-              ? Duration.zero
-              : const Duration(milliseconds: 150),
-          onDestinationSelected: (value) => setState(() => tab = value),
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.grid_view_outlined),
-              selectedIcon: Icon(Icons.grid_view_rounded),
-              label: 'Home',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.receipt_long_outlined),
-              selectedIcon: Icon(Icons.receipt_long_rounded),
-              label: 'Activity',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.savings_outlined),
-              selectedIcon: Icon(Icons.savings_rounded),
-              label: 'Plan',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.auto_stories_outlined),
-              selectedIcon: Icon(Icons.auto_stories_rounded),
-              label: 'Learn',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person_rounded),
-              label: 'You',
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
