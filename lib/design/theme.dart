@@ -199,6 +199,22 @@ abstract final class BachatTheme {
         ),
         labelStyle: TextStyle(color: scheme.onSurfaceVariant),
       ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: scheme.surface,
+        indicatorColor: scheme.primaryContainer,
+        selectedIconTheme: IconThemeData(color: scheme.onPrimaryContainer),
+        unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
+        selectedLabelTextStyle: TextStyle(
+          color: scheme.onSurface,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelTextStyle: TextStyle(
+          color: scheme.onSurfaceVariant,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: scheme.surface,
         elevation: 0,
