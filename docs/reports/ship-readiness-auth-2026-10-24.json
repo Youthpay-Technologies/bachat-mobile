@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-24",
+  "project_ref": "mqpcxptgmqzwylldiotr",
+  "approval": "Owner explicitly approved the prepared native Auth configuration before application.",
+  "cli_version": "2.120.0",
+  "applied_changes": [
+    {
+      "setting": "auth.site_url",
+      "before": "http://localhost:3000",
+      "after": "com.getyouthpay.bachat://auth/callback"
+    },
+    {
+      "setting": "auth.additional_redirect_urls",
+      "before": [],
+      "after": [
+        "com.getyouthpay.bachat://auth/callback"
+      ]
+    },
+    {
+      "setting": "auth.minimum_password_length",
+      "before": 6,
+      "after": 10
+    }
+  ],
+  "post_apply_declared_differences": 0,
+  "undeclared_remote_properties_preserved": 7,
+  "readonly_backend_readiness_checks": "all_passed",
+  "native_callback_redirect_probe": "passed",
+  "real_inbox_delivery": "not_verified",
+  "smtp_settings_changed": false,
+  "test_accounts_created": 0,
+  "emails_sent": 0,
+  "verification": "Supabase config diff/push followed by a new config diff and scripts/check_ship_readiness.py --check-backend"
+}
