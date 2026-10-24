@@ -33,6 +33,14 @@ Flutter uses Riverpod, native navigation, an account-gated tab shell, and separa
 
 ## Delivery
 
+The first launch phase targets Android through Play Store; store submission and
+release APK creation are outside the current ship-readiness work. The owner
+confirmed reuse of the existing Supabase project and has not supplied public
+support/email details. The app now contains factual data-handling information,
+license access, persistent pending-sync feedback and additional callback/network/
+storage failure handling. This does not imply that hosted email delivery or
+native callbacks are ready. See [the evidence and launch handoff](SHIP-READINESS.md).
+
 The October 24 UI Aesthetics pass refines the complete Flutter interface using
 the requested kasonye/ui-aesthetics-skill repository. Home places recent activity
 before supporting totals. Shared page headings, neutral surfaces, consistent
