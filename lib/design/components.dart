@@ -173,10 +173,7 @@ class EmptyState extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleLarge,
-        ),
+        Text(title, style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: 8),
         Text(
           body,

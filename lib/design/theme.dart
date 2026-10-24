@@ -181,7 +181,10 @@ abstract final class BachatTheme {
         errorMaxLines: 6,
         filled: true,
         fillColor: scheme.surface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(BachatRadii.control),
           borderSide: BorderSide(color: scheme.outline),
