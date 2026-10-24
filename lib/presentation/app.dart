@@ -13,6 +13,7 @@ import 'activity_filters.dart';
 import 'forms.dart';
 import 'auth_screens.dart';
 import 'onboarding.dart';
+import 'data_privacy_screen.dart';
 export 'onboarding.dart' show WelcomeScreen;
 
 class AppGate extends ConsumerWidget {
@@ -1525,7 +1526,21 @@ class SettingsPage extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 32),
+        const SectionHeading('About'),
+        Surface(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          child: ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.privacy_tip_outlined),
+            title: const Text('Your data'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.push<void>(
+              context,
+              MaterialPageRoute(builder: (_) => const DataPrivacyScreen()),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
         if (c.preview)
           TextButton.icon(
             onPressed: () async {
