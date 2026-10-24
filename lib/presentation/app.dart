@@ -145,11 +145,14 @@ class _ShellState extends ConsumerState<DashboardShell> {
           ],
         ),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(BachatRadii.sheet),
-          child: NavigationBar(
+      bottomNavigationBar: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          border: Border(
+            top: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
+          ),
+        ),
+        child: NavigationBar(
             selectedIndex: tab,
             animationDuration: MediaQuery.disableAnimationsOf(context)
                 ? Duration.zero
@@ -182,7 +185,6 @@ class _ShellState extends ConsumerState<DashboardShell> {
                 label: 'You',
               ),
             ],
-          ),
         ),
       ),
     );
@@ -277,9 +279,9 @@ class HomePage extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             if (!c.isParent) MoneyActions(c),
-            const SectionHeading('Overview'),
+            const SizedBox(height: 20),
             Surface(
-              tone: Theme.of(context).colorScheme.primaryContainer,
+              tone: Theme.of(context).colorScheme.surfaceContainerLow,
               child: Wrap(
                 spacing: 32,
                 runSpacing: 16,
@@ -404,7 +406,7 @@ class _Metric extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(label, style: Theme.of(context).textTheme.bodySmall),
-      const SizedBox(height: 4),
+      const SizedBox(height: 6),
       Text(value, style: Theme.of(context).textTheme.titleMedium),
     ],
   );
