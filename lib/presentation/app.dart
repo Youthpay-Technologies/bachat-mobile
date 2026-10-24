@@ -123,7 +123,8 @@ class _ShellState extends ConsumerState<DashboardShell> {
   int tab = 0;
   @override
   Widget build(BuildContext context) {
-    final wide = MediaQuery.sizeOf(context).width >= 840;
+    final viewport = MediaQuery.sizeOf(context);
+    final wide = viewport.width >= 840 && viewport.height >= 600;
     const destinations = [
       NavigationDestination(
         icon: Icon(Icons.grid_view_outlined),
