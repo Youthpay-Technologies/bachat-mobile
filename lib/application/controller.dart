@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:uuid/uuid.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -20,8 +21,13 @@ final controllerProvider = ChangeNotifierProvider<AppController>(
   (ref) => throw StateError('AppController must be provided at startup.'),
 );
 
+// final _smsAmountExpression = RegExp(
+//   r'(?:rs\.?|pkr|₨)\s*([\d,]+(?:\.\d{1,2})?)|([\d,]+(?:\.\d{1,2})?)\s*(?:rs\.?|pkr|rupees?)|\b(?:debited|debit|credited|credit|spent|paid|purchase|withdrawn|withdrawal|deposited|deposit|transferred|transfer|charged|refund(?:ed)?)\b.{0,24}?([\d,]+(?:\.\d{1,2})?)',
+//   caseSensitive: false,
+// );
+
 final _smsAmountExpression = RegExp(
-  r'(?:rs\.?|pkr|₨)\s*([\d,]+(?:\.\d{1,2})?)|([\d,]+(?:\.\d{1,2})?)\s*(?:rs\.?|pkr|rupees?)|\b(?:debited|debit|credited|credit|spent|paid|purchase|withdrawn|withdrawal|deposited|deposit|transferred|transfer|charged|refund(?:ed)?)\b.{0,24}?([\d,]+(?:\.\d{1,2})?)',
+  r'(?:rs\.?|pkr|₨|rupees?)\s*([\d,]+(?:\.\d{1,2})?)|([\d,]+(?:\.\d{1,2})?)\s*(?:rs\.?|pkr|rupees?)',
   caseSensitive: false,
 );
 
@@ -60,11 +66,13 @@ class AppController extends ChangeNotifier {
     if (!_smsListenerStarted) return;
     unawaited(
       _processPendingSms().catchError((Object error) {
-        this.error = 'Could not import a transaction received while the app was closed.';
+        this.error =
+            'Could not import a transaction received while the app was closed.';
         notifyListeners();
       }),
     );
   }
+
   SupabaseClient? get client => repository.cloud;
   String? get accountId => preview ? profile?.id : client?.auth.currentUser?.id;
   bool get signedIn => accountId != null;
@@ -117,7 +125,15 @@ class AppController extends ChangeNotifier {
         .toList();
     allEntries = (saved['entries'] as List)
         .map((j) => MoneyEntry.fromJson(Map<String, dynamic>.from(j as Map)))
-        .where((entry) => !{'preview-1', 'preview-2', 'preview-3', 'preview-4', 'preview-5'}.contains(entry.id))
+        .where(
+          (entry) => !{
+            'preview-1',
+            'preview-2',
+            'preview-3',
+            'preview-4',
+            'preview-5',
+          }.contains(entry.id),
+        )
         .toList();
     allBudgets = (saved['budgets'] as List)
         .map(
@@ -831,7 +847,9 @@ class AppController extends ChangeNotifier {
         final date = message['date'] as int?;
         final entry = _parseSmsToMoneyEntry(
           body,
-          timestamp: date == null ? null : DateTime.fromMillisecondsSinceEpoch(date),
+          timestamp: date == null
+              ? null
+              : DateTime.fromMillisecondsSinceEpoch(date),
           sourceId: record.key,
         );
         if (entry != null && !_hasDuplicateTransaction(entry)) {
@@ -858,19 +876,36 @@ class AppController extends ChangeNotifier {
   }) {
     final lower = smsBody.toLowerCase();
 
+    // EntryDirection direction = EntryDirection.expense;
+    // if (lower.contains('credit') ||
+    //     lower.contains('received') ||
+    //     lower.contains('deposit') ||
+    //     lower.contains('refund')) {
+    //   direction = EntryDirection.income;
+    // }
+
     EntryDirection direction = EntryDirection.expense;
-    if (lower.contains('credit') ||
-        lower.contains('received') ||
-        lower.contains('deposit') ||
-        lower.contains('refund')) {
+
+    final incomePatterns = RegExp(
+      r'\b(credited|received|deposited|refunded|added\s+to\s+your\s+account|cash\s+in)\b',
+      caseSensitive: false,
+    );
+    final expensePatterns = RegExp(
+      r'\b(debited|spent|paid|purchase|withdrawn|withdrawal|transferred|sent\s+to|payment\s+of|cash\s+out)\b',
+      caseSensitive: false,
+    );
+
+    if (incomePatterns.hasMatch(lower) && !expensePatterns.hasMatch(lower)) {
       direction = EntryDirection.income;
+    } else if (expensePatterns.hasMatch(lower)) {
+      direction = EntryDirection.expense;
     }
 
     final match = _smsAmountExpression.firstMatch(smsBody);
     if (match == null) return null;
 
-    final rawAmount = (match.group(1) ?? match.group(2) ?? match.group(3))
-        ?.replaceAll(',', '');
+    // Group 1 catches prefix currencies (Rs 500), Group 2 catches suffix currencies (500 rupees)
+    final rawAmount = (match.group(1) ?? match.group(2))?.replaceAll(',', '');
     if (rawAmount == null) return null;
     final int amountMinor;
     try {
@@ -894,16 +929,41 @@ class AppController extends ChangeNotifier {
     );
   }
 
+  // String _extractMerchantName(String body) {
+  //   final atRegExp = RegExp(
+  //     r'\b(?:at|to|from|infovisa\*|pos\*)\s+([A-Za-z0-9\s]+?)(?:\s+on|\s+avail|\s+avl|\.|$)',
+  //     caseSensitive: false,
+  //   );
+  //   final match = atRegExp.firstMatch(body);
+  //   if (match != null) {
+  //     String found = match.group(1)!.trim();
+  //     if (found.isNotEmpty && found.length < 30) return found;
+  //   }
+  //   return 'Bank Transaction';
+  // }
+
   String _extractMerchantName(String body) {
-    final atRegExp = RegExp(
-      r'\b(?:at|to|from|infovisa\*|pos\*)\s+([A-Za-z0-9\s]+?)(?:\s+on|\s+avail|\s+avl|\.|$)',
+    // Capture "to [Name]" or "at [Name]" or "paid [Name]" variants
+    final merchantRegExp = RegExp(
+      r'\b(?:to|at|from|paid|sent\s+to|transferred\s+to|pos\*|infovisa\*)\s+([A-Za-z0-9\s\-\.\*]+?)(?:\s+on|\s+via|\s+avail|\s+avl|fee|\.|$)',
       caseSensitive: false,
     );
-    final match = atRegExp.firstMatch(body);
+
+    final match = merchantRegExp.firstMatch(body);
     if (match != null) {
       String found = match.group(1)!.trim();
+      // Clean up trailing/leading spaces or junk characters
+      found = found.replaceAll(RegExp(r'\s+'), ' ');
       if (found.isNotEmpty && found.length < 30) return found;
     }
+
+    // Fallback check for common localized institution alerts
+    final lower = body.toLowerCase();
+    if (lower.contains('easypaisa')) return 'Easypaisa';
+    if (lower.contains('jazzcash')) return 'JazzCash';
+    if (lower.contains('nayapay')) return 'NayaPay';
+    if (lower.contains('sadapay')) return 'SadaPay';
+
     return 'Bank Transaction';
   }
 
@@ -997,9 +1057,7 @@ class AppController extends ChangeNotifier {
     final account =
         await _googleSignIn.signInSilently() ?? await _googleSignIn.signIn();
     if (account == null) {
-      throw const FormatException(
-        'Google sign-in was cancelled.',
-      );
+      throw const FormatException('Google sign-in was cancelled.');
     }
 
     final authHeaders = await account.authHeaders;
@@ -1077,9 +1135,9 @@ class AppController extends ChangeNotifier {
     final content = '$snippet $body'.toLowerCase();
 
     EntryDirection direction = EntryDirection.expense;
-    if (content.contains('credit') ||
-        content.contains('received payment') ||
-        content.contains('refund')) {
+    if (RegExp(
+      r'\b(credited|received|deposited|refunded)\b',
+    ).hasMatch(content)) {
       direction = EntryDirection.income;
     }
 
@@ -1150,7 +1208,8 @@ Future<void> backgroundSmsHandler(SmsMessage message) async {
   WidgetsFlutterBinding.ensureInitialized();
   final database = await openDatabase();
   try {
-    final id = message.id?.toString() ??
+    final id =
+        message.id?.toString() ??
         const Uuid().v5(
           Uuid.NAMESPACE_URL,
           'sms:${message.date}:${message.address}:${message.body}',
