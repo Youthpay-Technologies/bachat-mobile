@@ -55,7 +55,13 @@ In the original Windows workspace, helper scripts use the prepared local toolcha
 ./scripts/dev.ps1
 ```
 
-The helper preview runs at http://127.0.0.1:8080. The app uses the development Supabase project by default. Only public client configuration ships with it; other environments can override `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` with Dart defines. Localhost email callbacks have been verified with disposable token fixtures. Native callback allowlisting and actual inbox delivery still need deployment setup; see the backend guide.
+The helper preview runs at http://127.0.0.1:8080. The owner has retained the existing
+Supabase project for the first Android release. Only public client configuration
+ships with the app; other environments can override `SUPABASE_URL` and
+`SUPABASE_PUBLISHABLE_KEY` with Dart defines. The hosted Auth default/allowlist now
+uses the native callback, verified after the approved configuration update.
+Confirmation/recovery links target Android; real inbox delivery is still unverified.
+See [backend setup](docs/BACKEND.md) before changing hosted release settings.
 
 ## Project structure
 
