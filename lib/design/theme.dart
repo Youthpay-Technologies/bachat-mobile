@@ -198,11 +198,13 @@ abstract final class BachatTheme {
         selectedIconTheme: IconThemeData(color: scheme.onPrimaryContainer),
         unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
         selectedLabelTextStyle: TextStyle(
+          fontFamily: BachatBrand.interfaceFont,
           color: scheme.onSurface,
           fontSize: 12,
           fontWeight: FontWeight.w700,
         ),
         unselectedLabelTextStyle: TextStyle(
+          fontFamily: BachatBrand.interfaceFont,
           color: scheme.onSurfaceVariant,
           fontSize: 12,
           fontWeight: FontWeight.w500,
@@ -276,7 +278,11 @@ abstract final class BachatTheme {
         selectedColor: scheme.primaryContainer,
         showCheckmark: true,
         side: BorderSide(color: scheme.outlineVariant),
-        labelStyle: TextStyle(color: scheme.onSurface, fontSize: 13),
+        labelStyle: TextStyle(
+          fontFamily: BachatBrand.interfaceFont,
+          color: scheme.onSurface,
+          fontSize: 13,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BachatRadii.compact),
