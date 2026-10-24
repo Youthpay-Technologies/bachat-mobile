@@ -14,12 +14,13 @@ Validation: all 91 application tests pass; static analysis and formatting pass;
 three visual journeys pass; release JavaScript web build passes; local automated
 readiness checks pass. OSV reported no advisories for 113 locked hosted packages.
 
-This PR does not claim public launch readiness: the hosted native redirect probe
-currently falls back to localhost:3000, the CLI cannot yet see the owner's login,
-and real inbox delivery, public support/privacy details and a physical Android
-round trip remain unverified. The owner has approved the prepared native Auth
-change; credentials are the remaining dependency for applying it. No SMTP,
-database data, Play Store submission, signing or release APK work is included.
+The owner-approved hosted Auth fix is applied and verified: native callback/default
+redirect, exact native allowlist and a 10-character server password minimum. All
+read-only backend readiness checks pass and no declared config differences remain.
+Public launch still needs real inbox delivery, public support/privacy details and
+a physical Android round trip. Security advisors report no errors and one existing
+leaked-password-protection warning, documented for owner review. No SMTP, database
+data, Play Store submission, signing or release APK work is included.
 
 [Read the evidence, screenshots and launch handoff](https://github.com/saim-x/bachat-mobile/blob/feat/ship-readiness/docs/SHIP-READINESS.md).
 Every change, including individual screenshots, is committed separately.
