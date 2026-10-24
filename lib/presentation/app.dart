@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 
 import '../application/controller.dart';
 import '../design/components.dart';
-import '../design/theme.dart';
 import '../design/brand.dart';
 import '../design/brand_panels.dart';
 import '../domain/models.dart';
