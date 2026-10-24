@@ -52,17 +52,21 @@ extension TeenAuthentication on AppController {
               uri.path != '/callback')) {
       return;
     }
-    final parameters = {
-      ...uri.queryParameters,
-      ...Uri.splitQueryString(uri.fragment),
-    };
-    if (!parameters.containsKey('code') &&
-        !parameters.containsKey('access_token') &&
-        !parameters.containsKey('error')) {
-      return;
-    }
-    _handledLink = uri.toString();
+    var recognized = false;
+    var opened = false;
     try {
+      // Email links are external input, including their percent-encoded text.
+      final parameters = {
+        ...uri.queryParameters,
+        ...Uri.splitQueryString(uri.fragment),
+      };
+      if (!parameters.containsKey('code') &&
+          !parameters.containsKey('access_token') &&
+          !parameters.containsKey('error')) {
+        return;
+      }
+      recognized = true;
+      _handledLink = uri.toString();
       final response = await client!.auth.getSessionFromUrl(uri);
       if (response.redirectType == AuthChangeEvent.passwordRecovery.name ||
           response.redirectType == 'recovery') {
@@ -71,13 +75,19 @@ extension TeenAuthentication on AppController {
       }
       pendingEmail = null;
       await repository.savePendingEmail(null);
+      error = null;
+      opened = true;
     } on AuthException catch (e) {
       error = authMessage(e);
     } catch (_) {
+      recognized = true;
       error =
           'Unable to open this email link. Try opening it on the device where you requested it, or request a new link.';
     } finally {
-      if (kIsWeb) {
+      // Deduplicate successful/in-flight exchanges, but permit a failed link to
+      // be opened again after connectivity recovers. PKCE is still server-checked.
+      if (!opened && _handledLink == uri.toString()) _handledLink = null;
+      if (kIsWeb && recognized) {
         final clean = uri.replace(query: '', fragment: '');
         await SystemNavigator.routeInformationUpdated(
           uri: clean,
