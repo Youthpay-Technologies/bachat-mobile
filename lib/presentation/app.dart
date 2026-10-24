@@ -281,31 +281,6 @@ class HomePage extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             if (!c.isParent) MoneyActions(c),
-            const SizedBox(height: 20),
-            Surface(
-              tone: Theme.of(context).colorScheme.surfaceContainerLow,
-              child: Wrap(
-                spacing: 32,
-                runSpacing: 16,
-                children: [
-                  _Metric('Money in', money(summary.incomeMinor)),
-                  _Metric('Set aside', money(summary.savedMinor)),
-                  _Metric(
-                    'Net flow',
-                    money(
-                      summary.incomeMinor -
-                          summary.spentMinor -
-                          summary.savedMinor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Net flow is money in minus spending and money set aside.',
-              style: t.bodySmall,
-            ),
             SectionHeading(
               'Recent activity',
               action: 'See all',
@@ -333,6 +308,31 @@ class HomePage extends ConsumerWidget {
                       .toList(),
                 ),
               ),
+            const SectionHeading('Overview'),
+            Surface(
+              tone: Theme.of(context).colorScheme.surfaceContainerLow,
+              child: Wrap(
+                spacing: 32,
+                runSpacing: 16,
+                children: [
+                  _Metric('Money in', money(summary.incomeMinor)),
+                  _Metric('Set aside', money(summary.savedMinor)),
+                  _Metric(
+                    'Net flow',
+                    money(
+                      summary.incomeMinor -
+                          summary.spentMinor -
+                          summary.savedMinor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Net flow is money in minus spending and money set aside.',
+              style: t.bodySmall,
+            ),
             const SectionHeading('Spending breakdown'),
             if (summary.byCategory.isEmpty)
               EmptyState(
