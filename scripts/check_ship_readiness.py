@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import tomllib
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -132,6 +133,14 @@ def main():
     extraction = ET.parse(ANDROID / 'res/xml/data_extraction_rules.xml').getroot()
     check('cloud_private_data_excluded', has_exclusions(extraction.find('cloud-backup')))
     check('device_transfer_private_data_excluded', has_exclusions(extraction.find('device-transfer')))
+    release = tomllib.loads((ROOT / 'config/release/supabase/config.toml').read_text(encoding='utf-8-sig'))['auth']
+    callback = 'com.getyouthpay.bachat://auth/callback'
+    check('prepared_release_native_redirects', release['site_url'] == callback
+          and release['additional_redirect_urls'] == [callback])
+    check('prepared_release_auth_security', release['enable_signup'] is True
+          and release['enable_anonymous_sign_ins'] is False
+          and release['minimum_password_length'] >= 10
+          and release['email']['enable_confirmations'] is True)
     sources = [(path, path.read_text(encoding='utf-8')) for path in (ROOT / 'lib').rglob('*.dart')]
     check('no_localhost_app_urls', not any(re.search(r'https?://(?:localhost|127\.0\.0\.1)(?=[:/\s\x27\x22])', text) for _, text in sources))
     check('no_mock_http_in_app', not any('MockClient(' in text or '/test/' in text or '/tool/' in text for _, text in sources))
