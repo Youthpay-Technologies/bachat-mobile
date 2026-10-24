@@ -156,13 +156,6 @@ abstract final class BachatTheme {
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: canvas,
-        foregroundColor: text,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-      ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size(48, 54),
