@@ -181,27 +181,18 @@ class _PinSessionState extends State<_PinSession> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const BachatMark(),
-                      const SizedBox(height: 48),
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Icon(Icons.lock_outline, size: 32),
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
+                      const SizedBox(height: 32),
+                      PageHeading(
                         lock.unavailable
                             ? 'Device lock unavailable'
                             : setup
                             ? 'Create your PIN'
                             : 'Welcome back',
-                        style: Theme.of(context).textTheme.headlineLarge,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        setup
+                        subtitle: setup
                             ? 'Choose 6 digits to protect Bachat on this device.'
                             : 'Enter your PIN to open Bachat.',
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 8),
                       if (!lock.unavailable) ...[
                         TextFormField(
                           key: ValueKey('pin-$setup'),
