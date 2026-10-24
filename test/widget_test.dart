@@ -46,7 +46,7 @@ void main() {
     await mount(tester, c);
     expect(find.textContaining('Demo'), findsNothing);
     expect(find.textContaining('Saved on this device'), findsNothing);
-    expect(find.text('Rs 3,665'), findsOneWidget);
+    expect(find.text('No transactions yet'), findsOneWidget);
     await tester.tap(find.text('Activity').last);
     await tester.pumpAndSettle();
     expect(find.text('Activity').first, findsOneWidget);
@@ -74,6 +74,17 @@ void main() {
   testWidgets('last parent removal locks teen dashboard', (tester) async {
     final c = await controller();
     c.startPreview(UserRole.teen);
+    await c.saveEntry(
+      MoneyEntry(
+        id: 'old-readings',
+        ownerId: c.profile!.id,
+        merchant: 'Readings',
+        amountMinor: 174000,
+        direction: EntryDirection.expense,
+        category: 'Education',
+        occurredAt: DateTime(DateTime.now().year, DateTime.now().month - 1, 5),
+      ),
+    );
     await mount(tester, c);
     await tester.runAsync(() => c.revokeLink(c.links.first));
     await tester.pumpAndSettle();
@@ -113,6 +124,15 @@ void main() {
   ) async {
     final c = await controller();
     c.startPreview(UserRole.teen);
+    await c.saveGoal(
+      const SavingsGoal(
+        id: 'headphones',
+        ownerId: 'preview-teen',
+        title: 'A new pair of headphones',
+        targetMinor: 1200000,
+        savedMinor: 435000,
+      ),
+    );
     await mount(tester, c);
     await tester.ensureVisible(find.text('Add transaction'));
     await tester.tap(find.text('Add transaction'));
@@ -279,6 +299,15 @@ void main() {
     c.startPreview(UserRole.teen);
     c.allGoals.add(
       const SavingsGoal(
+        id: 'first-goal',
+        ownerId: 'preview-teen',
+        title: 'A new pair of headphones',
+        targetMinor: 1200000,
+        savedMinor: 435000,
+      ),
+    );
+    c.allGoals.add(
+      const SavingsGoal(
         id: 'second-goal',
         ownerId: 'preview-teen',
         title: 'A bicycle',
@@ -404,7 +433,7 @@ void main() {
       await tester.tap(find.widgetWithText(FilledButton, 'Add savings'));
       await tester.pumpAndSettle();
       expect(c.goals.single.savedMinor, 447550);
-      expect(c.entries.length, 5);
+      expect(c.entries, isEmpty);
       expect(find.text('Savings added'), findsOneWidget);
     },
   );

@@ -13,6 +13,9 @@ void main() {
     addTearDown(teen.dispose);
     await teen.initialize();
     await teen.startDemo(UserRole.teen);
+    expect(teen.entries, isEmpty);
+    expect(teen.budgets, isEmpty);
+    expect(teen.goals, isEmpty);
     await teen.saveEntry(
       MoneyEntry(
         id: 'lunch',
@@ -63,6 +66,67 @@ void main() {
       expect(c.approved, isTrue);
       await c.startDemo(UserRole.parent);
       expect(c.children.single.teenName, 'Ayesha');
+    },
+  );
+
+  test('local demo Gmail sync explains the missing OAuth setup', () async {
+    final db = await databaseFactoryMemory.openDatabase('demo-gmail-config');
+    addTearDown(db.close);
+    final c = AppController(BachatRepository(db, null));
+    addTearDown(c.dispose);
+    await c.startDemo(UserRole.teen);
+
+    await expectLater(
+      c.syncEmailTransactions(),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          contains('GOOGLE_SERVER_CLIENT_ID'),
+        ),
+      ),
+    );
+  });
+
+  test(
+    'opening an existing demo removes its preloaded sample records',
+    () async {
+      final db = await databaseFactoryMemory.openDatabase(
+        'demo-sample-migration',
+      );
+      addTearDown(db.close);
+      final repository = BachatRepository(db, null);
+      final original = AppController(repository);
+      addTearDown(original.dispose);
+      await original.startDemo(UserRole.teen);
+      original.allEntries.add(
+        MoneyEntry(
+          id: 'preview-2',
+          ownerId: original.profile!.id,
+          merchant: 'Foodpanda',
+          amountMinor: 86500,
+          direction: EntryDirection.expense,
+          category: 'Food & dining',
+          occurredAt: DateTime.now(),
+        ),
+      );
+      original.allEntries.add(
+        MoneyEntry(
+          id: 'my-entry',
+          ownerId: original.profile!.id,
+          merchant: 'My lunch',
+          amountMinor: 10000,
+          direction: EntryDirection.expense,
+          category: 'Food & dining',
+          occurredAt: DateTime.now(),
+        ),
+      );
+      await repository.save(AppController.demoKey, original.snapshot());
+
+      final reopened = AppController(repository);
+      addTearDown(reopened.dispose);
+      await reopened.initialize();
+      expect(reopened.entries.map((entry) => entry.id), ['my-entry']);
     },
   );
 }

@@ -14,15 +14,15 @@ This repository contains the standalone Flutter mobile app for Android and iOS. 
 - Explore separate teen and parent journeys, including mutual family approval.
 - Switch between light, dark, and system appearance.
 
-The learning tab is coming soon. Automatic bank, SMS, and Gmail imports are planned for later.
+The learning tab is coming soon. Android SMS transaction import is requested after onboarding for the teen persona and Gmail transaction import is available from Settings after Google OAuth is configured. SMS parsing uses bank-message heuristics, so support depends on the SMS format; iOS does not permit apps to read the SMS inbox.
 
 ## Current development experience
 
 The app currently opens without authentication. Continue as **Ayesha**, a 16-year-old teen, or **Sana**, her parent. Switch profiles from the home header or **You** to explore both journeys.
 
-Both profiles share persistent sample records stored locally. Changes survive app restarts and profile switches; settings includes a confirmed reset. Parent views cannot edit transactions, budgets, or goals. Family linking and approval can be explored locally, but do not verify real identities.
+Both profiles share one persistent local demo family. It starts with no sample transactions, budgets, or goals. Changes survive app restarts and profile switches; Settings includes a confirmed reset. Parent views cannot edit transactions, budgets, or goals. Family linking and approval can be explored locally, but do not verify real identities. SMS and Gmail imports stay on the device in this demo and are not uploaded to a server.
 
-Authentication and cloud synchronization are deferred. Supabase migrations and adapters are retained for future integration; the current startup does not initialize Supabase or upload sample records. Recorded net flow is not a bank balance.
+Authentication and cloud synchronization are deferred. Supabase migrations and adapters are retained for future integration; the current startup does not initialize Supabase or upload local records. Gmail sync requires Google OAuth client IDs and is not available without that configuration. Recorded net flow is not a bank balance.
 
 ## Get started
 
@@ -40,7 +40,7 @@ For a browser preview:
 flutter run -d chrome --web-port=8080
 ```
 
-In the original Windows workspace, helper scripts use the prepared local toolchain:
+Google Gmail setup and the Android OAuth build arguments are documented in [backend setup](docs/BACKEND.md). In the original Windows workspace, helper scripts use the prepared local toolchain:
 
 ```powershell
 . ./scripts/env.ps1

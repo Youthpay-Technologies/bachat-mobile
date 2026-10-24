@@ -6,7 +6,9 @@
 
 A Flutter app for Android and iOS, with distinct teen and parent journeys. Launch language is English and currency is PKR. Core features are onboarding, Google sign-in through Supabase, teen expense tracking, budgets, savings goals, parent linking and approval, child dashboards, settings, and a coming-soon learning screen.
 
-Gmail, automatic bank/SMS import, squads, rewards, and parent personal spending are deferred to keep this release focused. Manual expense and income entry is included.
+Gmail and automatic bank/SMS import are included in the current local Android teen flow. The app requests Android SMS access after onboarding when the user continues as a teen, then scans the inbox and listens for future messages. Parsing is heuristic and cannot guarantee every bank's wording or language. Gmail import is user-initiated and requires Google OAuth client configuration. Imported transactions are saved locally in the demo; cloud authentication and Gmail-to-cloud sync are not part of this release. iOS does not expose an API for reading SMS.
+
+The local demo starts with no sample transactions, budgets, or goals. Its fictional family approval is only a demo convenience and is not real identity verification. Squads, rewards, and parent personal spending remain deferred. Manual expense and income entry is included.
 
 ## Accounts and family access
 

@@ -183,7 +183,14 @@ class _WelcomeState extends ConsumerState<WelcomeScreen> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  onPressed: c.busy ? null : () => c.startDemo(role),
+                  onPressed: c.busy
+                      ? null
+                      : () async {
+                          await c.startDemo(role);
+                          if (role == UserRole.teen) {
+                            await c.initSmsListener();
+                          }
+                        },
                   icon: const Icon(Icons.arrow_forward_rounded),
                   label: Text(
                     role == UserRole.teen
@@ -1303,8 +1310,11 @@ class _FamilyState extends ConsumerState<FamilyPage> {
           ),
       AppError(c),
       OutlinedButton.icon(
-        onPressed: () =>
-            c.startDemo(c.isParent ? UserRole.teen : UserRole.parent),
+        onPressed: () async {
+          final role = c.isParent ? UserRole.teen : UserRole.parent;
+          await c.startDemo(role);
+          if (role == UserRole.teen) await c.initSmsListener();
+        },
         icon: const Icon(Icons.swap_horiz),
         label: const Text('Switch profile'),
       ),
@@ -1388,47 +1398,31 @@ class SettingsPage extends ConsumerWidget {
                   : () async {
                       final scaffoldMessenger = ScaffoldMessenger.of(context);
                       final controller = ref.read(controllerProvider);
-
-                      // FIX: Stop execution immediately if button clicked in demo status
-                      if (controller.preview) {
-                        scaffoldMessenger.showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Email sync is disabled in local demo mode.',
-                            ),
-                            backgroundColor: Colors.orange,
-                          ),
-                        );
-                        return;
-                      }
-
+                      scaffoldMessenger.showSnackBar(
+                        const SnackBar(
+                          content: Text('Syncing Gmail transactions...'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
                       try {
-                        scaffoldMessenger.showSnackBar(
-                          const SnackBar(
-                            content: Text('Syncing Gmail transactions...'),
-                            duration: Duration(seconds: 1),
-                          ),
-                        );
-
-                        // FIX: Await execution to capture outcomes natively
-                        await controller.syncEmailTransactions();
-
-                        scaffoldMessenger.showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Email transactions synced successfully!',
-                            ),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      } catch (e) {
-                        // FIX: Catch actual cancellation or parsing faults to show clean validation message
+                        final imported =
+                            await controller.syncEmailTransactions();
                         scaffoldMessenger.showSnackBar(
                           SnackBar(
                             content: Text(
-                              e is FormatException
-                                  ? e.message
-                                  : 'Sync failed. Please check credentials or try again.',
+                              imported == 0
+                                  ? 'Gmail sync complete. No new transactions found.'
+                                  : 'Gmail sync complete. Added $imported new transaction${imported == 1 ? '' : 's'}.',
+                            ),
+                          ),
+                        );
+                      } catch (error) {
+                        scaffoldMessenger.showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              error is FormatException
+                                  ? error.message
+                                  : 'Gmail sync failed. Check your connection and Google OAuth setup.',
                             ),
                             backgroundColor: Theme.of(
                               context,
@@ -1438,7 +1432,7 @@ class SettingsPage extends ConsumerWidget {
                       }
                     },
               icon: const Icon(Icons.email),
-              label: const Text('Sync Gmail Receipts'),
+              label: const Text('Sync Gmail transactions'),
             ),
           ),
           const SizedBox(height: 16),
@@ -1448,16 +1442,16 @@ class SettingsPage extends ConsumerWidget {
           onPressed: () async {
             if (await confirmAction(
               context,
-              title: 'Reset sample data?',
+              title: 'Reset local data?',
               body:
-                  'Your changes will be replaced with the original transactions, budgets, goals and family connection.',
+                  'This removes your locally saved transactions, budgets, goals and family connection.',
               action: 'Reset data',
             )) {
               await c.resetDemo();
             }
           },
           icon: const Icon(Icons.restart_alt),
-          label: const Text('Reset sample data'),
+          label: const Text('Reset local data'),
         ),
         AppError(c),
         const SizedBox(height: 32),
@@ -1499,6 +1493,7 @@ Future<void> accountSheet(
               onTap: () async {
                 Navigator.pop(sheetContext);
                 await c.startDemo(role);
+                if (role == UserRole.teen) await c.initSmsListener();
               },
             ),
           ),

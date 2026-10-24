@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:uuid/uuid.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:crypto/crypto.dart';
+import 'package:sembast/sembast.dart';
+import '../data/database.dart';
 import '../data/repository.dart';
 import '../domain/models.dart';
 import 'package:another_telephony/telephony.dart';
@@ -12,15 +15,22 @@ import 'package:another_telephony/telephony.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/gmail/v1.dart' as gmail;
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 final controllerProvider = ChangeNotifierProvider<AppController>(
   (ref) => throw StateError('AppController must be provided at startup.'),
 );
 
+final _smsAmountExpression = RegExp(
+  r'(?:rs\.?|pkr|₨)\s*([\d,]+(?:\.\d{1,2})?)|([\d,]+(?:\.\d{1,2})?)\s*(?:rs\.?|pkr|rupees?)|\b(?:debited|debit|credited|credit|spent|paid|purchase|withdrawn|withdrawal|deposited|deposit|transferred|transfer|charged|refund(?:ed)?)\b.{0,24}?([\d,]+(?:\.\d{1,2})?)',
+  caseSensitive: false,
+);
+
 class AppController extends ChangeNotifier {
-  AppController(this.repository);
+  AppController(this.repository) {
+    _lifecycleListener = AppLifecycleListener(onResume: _handleAppResumed);
+  }
   final BachatRepository repository;
+  late final AppLifecycleListener _lifecycleListener;
   Profile? profile;
   List<FamilyLink> links = [];
   List<MoneyEntry> allEntries = [];
@@ -44,11 +54,24 @@ class AppController extends ChangeNotifier {
   int _generation = 0;
   int _localRevision = 0;
   String? _loadedAccount;
+  bool _smsListenerStarted = false;
+
+  void _handleAppResumed() {
+    if (!_smsListenerStarted) return;
+    unawaited(
+      _processPendingSms().catchError((Object error) {
+        this.error = 'Could not import a transaction received while the app was closed.';
+        notifyListeners();
+      }),
+    );
+  }
   SupabaseClient? get client => repository.cloud;
   String? get accountId => preview ? profile?.id : client?.auth.currentUser?.id;
   bool get signedIn => accountId != null;
   bool get isParent => profile?.role == UserRole.parent;
   bool get approved => links.any((l) => l.approved && l.teenId == profile?.id);
+  bool get isTeenWithApprovedAccess =>
+      profile != null && profile!.role == UserRole.teen && approved;
   bool get needsApproval => profile?.role == UserRole.teen && !approved;
   List<FamilyLink> get children => links.where((l) => l.approved).toList();
   String? get viewingId => isParent
@@ -94,14 +117,17 @@ class AppController extends ChangeNotifier {
         .toList();
     allEntries = (saved['entries'] as List)
         .map((j) => MoneyEntry.fromJson(Map<String, dynamic>.from(j as Map)))
+        .where((entry) => !{'preview-1', 'preview-2', 'preview-3', 'preview-4', 'preview-5'}.contains(entry.id))
         .toList();
     allBudgets = (saved['budgets'] as List)
         .map(
           (j) => CategoryBudget.fromJson(Map<String, dynamic>.from(j as Map)),
         )
+        .where((budget) => budget.id != 'preview-budget')
         .toList();
     allGoals = (saved['goals'] as List)
         .map((j) => SavingsGoal.fromJson(Map<String, dynamic>.from(j as Map)))
+        .where((goal) => goal.id != 'preview-goal')
         .toList();
     selectedChildId = saved['selected_child'] as String?;
     familyCode = saved['family_code'] as String?;
@@ -128,16 +154,20 @@ class AppController extends ChangeNotifier {
     chosenRole = UserRole.values.byName(await repository.loadRole());
     if (client == null) {
       final saved = await repository.load(demoKey);
-      if (saved != null) _restoreDemo(saved);
+      if (saved != null) {
+        _restoreDemo(saved);
+        await repository.save(demoKey, snapshot());
+      }
       ready = true;
       notifyListeners();
+      if (isTeenWithApprovedAccess) await initSmsListener();
       return;
     }
     if (accountId != null) await _hydrate();
     ready = true;
     notifyListeners();
 
-    await initSmsListener();
+    if (isTeenWithApprovedAccess) await initSmsListener();
     _auth = client?.auth.onAuthStateChange.listen((event) async {
       if (preview) return;
       if (event.event == AuthChangeEvent.signedOut) {
@@ -147,6 +177,9 @@ class AppController extends ChangeNotifier {
       } else if (event.session != null &&
           event.event != AuthChangeEvent.initialSession) {
         await _hydrate();
+        if (isTeenWithApprovedAccess) {
+          await initSmsListener();
+        }
         await refresh();
       }
     });
@@ -684,72 +717,9 @@ class AppController extends ChangeNotifier {
       ),
     ];
     selectedChildId = teenId;
-    final now = DateTime.now();
-    allEntries = [
-      MoneyEntry(
-        id: 'preview-1',
-        ownerId: teenId,
-        merchant: 'Monthly allowance',
-        amountMinor: 1500000,
-        direction: EntryDirection.income,
-        category: 'Other',
-        occurredAt: DateTime(now.year, now.month, 1),
-      ),
-      MoneyEntry(
-        id: 'preview-2',
-        ownerId: teenId,
-        merchant: 'Foodpanda',
-        amountMinor: 86500,
-        direction: EntryDirection.expense,
-        category: 'Food & dining',
-        occurredAt: now,
-      ),
-      MoneyEntry(
-        id: 'preview-3',
-        ownerId: teenId,
-        merchant: 'Readings',
-        amountMinor: 174000,
-        direction: EntryDirection.expense,
-        category: 'Education',
-        occurredAt: now.subtract(const Duration(days: 1)),
-      ),
-      MoneyEntry(
-        id: 'preview-4',
-        ownerId: teenId,
-        merchant: 'Careem',
-        amountMinor: 42000,
-        direction: EntryDirection.expense,
-        category: 'Transport',
-        occurredAt: now.subtract(const Duration(days: 2)),
-      ),
-      MoneyEntry(
-        id: 'preview-5',
-        ownerId: teenId,
-        merchant: 'Lunch with friends',
-        amountMinor: 64000,
-        direction: EntryDirection.expense,
-        category: 'Food & dining',
-        occurredAt: now.subtract(const Duration(days: 3)),
-      ),
-    ];
-    allBudgets = [
-      CategoryBudget(
-        id: 'preview-budget',
-        ownerId: teenId,
-        category: 'Food & dining',
-        limitMinor: 400000,
-        month: monthKey(now),
-      ),
-    ];
-    allGoals = [
-      const SavingsGoal(
-        id: 'preview-goal',
-        ownerId: teenId,
-        title: 'A new pair of headphones',
-        targetMinor: 1200000,
-        savedMinor: 435000,
-      ),
-    ];
+    allEntries = [];
+    allBudgets = [];
+    allGoals = [];
     notifyListeners();
   }
 
@@ -759,6 +729,7 @@ class AppController extends ChangeNotifier {
     _connection?.cancel();
     _poll?.cancel();
     _familyChannel?.unsubscribe();
+    _lifecycleListener.dispose();
     super.dispose();
   }
 
@@ -767,114 +738,153 @@ class AppController extends ChangeNotifier {
   final Telephony _telephony = Telephony.instance;
 
   Future<void> initSmsListener() async {
-    if (preview || isParent || !approved || profile == null) return;
+    if (defaultTargetPlatform != TargetPlatform.android ||
+        isParent ||
+        !approved ||
+        profile == null ||
+        _smsListenerStarted) {
+      return;
+    }
 
-    bool? permissionsGranted = await _telephony.requestPhoneAndSmsPermissions;
-    if (permissionsGranted == true) {
-      await _loadPastSmsTransactions();
+    try {
+      final permissionsGranted = await _telephony.requestSmsPermissions;
+      if (permissionsGranted != true) {
+        error =
+            'SMS access was not granted. Allow SMS access in Android settings to import transactions.';
+        notifyListeners();
+        return;
+      }
 
       _telephony.listenIncomingSms(
         onNewMessage: _onNewSmsMessage,
         onBackgroundMessage: backgroundSmsHandler,
         listenInBackground: true,
       );
+      _smsListenerStarted = true;
+      error = null;
+      await _processPendingSms();
+      await _loadPastSmsTransactions();
+    } catch (_) {
+      error = 'Could not start SMS import. Check SMS access and try again.';
+      notifyListeners();
     }
   }
 
   Future<void> _onNewSmsMessage(SmsMessage message) async {
-    if (preview) return;
     final body = message.body ?? '';
     final address = message.address ?? '';
+    if (!_isTransactionSms(body, address)) return;
 
-    if (_isTransactionSms(body, address)) {
-      final occurredTime = message.date != null
-          ? DateTime.fromMillisecondsSinceEpoch(message.date!)
-          : DateTime.now();
-
-      final entry = _parseSmsToMoneyEntry(body, timestamp: occurredTime);
-      if (entry != null) {
-        try {
-          await saveEntry(entry);
-        } catch (_) {}
-      }
+    final entry = _parseSmsToMoneyEntry(
+      body,
+      timestamp: message.date == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(message.date!),
+      sourceId: message.id?.toString(),
+    );
+    if (entry == null || _hasDuplicateTransaction(entry)) return;
+    try {
+      await saveEntry(entry);
+    } catch (_) {
+      error = 'Could not save a transaction received by SMS.';
+      notifyListeners();
     }
   }
 
   Future<void> _loadPastSmsTransactions() async {
-    try {
-      List<SmsMessage> messages = await _telephony.getInboxSms(
-        columns: [SmsColumn.ADDRESS, SmsColumn.BODY, SmsColumn.DATE],
-        filter: SmsFilter.where(SmsColumn.BODY)
-            .like("%debited%")
-            .or(SmsColumn.BODY)
-            .like("%credited%")
-            .or(SmsColumn.BODY)
-            .like("%spent%")
-            .or(SmsColumn.BODY)
-            .like("%paid%"),
-      );
+    final messages = await _telephony.getInboxSms(
+      columns: [
+        SmsColumn.ID,
+        SmsColumn.ADDRESS,
+        SmsColumn.BODY,
+        SmsColumn.DATE,
+      ],
+    );
 
-      for (var message in messages) {
-        final body = message.body ?? '';
+    for (final message in messages) {
+      final body = message.body ?? '';
+      final address = message.address ?? '';
+      if (!_isTransactionSms(body, address)) continue;
+      final entry = _parseSmsToMoneyEntry(
+        body,
+        timestamp: message.date == null
+            ? null
+            : DateTime.fromMillisecondsSinceEpoch(message.date!),
+        sourceId: message.id?.toString(),
+      );
+      if (entry != null && !_hasDuplicateTransaction(entry)) {
+        await saveEntry(entry);
+      }
+    }
+    notifyListeners();
+  }
+
+  Future<void> _processPendingSms() async {
+    if (!isTeenWithApprovedAccess) return;
+    final store = stringMapStoreFactory.store('pending_sms_imports');
+    final queued = await store.find(repository.database);
+    for (final record in queued) {
+      final message = record.value;
+      final body = message['body'] as String? ?? '';
+      final address = message['address'] as String? ?? '';
+      if (_isTransactionSms(body, address)) {
+        final date = message['date'] as int?;
         final entry = _parseSmsToMoneyEntry(
           body,
-          timestamp: message.date != null
-              ? DateTime.fromMillisecondsSinceEpoch(message.date!)
-              : null,
+          timestamp: date == null ? null : DateTime.fromMillisecondsSinceEpoch(date),
+          sourceId: record.key,
         );
-        if (entry != null) {
-          bool exists = allEntries.any(
-            (e) =>
-                e.merchant == entry.merchant &&
-                e.amountMinor == entry.amountMinor &&
-                e.occurredAt.difference(entry.occurredAt).inMinutes.abs() < 5,
-          );
-          if (!exists) {
-            await saveEntry(entry);
-          }
+        if (entry != null && !_hasDuplicateTransaction(entry)) {
+          await saveEntry(entry);
         }
       }
-      notifyListeners();
-    } catch (_) {}
+      await store.record(record.key).delete(repository.database);
+    }
   }
 
   bool _isTransactionSms(String body, String sender) {
-    final lower = body.toLowerCase();
-    return lower.contains('debited') ||
-        lower.contains('credited') ||
-        lower.contains('spent') ||
-        lower.contains('paid') ||
-        lower.contains('rs.') ||
-        lower.contains('pkr');
+    final content = '$body $sender'.toLowerCase();
+    final transactionTerms = RegExp(
+      r'\b(debit(?:ed)?|credit(?:ed)?|spent|paid|purchase[ds]?|bought|withdraw(?:n|al)?|deposit(?:ed)?|transfer(?:red)?|received|refund(?:ed)?|charged|payment|transaction)\b',
+    );
+    return transactionTerms.hasMatch(content) &&
+        _smsAmountExpression.hasMatch(body);
   }
 
-  MoneyEntry? _parseSmsToMoneyEntry(String smsBody, {DateTime? timestamp}) {
+  MoneyEntry? _parseSmsToMoneyEntry(
+    String smsBody, {
+    DateTime? timestamp,
+    String? sourceId,
+  }) {
     final lower = smsBody.toLowerCase();
 
     EntryDirection direction = EntryDirection.expense;
-    if (lower.contains('credited') ||
+    if (lower.contains('credit') ||
         lower.contains('received') ||
-        lower.contains('deposited')) {
+        lower.contains('deposit') ||
+        lower.contains('refund')) {
       direction = EntryDirection.income;
     }
 
-    final amountRegExp = RegExp(
-      r'(?:rs\.?|pkr)\s*([\d,]+\.?\d*)',
-      caseSensitive: false,
-    );
-    final match = amountRegExp.firstMatch(smsBody);
+    final match = _smsAmountExpression.firstMatch(smsBody);
     if (match == null) return null;
 
-    String cleanAmount = match.group(1)!.replaceAll(',', '');
-    double parsedAmount = double.tryParse(cleanAmount) ?? 0.0;
-    if (parsedAmount <= 0) return null;
-
-    int amountMinor = (parsedAmount * 100).round();
+    final rawAmount = (match.group(1) ?? match.group(2) ?? match.group(3))
+        ?.replaceAll(',', '');
+    if (rawAmount == null) return null;
+    final int amountMinor;
+    try {
+      amountMinor = parseMoney(rawAmount);
+    } on FormatException {
+      return null;
+    }
     String merchant = _extractMerchantName(smsBody);
     String category = _categorizeTransaction(merchant, smsBody);
 
     return MoneyEntry(
-      id: const Uuid().v4(),
+      id: sourceId == null
+          ? const Uuid().v4()
+          : const Uuid().v5(Uuid.NAMESPACE_URL, 'sms:$sourceId'),
       ownerId: profile!.id,
       merchant: merchant,
       amountMinor: amountMinor,
@@ -886,7 +896,7 @@ class AppController extends ChangeNotifier {
 
   String _extractMerchantName(String body) {
     final atRegExp = RegExp(
-      r'(?:at|to|from|infovisa\*|pos\*)\s+([A-Za-z0-9\s]+?)(?:\s+on|\s+avail|\s+avl|\.|$)',
+      r'\b(?:at|to|from|infovisa\*|pos\*)\s+([A-Za-z0-9\s]+?)(?:\s+on|\s+avail|\s+avl|\.|$)',
       caseSensitive: false,
     );
     final match = atRegExp.firstMatch(body);
@@ -928,16 +938,59 @@ class AppController extends ChangeNotifier {
     return 'Other';
   }
 
+  bool _hasDuplicateTransaction(MoneyEntry candidate) {
+    final candidateMerchant = _normalizeMerchant(candidate.merchant);
+    const genericMerchants = {'banktransaction', 'emailreceipt'};
+    return allEntries.any((existing) {
+      if (existing.id == candidate.id) return true;
+      if (existing.amountMinor != candidate.amountMinor ||
+          existing.direction != candidate.direction) {
+        return false;
+      }
+
+      final minutesApart = existing.occurredAt
+          .difference(candidate.occurredAt)
+          .inMinutes
+          .abs();
+      final existingMerchant = _normalizeMerchant(existing.merchant);
+      if (candidateMerchant == existingMerchant) return minutesApart <= 1440;
+      if (genericMerchants.contains(candidateMerchant) ||
+          genericMerchants.contains(existingMerchant)) {
+        return minutesApart <= 30;
+      }
+      return candidate.category != 'Other' &&
+          candidate.category == existing.category &&
+          minutesApart <= 30;
+    });
+  }
+
+  String _normalizeMerchant(String merchant) =>
+      merchant.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
   // GMAIL INTEGRATION
+
+  static const _googleServerClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+  );
+  static const _googleClientId = String.fromEnvironment('GOOGLE_CLIENT_ID');
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: [gmail.GmailApi.gmailReadonlyScope],
+    serverClientId: _googleServerClientId.isEmpty
+        ? null
+        : _googleServerClientId,
+    clientId: _googleClientId.isEmpty ? null : _googleClientId,
   );
 
-  Future<void> syncEmailTransactions() async {
-    if (preview || isParent || !approved || profile == null) {
+  Future<int> syncEmailTransactions() async {
+    if (isParent || !approved || profile == null) {
       throw const FormatException(
-        'Cannot run sync integrations while in local Demo mode.',
+        'An approved teen profile is required to sync transactions.',
+      );
+    }
+    if (_googleServerClientId.isEmpty) {
+      throw const FormatException(
+        'Gmail sync is not configured yet. Add a Google web OAuth client ID as GOOGLE_SERVER_CLIENT_ID when building the app.',
       );
     }
 
@@ -945,74 +998,73 @@ class AppController extends ChangeNotifier {
         await _googleSignIn.signInSilently() ?? await _googleSignIn.signIn();
     if (account == null) {
       throw const FormatException(
-        'Google authentication flow cancelled or skipped by the user.',
+        'Google sign-in was cancelled.',
       );
     }
 
     final authHeaders = await account.authHeaders;
     final httpClient = GoogleAuthClient(authHeaders);
-    final gmailApi = gmail.GmailApi(httpClient);
-
-    final query =
-        'subject:(debited OR credited OR receipt OR order OR invoice OR paid OR payment)';
-    final listResponse = await gmailApi.users.messages.list(
-      'me',
-      q: query,
-      maxResults: 15,
-    );
-
-    final messages = listResponse.messages ?? [];
-    for (var msgRef in messages) {
-      final msg = await gmailApi.users.messages.get('me', msgRef.id!);
-
-      DateTime transactionDate = DateTime.now();
-      if (msg.internalDate != null) {
-        transactionDate = DateTime.fromMillisecondsSinceEpoch(
-          int.parse(msg.internalDate!),
+    try {
+      final gmailApi = gmail.GmailApi(httpClient);
+      const query =
+          '{debited credited receipt order invoice paid payment transaction purchase withdrawal deposit refund}';
+      String? pageToken;
+      var imported = 0;
+      do {
+        final response = await gmailApi.users.messages.list(
+          'me',
+          q: query,
+          maxResults: 100,
+          pageToken: pageToken,
         );
-      }
-
-      final body = _extractEmailBody(msg);
-      final snippet = msg.snippet ?? '';
-
-      final entry = _parseEmailToMoneyEntry(
-        snippet,
-        body,
-        messageId: msg.id,
-        timestamp: transactionDate,
-      );
-      if (entry != null) {
-        bool exists = allEntries.any(
-          (e) =>
-              e.id == entry.id ||
-              (e.merchant == entry.merchant &&
-                  e.amountMinor == entry.amountMinor &&
-                  e.occurredAt.difference(entry.occurredAt).inHours.abs() < 24),
-        );
-        if (!exists) {
-          await saveEntry(entry);
+        for (final reference in response.messages ?? <gmail.Message>[]) {
+          final messageId = reference.id;
+          if (messageId == null) continue;
+          final message = await gmailApi.users.messages.get('me', messageId);
+          final transactionDate = message.internalDate == null
+              ? DateTime.now()
+              : DateTime.fromMillisecondsSinceEpoch(
+                  int.parse(message.internalDate!),
+                );
+          final entry = _parseEmailToMoneyEntry(
+            message.snippet ?? '',
+            _extractEmailBody(message),
+            messageId: messageId,
+            timestamp: transactionDate,
+          );
+          if (entry != null && !_hasDuplicateTransaction(entry)) {
+            await saveEntry(entry);
+            imported++;
+          }
         }
-      }
+        pageToken = response.nextPageToken;
+      } while (pageToken != null);
+      notifyListeners();
+      return imported;
+    } finally {
+      httpClient.close();
     }
-    notifyListeners();
   }
 
   String _extractEmailBody(gmail.Message message) {
-    if (message.payload?.body?.data != null) {
-      try {
-        return String.fromCharCodes(
-          base64Url.decode(message.payload!.body!.data!),
-        );
-      } catch (_) {}
-    }
-    final parts = message.payload?.parts ?? [];
-    for (var part in parts) {
-      if (part.body?.data != null) {
+    String? extract(gmail.MessagePart? part) {
+      final data = part?.body?.data;
+      if (data != null) {
         try {
-          return String.fromCharCodes(base64Url.decode(part.body!.data!));
-        } catch (_) {}
+          return utf8.decode(base64Url.decode(data), allowMalformed: true);
+        } on FormatException {
+          return null;
+        }
       }
+      for (final nested in part?.parts ?? <gmail.MessagePart>[]) {
+        final content = extract(nested);
+        if (content != null && content.isNotEmpty) return content;
+      }
+      return null;
     }
+
+    final content = extract(message.payload);
+    if (content != null && content.isNotEmpty) return content;
     return message.snippet ?? '';
   }
 
@@ -1025,14 +1077,14 @@ class AppController extends ChangeNotifier {
     final content = '$snippet $body'.toLowerCase();
 
     EntryDirection direction = EntryDirection.expense;
-    if (content.contains('credited') ||
+    if (content.contains('credit') ||
         content.contains('received payment') ||
         content.contains('refund')) {
       direction = EntryDirection.income;
     }
 
     final amountRegExp = RegExp(
-      r'(?:rs\.?|pkr|\$)\s*([\d,]+\.?\d*)',
+      r'(?:rs\.?|pkr|\$)\s*([\d,]+(?:\.\d{1,2})?)',
       caseSensitive: false,
     );
     final match = amountRegExp.firstMatch(content);
@@ -1044,10 +1096,12 @@ class AppController extends ChangeNotifier {
     }
 
     String cleanAmount = match.group(1)!.replaceAll(',', '');
-    double parsedAmount = double.tryParse(cleanAmount) ?? 0.0;
-    if (parsedAmount <= 0) return null;
-
-    int amountMinor = (parsedAmount * 100).round();
+    final int amountMinor;
+    try {
+      amountMinor = parseMoney(cleanAmount);
+    } on FormatException {
+      return null;
+    }
     String merchant = 'Email Receipt';
     if (content.contains('foodpanda')) {
       merchant = 'Foodpanda';
@@ -1057,20 +1111,17 @@ class AppController extends ChangeNotifier {
       merchant = 'Daraz';
     } else if (content.contains('netflix')) {
       merchant = 'Netflix';
+    } else {
+      final extracted = _extractMerchantName(content);
+      if (extracted != 'Bank Transaction') merchant = extracted;
     }
 
     String category = _categorizeTransaction(merchant, content);
 
-    // Generate unique ID deterministically via md5 to handle deduplication seamlessly
-    String generatedId = const Uuid().v4();
-    if (messageId != null) {
-      try {
-        // v5 creates an identical, valid UUID string every time for the same input text
-        generatedId = const Uuid().v5(Uuid.NAMESPACE_URL, messageId);
-      } catch (_) {}
-    }
     return MoneyEntry(
-      id: generatedId,
+      id: messageId == null
+          ? const Uuid().v4()
+          : const Uuid().v5(Uuid.NAMESPACE_URL, 'gmail:$messageId'),
       ownerId: profile!.id,
       merchant: merchant,
       amountMinor: amountMinor,
@@ -1095,6 +1146,22 @@ class GoogleAuthClient extends http.BaseClient {
 }
 
 @pragma('vm:entry-point')
-void backgroundSmsHandler(SmsMessage message) {
-  // Foreground sync processes handle batch synchronization routines natively when context mounts
+Future<void> backgroundSmsHandler(SmsMessage message) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final database = await openDatabase();
+  try {
+    final id = message.id?.toString() ??
+        const Uuid().v5(
+          Uuid.NAMESPACE_URL,
+          'sms:${message.date}:${message.address}:${message.body}',
+        );
+    final store = stringMapStoreFactory.store('pending_sms_imports');
+    await store.record(id).put(database, {
+      'body': message.body ?? '',
+      'address': message.address ?? '',
+      'date': message.date,
+    });
+  } finally {
+    await database.close();
+  }
 }

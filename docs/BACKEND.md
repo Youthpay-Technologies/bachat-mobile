@@ -28,6 +28,25 @@ Android/iOS custom scheme callbacks are configured in their manifests. Supabaseâ
 
 Official setup reference: https://supabase.com/docs/guides/auth/social-login/auth-google
 
+## Configure Gmail transaction import
+
+Gmail import uses the user's Google account directly from the device; it does not use Supabase authentication. It can save locally in the demo without a backend, but it cannot access Gmail until Google OAuth is configured.
+
+1. In the Google Cloud project, enable the Gmail API and configure the OAuth consent screen. Add the Google account used for testing as a test user.
+2. Create an Android OAuth client for package `com.getyouthpay.bachat_mobile` and register the SHA-1 signing certificate for the APK. Register both debug and release signing certificates if both builds are used.
+3. Create a Web application OAuth client. Its client ID is the `GOOGLE_SERVER_CLIENT_ID` build value. Do not put its client secret in the app.
+4. Build the APK with public OAuth client IDs:
+
+   ```powershell
+   $webClientId = "your-web-oauth-client-id.apps.googleusercontent.com"
+   flutter build apk --release "--dart-define=GOOGLE_SERVER_CLIENT_ID=$webClientId"
+   ```
+
+   For iOS, also provide the iOS OAuth client ID as `GOOGLE_CLIENT_ID` and configure its URL scheme in the iOS runner. iOS SMS inbox reading is not supported.
+5. Install that configured build, open **You â†’ Sync Gmail transactions**, choose a Google account, and grant Gmail read-only access.
+
+The app requests `gmail.readonly` and reads transaction-like messages; it does not send or modify email. Gmail's read-only scope is restricted. Google may require verification before distributing the app broadly; test-user mode is for development only. OAuth client IDs are identifiers, not secrets, but client secrets and signing keys must never be embedded in Flutter or committed.
+
 ## Authorization and tests
 
 RLS covers every exposed table. Money writes require the authenticated teen and an approved family relationship. Parents have select access to approved children only. Profile roles and signup ages are immutable. Family tables have no direct client write grants; RPCs validate the caller. Codes are hashed at rest, expire after 24 hours, and are consumed on claim. Requests also expire after 24 hours.
@@ -41,4 +60,3 @@ Supabase advisors reported no security warnings/errors after migration. Two info
 ## Migration workflow
 
 The Supabase CLI configuration is committed for local development (`npx supabase start` requires Docker). Create future migrations with `npx supabase migration new <name>`, inspect their SQL, and deploy to the correct project. Do not modify the old web app's database. The initial migration was applied through the connected Supabase MCP tool using the committed SQL.
-

@@ -37,12 +37,3 @@ kotlin {
 flutter {
     source = "../.."
 }
-
-// 🔥 ADD THIS BLOCK AT THE VERY BOTTOM OF THE FILE:
-subprojects {
-    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile>().configureEach {
-        compilerOptions {
-            jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
-        }
-    }
-}
