@@ -786,7 +786,7 @@ class PlanPage extends ConsumerWidget {
       children: [
         PageHeading(
           'Plan',
-          subtitle: '${DateFormat.yMMMM().format(DateTime.now())} · Your monthly plan',
+          subtitle: '${DateFormat.yMMMM().format(DateTime.now())} Â· Your monthly plan',
         ),
         ChildPicker(c),
         const SectionHeading('Set aside'),
