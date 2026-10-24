@@ -174,7 +174,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                   }, style: theme.textTheme.bodyLarge),
                                   const SizedBox(height: 24),
                                   Surface(
-                                    tone: theme.colorScheme.secondaryContainer,
+                                    tone: theme.colorScheme.surface,
                                     child: preview(context),
                                   ),
                                 ],
