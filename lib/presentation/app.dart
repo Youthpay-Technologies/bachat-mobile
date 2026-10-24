@@ -1566,7 +1566,7 @@ Future<void> appearanceSheet(BuildContext context, AppController c) =>
                   : null,
               onTap: () async {
                 Navigator.pop(sheetContext);
-                await c.setTheme(entry.key);
+                await c.run(() => c.setTheme(entry.key));
               },
             ),
           ),
