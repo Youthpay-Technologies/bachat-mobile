@@ -20,7 +20,8 @@ Teen-owned accounts only; parent accounts and lessons remain explicitly coming
 soon. Interactive onboarding examples must never become account records. Existing
 Supabase Auth and database ownership rules remain authoritative. Use the existing
 backend; do not create a new project, send real emails, change hosted production
-settings or deploy database changes as an implied part of this audit.
+settings or deploy database changes without explicit approval. The narrow native
+Auth change was subsequently approved and applied as recorded below.
 
 Commit every source, test and documentation change immediately on this branch.
 Do not include private configuration, credentials, account data or build output.
@@ -89,7 +90,8 @@ and that timing out one request neither closes the client nor replays a write.
 | Public Auth configuration | PASS: signup/email enabled, confirmations required, anonymous users disabled |
 | Anonymous data isolation | PASS: unauthenticated REST probes expose no profiles, transactions, budgets or goals |
 | Live authenticated RLS/CRUD | NOT rerun in this audit: earlier rollback/live verification is documented in BACKEND.md; current mocked/controller tests pass but do not replace fresh live authorization evidence |
-| Native hosted Auth redirect | FAIL at audit: invalid-token, read-only redirect probe returned http://localhost:3000; no real token, account or email was used |
+| Native hosted Auth redirect | PASS after the approved fix: read-only invalid-token probe returns com.getyouthpay.bachat://auth/callback; declared remote configuration differences are zero |
+| Live security advisors | No ERROR findings; one existing WARN for disabled leaked-password protection and two INFO findings for deny-by-default private family tables |
 | Real inbox delivery and native link round trip | NOT VERIFIED; no mail provider/inbox details supplied |
 | Public support/privacy and account-data request process | OWNER ACTION: no public contact/policy details supplied; in-app data information is factual product documentation, not a published legal policy |
 | Forge verify / secret scrub | UNAVAILABLE: both requested commands returned MODULE_NOT_FOUND because the Forge runtime is absent; not represented as passes |
@@ -113,15 +115,18 @@ captured or uploaded. Historical reports are unchanged.
 
 ## Hosted release configuration
 
-The owner approved applying the narrow native Auth change. Approval is recorded;
-the initial CLI recheck still returned AccessTokenRequiredError, so the change
-was not applied at that point. Current live verification, rather than the local
-configuration file, determines whether this item is resolved.
+The owner explicitly approved the native Auth change, and it is applied to the
+existing project. Exactly three declared properties changed: site_url from
+localhost:3000 to the native callback, the native redirect allowlist, and the
+server password minimum from 6 to 10, matching the client. Email confirmations
+remain required. All seven undeclared remote properties were preserved; SMTP
+was untouched. The follow-up diff shows zero declared changes, and every read-only
+backend readiness probe passes. See the [sanitized application record](reports/ship-readiness-auth-2026-10-24.json).
 
-Prepared file: [release Auth settings](../config/release/supabase/config.toml).
-Default redirect and allowlist are the exact native callback; email confirmation,
-non-anonymous accounts and the 10-character password minimum remain enabled.
-Existing development settings remain separate. The file contains no SMTP secrets.
+Applied file: [release Auth settings](../config/release/supabase/config.toml).
+Existing development settings remain separate. Using the development profile on
+this same project would change the active release redirects; review explicitly
+before doing so. The release configuration contains no SMTP secrets.
 
 ```powershell
 npx --yes supabase@2.120.0 login
@@ -138,20 +143,24 @@ production changes. Never put provider credentials in Git or chat.
 
 ## Remaining public-launch checks
 
-1. Make the native redirect probe pass on the actual existing project.
-2. Configure/confirm production email delivery in Supabase and verify confirmation
+1. Configure/confirm production email delivery in Supabase and verify confirmation
    and recovery through a real inbox on the same device that requested each PKCE
    link. A mocked callback or prepared configuration does not prove delivery.
-3. Supply public privacy/support information and own the account-data request
+2. Supply public privacy/support information and own the account-data request
    process. Account deletion is not implemented by the current teen release;
    transaction soft deletion is not account removal.
-4. On a physical Android device, complete signup, confirmation, profile and PIN;
+3. On a physical Android device, complete signup, confirmation, profile and PIN;
    save/edit/delete an exact-paisa transaction; set a budget and savings goal;
    background/unlock; save while offline, restart and reconnect; check another
    signed-in device receives the change. Verify data cannot be viewed while locked.
-5. Review hosted Auth/database error logs and backup/restore availability in the
+4. Review hosted Auth/database error logs and backup/restore availability in the
    Supabase dashboard, and assign someone to handle launch support. No monitoring
    subscription or alert destination was invented in this code change.
+5. Review the existing disabled leaked-password-protection warning. This feature
+   requires Supabase Pro or above; enabling a paid feature or upgrading a plan is
+   outside the approved callback change. See [official password security](https://supabase.com/docs/guides/auth/password-security).
+   The two private-family-table RLS INFO findings reflect deliberate deny-by-default
+   storage for disabled family features; do not add permissive policies to silence them.
 
 Parent onboarding and lessons remain explicitly unavailable by the confirmed
 product scope. Production sessions cannot switch into sample profiles; the
