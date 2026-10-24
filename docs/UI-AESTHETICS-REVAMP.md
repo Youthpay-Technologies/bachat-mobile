@@ -47,7 +47,7 @@ Flutter 3.47.7 / Dart 3.13.5, October 24, 2026.
 | Git whitespace check | Passed |
 | Android APK / iOS device build | Not verified in this session |
 
-The standard Flutter CLI cannot launch child processes in this Windows sandbox
+During the initial restricted session, the standard Flutter CLI could not launch child processes
 (`CreateFile failed 5`, including its Git subprocess). Validation therefore used
 the installed analysis server through its JSON protocol, the installed frontend
 compiler, and the Flutter engine directly. A temporary runner in ignored build
@@ -94,11 +94,14 @@ remain unchanged. Captures display preview-only account controls where applicabl
 ## Delivery status
 
 Every source, test, documentation and individual screenshot change is committed
-on `feat/ui-aesthetics-revamp`. Main has not been changed. The existing expense
-experience commits are preserved in this branch's ancestry.
+on `feat/ui-aesthetics-revamp`. The earlier expense-experience commits are
+preserved in its ancestry, so PR #15 contains the combined onboarding and UI work.
 
-GitHub access was retried after the owner restored access, but this session still
-routes Git through an unavailable proxy at 127.0.0.1:9 and gh cannot authenticate.
-An escalation request was rejected because the session policy disallows sandbox
-approval. A GitHub PR could not be opened and no merge is claimed. The
-[prepared PR description](UI-AESTHETICS-PR.md) is ready for a session with access.
+GitHub access is restored. A stale GITHUB_TOKEN environment override was masking
+the valid saved login; GitHub commands now use that saved login. The branch is
+pushed and [PR #15](https://github.com/saim-x/bachat-mobile/pull/15) targets main.
+The earlier sandbox/network blocker is resolved. Standard local Flutter analysis
+also passes. GitHub Actions independently runs formatting, analysis, the complete
+test suite, a release web build and a debug Android APK build. The live PR checks
+and merge record are authoritative for final delivery status. Signed iOS and
+physical-device verification remain outside this Windows session.
