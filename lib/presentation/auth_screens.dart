@@ -291,7 +291,8 @@ class _ProfileSetupState extends ConsumerState<ProfileSetupScreen> {
               const SizedBox(height: 20),
               const PageHeading(
                 'A little about you',
-                subtitle: 'Start your teen profile. Bachat is for ages 13 to 18.',
+                subtitle:
+                    'Start your teen profile. Bachat is for ages 13 to 18.',
               ),
               TextFormField(
                 controller: name,
