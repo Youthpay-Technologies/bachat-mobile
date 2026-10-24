@@ -41,11 +41,12 @@ Flutter 3.47.7 / Dart 3.13.5, October 24, 2026.
 | --- | --- |
 | Dart formatting, lib/test/tool | 43 files, no changes |
 | Dart analysis server, lib/test/tool | Zero diagnostics |
-| All application unit/widget tests | 75 passed, zero failed |
+| All application unit/widget tests | 75 passed, zero failed; standard Flutter runner also passes |
 | Dedicated visual journeys | Four passed; 20 screenshots |
 | Optimized JavaScript compilation | Passed; 2,467,376 output characters |
 | Git whitespace check | Passed |
-| Android APK / iOS device build | Not verified in this session |
+| Packaged web / Android APK | Validated by the linked GitHub Actions PR checks |
+| Signed iOS / physical-device build | Not verified in this session |
 
 During the initial restricted session, the standard Flutter CLI could not launch child processes
 (`CreateFile failed 5`, including its Git subprocess). Validation therefore used
@@ -101,7 +102,8 @@ GitHub access is restored. A stale GITHUB_TOKEN environment override was masking
 the valid saved login; GitHub commands now use that saved login. The branch is
 pushed and [PR #15](https://github.com/saim-x/bachat-mobile/pull/15) targets main.
 The earlier sandbox/network blocker is resolved. Standard local Flutter analysis
-also passes. GitHub Actions independently runs formatting, analysis, the complete
+also passes. The standard Flutter test runner passes all 75 tests after setting
+TEMP and TMP to the workspace build directory because the system temp drive is full. GitHub Actions independently runs formatting, analysis, the complete
 test suite, a release web build and a debug Android APK build. The live PR checks
 and merge record are authoritative for final delivery status. Signed iOS and
 physical-device verification remain outside this Windows session.
