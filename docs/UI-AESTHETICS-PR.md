@@ -1,28 +1,22 @@
-# Polish Bachat's complete Flutter UI with UI Aesthetics
+# Polish Bachat UI and add responsive navigation
 
-Bachat's screens gave primary actions, secondary summaries and individual panels
-similar emphasis. Apply the requested kasonye/ui-aesthetics-skill guidance to make
-spending and recent activity easier to scan and carry one visual system through
-the account, PIN and everyday money journeys.
+Apply the requested kasonye/ui-aesthetics-skill guidance across the Flutter app.
+Home gives spending, entry actions and recent activity clear priority. Shared
+headings, restrained light/dark surfaces, consistent controls and empty states
+unify the account, PIN, activity, planning and learning screens. Phone navigation
+anchors to the bottom; wider screens use a side rail while preserving tab and
+search state. Narrow money sheets and large-text layouts retain usable controls.
 
-- Unify light/dark neutral surfaces, typography, control geometry, page headings
-  and empty states while retaining the confirmed Bachat brand.
-- Place recent activity above supporting Home metrics; simplify planning and
-  introduction panels; align money fields and give narrow sheets more space.
-- Anchor phone navigation and use a side rail on wider screens, preserving tab
-  and search state when resizing. Retain compact navigation in short landscape.
-- Add responsive regression tests and 20 reproducible phone/wide captures.
+Validation: standard Flutter analysis has no issues and all 75 application tests
+pass. Four visual journeys produce 20 phone/wide light/dark captures. Formatting
+and whitespace checks pass, and optimized JavaScript compiles. GitHub Actions
+also checks release web and debug Android builds; see the PR checks for their
+final results. Signed iOS and physical-device testing remain unverified.
 
-Validation: zero analysis diagnostics; 43 Dart files formatted; all 75 application
-unit/widget tests pass; four visual journeys pass; optimized JavaScript compiles;
-git diff --check passes. The Windows sandbox required invoking the installed
-analysis server, compiler and Flutter test engine directly; full packaged web,
-Android and signed iOS builds have not been verified in this session.
+[Review the screenshots and verification](https://github.com/saim-x/bachat-mobile/blob/feat/ui-aesthetics-revamp/docs/UI-AESTHETICS-REVAMP.md).
+Historical PDF reports remain unchanged. This branch preserves the earlier
+expense-experience commits from PR #14, so merging it delivers the combined
+onboarding and UI work. All changes, including individual screenshots, have
+separate commits. Merge with a merge commit to preserve that history.
 
-See docs/UI-AESTHETICS-REVAMP.md for the screenshots, exact validation method and
-reproduction commands. Historical PDF reports remain unchanged. This branch
-preserves the existing expense-experience branch's commits, which were already
-present in the active workspace and are ahead of the locally known main.
-
-Intended base: main. Intended head: feat/ui-aesthetics-revamp.
-This file is a prepared description; it does not assert that a GitHub PR exists.
+Tracked in https://github.com/saim-x/bachat-mobile/pull/15.
