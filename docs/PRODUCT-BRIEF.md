@@ -25,11 +25,20 @@ Google sign-in, bank/SMS/Gmail imports, squads, rewards and parent personal spen
 
 ## Interface and architecture
 
+The expense experience now includes an interactive three-step introduction with explicitly labeled examples, direct sign-in, Back and Skip. Example selections never create transactions, budgets or goals. Home prioritizes recent activity; Activity shows totals for the filtered results; first-expense, budget and goal actions are available in empty states. All motion respects the device's reduced-motion preference. See [the UX improvement plan](UX-REVAMP.md).
+
 Use the confirmed cobalt #0C38A9, sunshine #FFDE59 and tangerine #FF751E identity, with Instrument Sans headings, Inter interface text and selective Instrument Serif Italic accents. The lowercase-b symbol replaces the YP tile, with “by YouthPay” retained as endorsement. All requested font families and licenses are bundled for offline use. Keep semantic light/dark themes, flat surfaces and native accessible controls; see [design](DESIGN.md) and [redesign verification](BRAND-REDESIGN.md).
 
 Flutter uses Riverpod, native navigation, an account-gated tab shell, and separate domain, application, data and presentation layers. Sembast/IndexedDB stores account snapshots and queued edits; Supabase provides Auth and PostgreSQL with RLS. Amounts use integer paisa. Cross-device conflicts use the last successfully uploaded record; savings changes on different devices are not merged additively.
 
 ## Delivery
+
+The October 24 UI Aesthetics pass refines the complete Flutter interface using
+the requested kasonye/ui-aesthetics-skill repository. Home places recent activity
+before supporting totals. Shared page headings, neutral surfaces, consistent
+controls and responsive bottom/side navigation carry the visual system across
+the account and money journeys. See [the revamp record](UI-AESTHETICS-REVAMP.md)
+for current verification and delivery status.
 
 Private repository: https://github.com/saim-x/bachat-mobile. Commit each coherent change and merge through verified PRs. The old local Next.js app has been removed. Mac team members handle iOS signing and physical-device verification.
 

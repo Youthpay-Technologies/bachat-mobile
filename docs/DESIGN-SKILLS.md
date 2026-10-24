@@ -1,5 +1,20 @@
 # Requested design skills
 
+## UI Aesthetics, October 24, 2026
+
+Source: https://github.com/kasonye/ui-aesthetics-skill
+
+Read the canonical SKILL.md and its rewrite-playbook, component-aesthetics,
+interaction-states and color-system references. Applied its medium-restructure
+workflow to the complete Flutter UI: composition before decoration, neutral surface
+hierarchy, restrained accent roles, shared control geometry and deliberate phone
+and wide-screen navigation. The existing product identity takes precedence over
+generic palette defaults. No web framework or animation package was added.
+
+See [the implementation and validation record](UI-AESTHETICS-REVAMP.md).
+
+## Earlier domain guidance
+
 Source: https://github.com/jakubkrehel/skills
 
 Recursively discovered and installed all 13 SKILL.md packages during discovery:

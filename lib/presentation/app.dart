@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 
 import '../application/controller.dart';
 import '../design/components.dart';
-import '../design/theme.dart';
 import '../design/brand.dart';
 import '../design/brand_panels.dart';
 import '../domain/models.dart';
@@ -13,6 +12,8 @@ import '../domain/activity_filter.dart';
 import 'activity_filters.dart';
 import 'forms.dart';
 import 'auth_screens.dart';
+import 'onboarding.dart';
+export 'onboarding.dart' show WelcomeScreen;
 
 class AppGate extends ConsumerWidget {
   const AppGate({super.key});
@@ -67,11 +68,20 @@ class AppGate extends ConsumerWidget {
 }
 
 class PageBody extends StatelessWidget {
-  const PageBody({super.key, required this.children});
+  const PageBody({super.key, required this.children, this.storageKey});
   final List<Widget> children;
+  final String? storageKey;
   @override
   Widget build(BuildContext context) => SingleChildScrollView(
-    padding: const EdgeInsets.fromLTRB(24, 24, 24, 36),
+    key: storageKey == null ? null : PageStorageKey(storageKey),
+    physics: const AlwaysScrollableScrollPhysics(),
+    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+    padding: EdgeInsets.fromLTRB(
+      MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
+      24,
+      MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
+      36,
+    ),
     child: Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 600),
@@ -102,134 +112,6 @@ class AppError extends StatelessWidget {
         );
 }
 
-class WelcomeScreen extends ConsumerStatefulWidget {
-  const WelcomeScreen({super.key});
-  @override
-  ConsumerState<WelcomeScreen> createState() => _WelcomeState();
-}
-
-class _WelcomeState extends ConsumerState<WelcomeScreen> {
-  int step = 0;
-  bool authenticating = false;
-  UserRole role = UserRole.teen;
-  @override
-  Widget build(BuildContext context) {
-    final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
-    if (authenticating) return const AuthScreen();
-    return Scaffold(
-      body: SafeArea(
-        child: PageBody(
-          children: [
-            const BachatMark(large: true),
-            const SizedBox(height: 40),
-            BrandHeadline(
-              lead: step == 0
-                  ? 'Make money'
-                  : step == 1
-                  ? 'Small habits.'
-                  : 'Your money.',
-              accent: step == 0
-                  ? 'make sense.'
-                  : step == 1
-                  ? 'Real progress.'
-                  : 'Your way.',
-            ),
-            const SizedBox(height: 18),
-            Text(
-              step == 0
-                  ? 'Track the everyday. Make a plan. Save for something good.'
-                  : step == 1
-                  ? 'See where your money goes and make a little room for what matters.'
-                  : 'Track spending, build a budget and save for what matters.',
-              style: t.bodyLarge,
-            ),
-            const SizedBox(height: 28),
-            Surface(
-              tone: Theme.of(context).colorScheme.secondaryContainer,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const HabitIllustration(compact: true),
-                  const SizedBox(height: 20),
-                  Text(
-                    step == 0
-                        ? 'Your everyday, in perspective'
-                        : step == 1
-                        ? 'Build a habit that lasts'
-                        : 'A plan worth looking forward to',
-                    style: t.titleLarge,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    step == 0
-                        ? 'Food, rides, a little treat. Give every rupee a place.'
-                        : step == 1
-                        ? 'A simple budget and a saving goal can make everyday choices easier.'
-                        : 'Start with a small saving goal. Keep your progress close.',
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 32),
-            if (step < 2) ...[
-              Semantics(
-                label: 'Introduction ${step + 1} of 3',
-                child: Row(
-                  children: List.generate(
-                    3,
-                    (i) => Container(
-                      margin: const EdgeInsets.only(right: 6),
-                      width: i == step ? 28 : 8,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: i == step
-                            ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.outlineVariant,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () => setState(() => step++),
-                  child: const Text('Continue'),
-                ),
-              ),
-              Center(
-                child: TextButton(
-                  onPressed: () => setState(() => step = 2),
-                  child: const Text('Skip introduction'),
-                ),
-              ),
-            ] else ...[
-              RoleChoices(
-                value: role,
-                onChanged: (value) => setState(() => role = value),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: c.busy
-                      ? null
-                      : () => setState(() => authenticating = true),
-                  icon: const Icon(Icons.arrow_forward_rounded),
-                  label: const Text('Continue as a teen'),
-                ),
-              ),
-            ],
-            AppError(c),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class DashboardShell extends ConsumerStatefulWidget {
   const DashboardShell({super.key});
   @override
@@ -240,10 +122,63 @@ class _ShellState extends ConsumerState<DashboardShell> {
   int tab = 0;
   @override
   Widget build(BuildContext context) {
+    final viewport = MediaQuery.sizeOf(context);
+    final wide = viewport.width >= 840 && viewport.height >= 600;
+    const destinations = [
+      NavigationDestination(
+        icon: Icon(Icons.grid_view_outlined),
+        selectedIcon: Icon(Icons.grid_view_rounded),
+        label: 'Home',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.receipt_long_outlined),
+        selectedIcon: Icon(Icons.receipt_long_rounded),
+        label: 'Activity',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.savings_outlined),
+        selectedIcon: Icon(Icons.savings_rounded),
+        label: 'Plan',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.auto_stories_outlined),
+        selectedIcon: Icon(Icons.auto_stories_rounded),
+        label: 'Learn',
+      ),
+      NavigationDestination(
+        icon: Icon(Icons.person_outline),
+        selectedIcon: Icon(Icons.person_rounded),
+        label: 'You',
+      ),
+    ];
     return Scaffold(
       body: SafeArea(
-        child: Column(
+        child: Row(
           children: [
+            if (wide) ...[
+              NavigationRail(
+                selectedIndex: tab,
+                onDestinationSelected: (value) => setState(() => tab = value),
+                minWidth: MediaQuery.textScalerOf(context).scale(12) > 18
+                    ? 160
+                    : 104,
+                labelType: NavigationRailLabelType.all,
+                leading: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: BachatSymbol(),
+                ),
+                destinations: destinations
+                    .map(
+                      (destination) => NavigationRailDestination(
+                        icon: destination.icon,
+                        selectedIcon: destination.selectedIcon,
+                        label: Text(destination.label),
+                      ),
+                    )
+                    .toList(),
+              ),
+              const VerticalDivider(width: 1),
+            ],
             Expanded(
               child: IndexedStack(
                 index: tab,
@@ -262,42 +197,26 @@ class _ShellState extends ConsumerState<DashboardShell> {
           ],
         ),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(BachatRadii.sheet),
-          child: NavigationBar(
-            selectedIndex: tab,
-            animationDuration: MediaQuery.disableAnimationsOf(context)
-                ? Duration.zero
-                : const Duration(milliseconds: 150),
-            onDestinationSelected: (value) => setState(() => tab = value),
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.grid_view_outlined),
-                selectedIcon: Icon(Icons.grid_view_rounded),
-                label: 'Home',
+      bottomNavigationBar: wide
+          ? null
+          : DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                border: Border(
+                  top: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                  ),
+                ),
               ),
-              NavigationDestination(
-                icon: Icon(Icons.receipt_long_outlined),
-                label: 'Activity',
+              child: NavigationBar(
+                selectedIndex: tab,
+                animationDuration: MediaQuery.disableAnimationsOf(context)
+                    ? Duration.zero
+                    : const Duration(milliseconds: 150),
+                onDestinationSelected: (value) => setState(() => tab = value),
+                destinations: destinations,
               ),
-              NavigationDestination(
-                icon: Icon(Icons.savings_outlined),
-                label: 'Plan',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.auto_stories_outlined),
-                label: 'Learn',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.person_outline),
-                label: 'You',
-              ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }
@@ -334,10 +253,20 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
-    final summary = MoneySummary(c.entries, DateTime.now());
+    final now = DateTime.now();
+    final summary = MoneySummary(c.entries, now);
+    final expenseCount = c.entries
+        .where(
+          (entry) =>
+              entry.direction == EntryDirection.expense &&
+              entry.occurredAt.year == now.year &&
+              entry.occurredAt.month == now.month,
+        )
+        .length;
     return RefreshIndicator(
       onRefresh: c.refresh,
       child: PageBody(
+        storageKey: 'home',
         children: [
           Row(
             children: [
@@ -372,14 +301,44 @@ class HomePage extends ConsumerWidget {
             const FamilyPage(embedded: true)
           else ...[
             SpendingHero(
-              month: DateFormat.MMMM().format(DateTime.now()),
+              month: DateFormat.MMMM().format(now),
               amount: money(summary.spentMinor),
+              contextLabel: expenseCount == 0
+                  ? 'Start this month with your first expense.'
+                  : '$expenseCount ${expenseCount == 1 ? 'expense' : 'expenses'} recorded this month.',
             ),
             const SizedBox(height: 16),
             if (!c.isParent) MoneyActions(c),
+            SectionHeading(
+              'Recent activity',
+              action: 'See all',
+              onAction: onActivity,
+            ),
+            if (c.entries.isEmpty)
+              EmptyState(
+                icon: Icons.receipt_long_outlined,
+                title: 'Your story starts with one entry',
+                body:
+                    'Add a purchase or allowance. Your recent activity will appear here.',
+                action: c.isParent ? null : 'Add your first expense',
+                onAction: () => entryForm(context, c),
+              )
+            else
+              Surface(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Column(
+                  children: c.entries
+                      .take(3)
+                      .map((e) => EntryTile(e, c))
+                      .toList(),
+                ),
+              ),
             const SectionHeading('Overview'),
             Surface(
-              tone: Theme.of(context).colorScheme.primaryContainer,
+              tone: Theme.of(context).colorScheme.surfaceContainerLow,
               child: Wrap(
                 spacing: 32,
                 runSpacing: 16,
@@ -397,12 +356,19 @@ class HomePage extends ConsumerWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 8),
+            Text(
+              'Net flow is money in minus spending and money set aside.',
+              style: t.bodySmall,
+            ),
             const SectionHeading('Spending breakdown'),
             if (summary.byCategory.isEmpty)
-              const EmptyState(
+              EmptyState(
                 icon: Icons.pie_chart_outline,
                 title: 'A clearer picture starts here',
                 body: 'Record an expense to see your spending by category.',
+                action: c.isParent ? null : 'Record an expense',
+                onAction: () => entryForm(context, c),
               )
             else
               Surface(
@@ -413,9 +379,12 @@ class HomePage extends ConsumerWidget {
                           padding: const EdgeInsets.symmetric(vertical: 8),
                           child: Column(
                             children: [
-                              Row(
+                              Wrap(
+                                alignment: WrapAlignment.spaceBetween,
+                                spacing: 16,
+                                runSpacing: 4,
                                 children: [
-                                  Expanded(child: Text(e.key)),
+                                  Text(e.key),
                                   Text(money(e.value), style: t.titleSmall),
                                 ],
                               ),
@@ -436,41 +405,18 @@ class HomePage extends ConsumerWidget {
                 ),
               ),
             SectionHeading(
-              'Recent activity',
-              action: 'See all',
-              onAction: onActivity,
-            ),
-            if (c.entries.isEmpty)
-              const EmptyState(
-                icon: Icons.receipt_long_outlined,
-                title: 'Your story starts with one entry',
-                body:
-                    'Add a purchase or allowance. Your recent activity will appear here.',
-              )
-            else
-              Surface(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: Column(
-                  children: c.entries
-                      .take(3)
-                      .map((e) => EntryTile(e, c))
-                      .toList(),
-                ),
-              ),
-            SectionHeading(
               'Savings goals',
               action: 'Your plan',
               onAction: onPlan,
             ),
             if (c.goals.isEmpty)
-              const EmptyState(
+              EmptyState(
                 icon: Icons.flag_outlined,
                 title: 'Give your savings a purpose',
                 body:
                     'Create a goal in Plan and take it one small step at a time.',
+                action: c.isParent ? null : 'Create a savings goal',
+                onAction: () => goalForm(context, c),
               )
             else
               GoalCarousel(c),
@@ -490,7 +436,7 @@ class _Metric extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(label, style: Theme.of(context).textTheme.bodySmall),
-      const SizedBox(height: 4),
+      const SizedBox(height: 6),
       Text(value, style: Theme.of(context).textTheme.titleMedium),
     ],
   );
@@ -567,12 +513,16 @@ class EntryTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                backgroundColor: entry.direction == EntryDirection.savings
+                    ? Theme.of(context).colorScheme.secondaryContainer
+                    : Theme.of(context).colorScheme.primaryContainer,
                 child: Icon(
                   entry.direction == EntryDirection.income
                       ? Icons.south_west
                       : categoryIcon(entry.category),
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  color: entry.direction == EntryDirection.savings
+                      ? Theme.of(context).colorScheme.onSecondaryContainer
+                      : Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
               ),
               const SizedBox(width: 12),
@@ -585,9 +535,25 @@ class EntryTile extends StatelessWidget {
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      '${entry.categoryLabel} · ${DateFormat.MMMd().format(entry.occurredAt)}',
-                      style: Theme.of(context).textTheme.bodySmall,
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        Text(
+                          '${switch (entry.direction) {
+                            EntryDirection.expense => 'Spent',
+                            EntryDirection.income => 'Received',
+                            EntryDirection.savings => 'Set aside',
+                          }} · ${entry.categoryLabel}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        Text(
+                          DateFormat.MMMd()
+                              .format(entry.occurredAt)
+                              .replaceAll(' ', '\u00a0'),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
                     ),
                     if (compact)
                       Padding(
@@ -604,6 +570,44 @@ class EntryTile extends StatelessWidget {
       );
     },
   );
+}
+
+class ActivityTotals extends StatelessWidget {
+  const ActivityTotals(this.entries, {super.key});
+  final List<MoneyEntry> entries;
+
+  @override
+  Widget build(BuildContext context) {
+    int total(EntryDirection direction) => entries
+        .where((entry) => entry.direction == direction)
+        .fold(0, (sum, entry) => sum + entry.amountMinor);
+    return Surface(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${entries.length} ${entries.length == 1 ? 'transaction' : 'transactions'} · Current results',
+            style: Theme.of(context).textTheme.titleSmall,
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 24,
+            runSpacing: 12,
+            children: [
+              for (final direction in EntryDirection.values)
+                if (entries.any((entry) => entry.direction == direction))
+                  _Metric(switch (direction) {
+                    EntryDirection.expense => 'Spent',
+                    EntryDirection.income => 'Received',
+                    EntryDirection.savings => 'Set aside',
+                  }, money(total(direction))),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class ActivityPage extends ConsumerStatefulWidget {
@@ -643,35 +647,27 @@ class _ActivityState extends ConsumerState<ActivityPage> {
           .add(entry);
     }
     return PageBody(
+      storageKey: 'activity',
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Activity',
-                style: Theme.of(context).textTheme.headlineLarge,
-              ),
+        PageHeading(
+          'Activity',
+          action: IconButton.outlined(
+            tooltip: 'Filter activity',
+            icon: Badge(
+              isLabelVisible: options.activeCount > 0,
+              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+              textColor: Theme.of(context).colorScheme.onPrimaryContainer,
+              label: Text('${options.activeCount}'),
+              child: const Icon(Icons.tune_rounded),
             ),
-            IconButton.outlined(
-              tooltip: 'Filter activity',
-              icon: Badge(
-                isLabelVisible: options.activeCount > 0,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                textColor: Theme.of(context).colorScheme.onPrimaryContainer,
-                label: Text('${options.activeCount}'),
-                child: const Icon(Icons.tune_rounded),
-              ),
-              onPressed: () async {
-                final selected = await activityFilterSheet(context, options);
-                if (selected != null && mounted) {
-                  setState(() => options = selected);
-                }
-              },
-            ),
-          ],
+            onPressed: () async {
+              final selected = await activityFilterSheet(context, options);
+              if (selected != null && mounted) {
+                setState(() => options = selected);
+              }
+            },
+          ),
         ),
-
-        const SizedBox(height: 24),
         ChildPicker(c),
         TextField(
           controller: search,
@@ -728,6 +724,10 @@ class _ActivityState extends ConsumerState<ActivityPage> {
         const SizedBox(height: 20),
         if (!c.isParent) MoneyActions(c),
         const SizedBox(height: 16),
+        if (entries.isNotEmpty) ...[
+          ActivityTotals(entries),
+          const SizedBox(height: 8),
+        ],
         if (entries.isEmpty)
           EmptyState(
             icon: Icons.receipt_long_outlined,
@@ -815,14 +815,13 @@ class PlanPage extends ConsumerWidget {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
     final summary = MoneySummary(c.entries, DateTime.now());
     return PageBody(
+      storageKey: 'plan',
       children: [
-        Text('Plan', style: t.headlineLarge),
-        const SizedBox(height: 8),
-        Text(
-          'Make room for what matters.',
-          style: BachatBrand.editorial(context, size: 30),
+        PageHeading(
+          'Plan',
+          subtitle:
+              '${DateFormat.yMMMM().format(DateTime.now())} · Your monthly plan',
         ),
-        const SizedBox(height: 16),
         ChildPicker(c),
         const SectionHeading('Set aside'),
         Surface(
@@ -855,11 +854,13 @@ class PlanPage extends ConsumerWidget {
           onAction: () => budgetForm(context, c),
         ),
         if (c.budgets.isEmpty)
-          const EmptyState(
+          EmptyState(
             icon: Icons.donut_large_outlined,
             title: 'Make a little room',
             body:
                 'Set a monthly category limit to keep everyday spending in perspective.',
+            action: c.isParent ? null : 'Set your first budget',
+            onAction: () => budgetForm(context, c),
           ),
         if (!c.isParent && c.reusableBudgets.isNotEmpty) ReuseBudgetsButton(c),
         ...c.budgets.map((b) {
@@ -892,6 +893,8 @@ class PlanPage extends ConsumerWidget {
                   ],
                   const SizedBox(height: 16),
                   LinearProgressIndicator(
+                    semanticsLabel:
+                        '${b.category} monthly budget: ${money(spent)} spent of ${money(b.limitMinor)}',
                     value: (spent / b.limitMinor).clamp(0, 1),
                     minHeight: 6,
                     color: spent > b.limitMinor
@@ -1001,7 +1004,6 @@ class GoalCard extends StatelessWidget {
   final AppController c;
   @override
   Widget build(BuildContext context) => Surface(
-    tone: Theme.of(context).colorScheme.secondaryContainer,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1037,6 +1039,8 @@ class GoalCard extends StatelessWidget {
         Text('${money(goal.savedMinor)} of ${money(goal.targetMinor)}'),
         const SizedBox(height: 12),
         LinearProgressIndicator(
+          semanticsLabel:
+              '${goal.title} savings goal: ${money(goal.savedMinor)} saved of ${money(goal.targetMinor)}',
           value: goal.progress,
           minHeight: 6,
           borderRadius: BorderRadius.circular(6),
@@ -1068,11 +1072,10 @@ class LearnPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => PageBody(
     children: [
-      Text('Learn', style: Theme.of(context).textTheme.headlineLarge),
-      const SizedBox(height: 32),
+      const PageHeading('Learn'),
       Surface(
-        tone: Theme.of(context).colorScheme.secondaryContainer,
-        padding: const EdgeInsets.all(28),
+        tone: Theme.of(context).colorScheme.surfaceContainerLow,
+        padding: const EdgeInsets.all(24),
         child: const HabitIllustration(),
       ),
       const SizedBox(height: 28),
@@ -1398,8 +1401,7 @@ class SettingsPage extends ConsumerWidget {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
     return PageBody(
       children: [
-        Text('You', style: t.headlineLarge),
-        const SizedBox(height: 32),
+        const PageHeading('You'),
         Surface(
           child: ListTile(
             contentPadding: EdgeInsets.zero,

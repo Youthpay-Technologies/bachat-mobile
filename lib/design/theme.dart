@@ -3,18 +3,18 @@ import 'package:flutter/material.dart';
 import 'brand.dart';
 
 abstract final class BachatRadii {
-  static const compact = 10.0;
-  static const control = 16.0;
-  static const surface = 24.0;
-  static const sheet = 32.0;
+  static const compact = 8.0;
+  static const control = 12.0;
+  static const surface = 20.0;
+  static const sheet = 24.0;
 }
 
 abstract final class BachatTheme {
   static ThemeData build(Brightness brightness) {
     final dark = brightness == Brightness.dark;
     final accent = dark ? const Color(0xFFB5C8FF) : BachatBrand.cobalt;
-    final text = dark ? const Color(0xFFF2F5FF) : BachatBrand.ink;
-    final canvas = dark ? const Color(0xFF0D1529) : BachatBrand.canvas;
+    final text = dark ? const Color(0xFFF0F2F6) : BachatBrand.ink;
+    final canvas = dark ? const Color(0xFF101319) : BachatBrand.canvas;
     final scheme =
         ColorScheme.fromSeed(
           seedColor: accent,
@@ -22,12 +22,15 @@ abstract final class BachatTheme {
         ).copyWith(
           primary: accent,
           onPrimary: dark ? const Color(0xFF10275E) : Colors.white,
-          surface: Color(dark ? 0xFF17233D : 0xFFFFFFFF),
+          surface: Color(dark ? 0xFF1A1E26 : 0xFFFFFFFF),
+          surfaceContainerLow: Color(dark ? 0xFF161A21 : 0xFFF0F2F6),
+          surfaceContainer: Color(dark ? 0xFF222731 : 0xFFE9EDF3),
+          surfaceContainerHigh: Color(dark ? 0xFF2A303C : 0xFFE2E7EF),
           onSurface: text,
-          onSurfaceVariant: Color(dark ? 0xFFB7C3DE : 0xFF566480),
-          outline: Color(dark ? 0xFF8393B3 : 0xFF73819A),
-          outlineVariant: Color(dark ? 0xFF2C3C5C : 0xFFDEE4F0),
-          primaryContainer: Color(dark ? 0xFF243A6A : 0xFFE9EFFF),
+          onSurfaceVariant: Color(dark ? 0xFFAFB7C6 : 0xFF596478),
+          outline: Color(dark ? 0xFF7F8A9E : 0xFF788398),
+          outlineVariant: Color(dark ? 0xFF333B49 : 0xFFDDE2EB),
+          primaryContainer: Color(dark ? 0xFF223458 : 0xFFEAF0FD),
           onPrimaryContainer: dark
               ? const Color(0xFFDCE5FF)
               : BachatBrand.cobalt,
@@ -48,8 +51,22 @@ abstract final class BachatTheme {
       fontFamily: BachatBrand.interfaceFont,
     );
     return base.copyWith(
-      bottomSheetTheme: BottomSheetThemeData(
+      appBarTheme: AppBarTheme(
         backgroundColor: canvas,
+        foregroundColor: text,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+      ),
+      listTileTheme: ListTileThemeData(
+        iconColor: scheme.onSurfaceVariant,
+        minVerticalPadding: 12,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BachatRadii.control),
+        ),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: scheme.surface,
         surfaceTintColor: Colors.transparent,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
@@ -64,17 +81,17 @@ abstract final class BachatTheme {
             displaySmall: TextStyle(
               fontFamily: BachatBrand.headingFont,
               fontFamilyFallback: const [BachatBrand.interfaceFont],
-              fontSize: 48,
+              fontSize: 44,
               fontWeight: FontWeight.w700,
               height: 1.1,
-              letterSpacing: -1.4,
+              letterSpacing: -1.2,
               color: text,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
             headlineLarge: TextStyle(
               fontFamily: BachatBrand.headingFont,
               fontFamilyFallback: const [BachatBrand.interfaceFont],
-              fontSize: 30,
+              fontSize: 32,
               fontWeight: FontWeight.w700,
               height: 1.2,
               letterSpacing: -0.7,
@@ -83,7 +100,7 @@ abstract final class BachatTheme {
             headlineMedium: TextStyle(
               fontFamily: BachatBrand.headingFont,
               fontFamilyFallback: const [BachatBrand.interfaceFont],
-              fontSize: 28,
+              fontSize: 26,
               fontWeight: FontWeight.w700,
               height: 1.2,
               color: text,
@@ -139,13 +156,6 @@ abstract final class BachatTheme {
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
-      appBarTheme: AppBarTheme(
-        backgroundColor: canvas,
-        foregroundColor: text,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-      ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size(48, 54),
@@ -161,9 +171,13 @@ abstract final class BachatTheme {
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
+        errorMaxLines: 6,
         filled: true,
         fillColor: scheme.surface,
-        contentPadding: const EdgeInsets.all(18),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 18,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(BachatRadii.control),
           borderSide: BorderSide(color: scheme.outline),
@@ -177,6 +191,24 @@ abstract final class BachatTheme {
           borderSide: BorderSide(color: scheme.primary, width: 2),
         ),
         labelStyle: TextStyle(color: scheme.onSurfaceVariant),
+      ),
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: scheme.surface,
+        indicatorColor: scheme.primaryContainer,
+        selectedIconTheme: IconThemeData(color: scheme.onPrimaryContainer),
+        unselectedIconTheme: IconThemeData(color: scheme.onSurfaceVariant),
+        selectedLabelTextStyle: TextStyle(
+          fontFamily: BachatBrand.interfaceFont,
+          color: scheme.onSurface,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelTextStyle: TextStyle(
+          fontFamily: BachatBrand.interfaceFont,
+          color: scheme.onSurfaceVariant,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: scheme.surface,
@@ -224,7 +256,10 @@ abstract final class BachatTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: scheme.onSurface,
-          minimumSize: const Size(48, 52),
+          backgroundColor: scheme.surface,
+          side: BorderSide(color: scheme.outline),
+          minimumSize: const Size(48, 54),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(BachatRadii.control),
           ),
@@ -239,6 +274,16 @@ abstract final class BachatTheme {
         ),
       ),
       chipTheme: base.chipTheme.copyWith(
+        backgroundColor: scheme.surface,
+        selectedColor: scheme.primaryContainer,
+        showCheckmark: true,
+        side: BorderSide(color: scheme.outlineVariant),
+        labelStyle: TextStyle(
+          fontFamily: BachatBrand.interfaceFont,
+          color: scheme.onSurface,
+          fontSize: 13,
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BachatRadii.compact),
         ),

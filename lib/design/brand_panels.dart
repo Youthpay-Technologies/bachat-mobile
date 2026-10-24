@@ -21,8 +21,14 @@ class BrandHeadline extends StatelessWidget {
 }
 
 class SpendingHero extends StatelessWidget {
-  const SpendingHero({super.key, required this.month, required this.amount});
+  const SpendingHero({
+    super.key,
+    required this.month,
+    required this.amount,
+    required this.contextLabel,
+  });
   final String month, amount;
+  final String contextLabel;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -46,14 +52,11 @@ class SpendingHero extends StatelessWidget {
               ),
             ),
             const ExcludeSemantics(
-              child: Icon(
-                Icons.north_east_rounded,
-                color: BachatBrand.sunshine,
-              ),
+              child: Icon(Icons.receipt_long_outlined, color: Colors.white70),
             ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         Text(
           amount,
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
@@ -62,23 +65,16 @@ class SpendingHero extends StatelessWidget {
             fontSize: MediaQuery.textScalerOf(context).scale(14) > 20 ? 28 : 44,
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
+        const Divider(color: Color(0xFF4668BA), height: 1),
+        const SizedBox(height: 16),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              margin: const EdgeInsetsDirectional.only(top: 5, end: 8),
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: BachatBrand.sunshine,
-                shape: BoxShape.circle,
-              ),
-            ),
-            const Expanded(
+            Expanded(
               child: Text(
-                'Your everyday, in perspective.',
-                style: TextStyle(
+                contextLabel,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 13,
                   height: 1.5,

@@ -61,6 +61,18 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<bool>(controllerProvider.select((c) => c.signedIn), (
+      _,
+      signedIn,
+    ) {
+      if (signedIn && !widget.recovery) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+        });
+      }
+    });
     final c = ref.watch(controllerProvider);
     final title = widget.recovery
         ? 'Choose a new password'
@@ -70,6 +82,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         ? 'Make room for your goals'
         : 'Welcome back';
     return Scaffold(
+      appBar: !widget.recovery && Navigator.of(context).canPop()
+          ? AppBar(
+              leading: const BackButton(),
+              title: const Text('Your account'),
+            )
+          : null,
       body: SafeArea(
         child: AutofillGroup(
           child: Form(
@@ -77,9 +95,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             child: PageBody(
               children: [
                 const BachatMark(),
-                const SizedBox(height: 44),
-                Text(title, style: Theme.of(context).textTheme.headlineLarge),
-                const SizedBox(height: 12),
+                const SizedBox(height: 28),
+                if (create) ...[
+                  const StatusBadge(
+                    '1 · Create account   2 · Verify email   3 · Profile',
+                  ),
+                  const SizedBox(height: 20),
+                ],
+                PageHeading(title),
                 Text(
                   widget.recovery
                       ? 'Use a password you have not used before.'
@@ -95,7 +118,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     controller: email,
                     enabled: !c.busy,
                     keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
+                    textInputAction: reset
+                        ? TextInputAction.done
+                        : TextInputAction.next,
+                    onFieldSubmitted: (_) {
+                      if (reset) submit();
+                    },
                     autofillHints: const [AutofillHints.email],
                     autocorrect: false,
                     decoration: const InputDecoration(labelText: 'Email'),
@@ -173,7 +201,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     onPressed: c.busy ? null : submit,
                     child: Text(
                       c.busy
-                          ? 'Please wait...'
+                          ? 'Please wait…'
                           : widget.recovery
                           ? 'Update password'
                           : reset
@@ -255,22 +283,24 @@ class _ProfileSetupState extends ConsumerState<ProfileSetupScreen> {
           child: PageBody(
             children: [
               const BachatMark(),
-              const SizedBox(height: 44),
-              Text(
+              const SizedBox(height: 28),
+              const StatusBadge(
+                'Email verified · Complete your profile',
+                icon: Icons.check_circle_outline,
+              ),
+              const SizedBox(height: 20),
+              const PageHeading(
                 'A little about you',
-                style: Theme.of(context).textTheme.headlineLarge,
+                subtitle:
+                    'Start your teen profile. Bachat is for ages 13 to 18.',
               ),
-              const SizedBox(height: 12),
-              const Text(
-                'Start your teen profile. Bachat is for ages 13 to 18.',
-              ),
-              const SizedBox(height: 32),
               TextFormField(
                 controller: name,
                 enabled: !c.busy,
                 maxLength: 60,
                 textCapitalization: TextCapitalization.words,
                 autofillHints: const [AutofillHints.givenName],
+                textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(labelText: 'Your name'),
                 validator: (v) =>
                     (v ?? '').trim().isEmpty ? 'Enter your name.' : null,
@@ -278,6 +308,8 @@ class _ProfileSetupState extends ConsumerState<ProfileSetupScreen> {
               const SizedBox(height: 20),
               DropdownButtonFormField<int>(
                 initialValue: age,
+                isExpanded: true,
+                itemHeight: null,
                 decoration: const InputDecoration(labelText: 'Age'),
                 items: List.generate(
                   6,
@@ -296,6 +328,7 @@ class _ProfileSetupState extends ConsumerState<ProfileSetupScreen> {
                       ? null
                       : () async {
                           if (form.currentState!.validate()) {
+                            FocusScope.of(context).unfocus();
                             await c.createProfile(
                               name.text,
                               UserRole.teen,
@@ -303,7 +336,7 @@ class _ProfileSetupState extends ConsumerState<ProfileSetupScreen> {
                             );
                           }
                         },
-                  child: Text(c.busy ? 'Saving...' : 'Start tracking'),
+                  child: Text(c.busy ? 'Saving…' : 'Start tracking'),
                 ),
               ),
               TextButton(
