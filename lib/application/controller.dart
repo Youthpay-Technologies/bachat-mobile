@@ -779,8 +779,17 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> setTheme(String value) async {
+    if (!const ['light', 'dark', 'system'].contains(value)) {
+      throw const FormatException('Choose light, dark or system appearance.');
+    }
+    try {
+      await repository.saveTheme(value);
+    } catch (_) {
+      throw const FormatException(
+        'Unable to save your appearance. Check available storage and try again.',
+      );
+    }
     theme = value;
-    await repository.saveTheme(value);
     notifyListeners();
   }
 
