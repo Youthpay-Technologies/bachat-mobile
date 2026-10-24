@@ -102,8 +102,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   ),
                   const SizedBox(height: 20),
                 ],
-                Text(title, style: Theme.of(context).textTheme.headlineLarge),
-                const SizedBox(height: 12),
+                PageHeading(title),
                 Text(
                   widget.recovery
                       ? 'Use a password you have not used before.'
@@ -290,15 +289,10 @@ class _ProfileSetupState extends ConsumerState<ProfileSetupScreen> {
                 icon: Icons.check_circle_outline,
               ),
               const SizedBox(height: 20),
-              Text(
+              const PageHeading(
                 'A little about you',
-                style: Theme.of(context).textTheme.headlineLarge,
+                subtitle: 'Start your teen profile. Bachat is for ages 13 to 18.',
               ),
-              const SizedBox(height: 12),
-              const Text(
-                'Start your teen profile. Bachat is for ages 13 to 18.',
-              ),
-              const SizedBox(height: 32),
               TextFormField(
                 controller: name,
                 enabled: !c.busy,
