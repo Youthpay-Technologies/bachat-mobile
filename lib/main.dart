@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'data/backend_http_client.dart';
 import 'data/backend_config.dart';
 import 'data/pin_storage.dart';
 import 'application/device_lock.dart';
+import 'application/licenses.dart';
 import 'presentation/device_lock_screen.dart';
 import 'application/controller.dart';
 import 'data/database.dart';
@@ -17,11 +20,16 @@ Future<void> main() async {
   // Capture email callback parameters before Flutter routing can update the URL.
   final initialAuthLink = Uri.base;
   WidgetsFlutterBinding.ensureInitialized();
+  BachatLicenses.register();
   try {
     if (!_backendReady) {
       await Supabase.initialize(
         url: BackendConfig.url,
         publishableKey: BackendConfig.publishableKey,
+        httpClient: BackendHttpClient(http.Client()),
+        postgrestOptions: const PostgrestClientOptions(
+          requestTimeout: Duration(seconds: 15),
+        ),
         authOptions: const FlutterAuthClientOptions(
           localStorage: SecureSessionStorage(),
           detectSessionInUri: false,
@@ -43,6 +51,7 @@ Future<void> main() async {
   } catch (_) {
     runApp(
       MaterialApp(
+        debugShowCheckedModeBanner: false,
         theme: BachatTheme.build(Brightness.light),
         home: Scaffold(
           body: SafeArea(

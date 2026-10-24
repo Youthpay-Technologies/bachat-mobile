@@ -8,4 +8,8 @@ Implementation status: Supabase initialization, email/password and recovery scre
 
 Verification: live rollback SQL authorization checks and approved temporary-account HTTP checks pass. The actual Flutter browser passed sign-in, money creation/savings updates, offline save/reload/sync, account isolation and password recovery against the live backend, with zero page errors. Both fixture accounts and their owned records, sessions and tokens were removed afterward. Credentials were never written to disk.
 
-Remaining hosted work: apply the native callback allowlist with an authenticated Supabase CLI session (the MCP tools do not expose Auth settings updates), and configure/verify real inbox email delivery. Localhost callbacks were honored; the native scheme was rejected by the hosted server. This is a deployment configuration boundary, not completed native email-link verification. See BACKEND.md and VERIFICATION.md.
+Current hosted state (2026-10-24): the owner-approved native Auth callback and
+10-character server password minimum are applied. The declared configuration diff
+is clean and the native redirect probe passes. Real inbox confirmation/recovery
+and a physical-device round trip remain unverified. See BACKEND.md and the current
+SHIP-READINESS.md evidence; earlier localhost/fixture checks are historical.

@@ -369,4 +369,52 @@ void main() {
     );
     expect(c.entries, hasLength(5));
   });
+  test(
+    'malformed email callback is contained without opening a session',
+    () async {
+      var requests = 0;
+      final c = await setup((_) async {
+        requests++;
+        return json({});
+      });
+      await expectLater(
+        c.handleAuthLink(
+          Uri.parse('com.getyouthpay.bachat://auth/callback#error=%FF'),
+        ),
+        completes,
+      );
+      expect(c.signedIn, isFalse);
+      expect(requests, 0);
+      expect(c.error, contains('Unable to open this email link'));
+    },
+  );
+
+  test(
+    'email callback can retry after a transport failure and deduplicates success',
+    () async {
+      var exchanges = 0;
+      final c = await setup((r) async {
+        if (r.url.path.endsWith('/token')) {
+          exchanges++;
+          if (exchanges == 1) throw TimeoutException('Connection stalled');
+          return json(fixtureSession());
+        }
+        return json({});
+      });
+      await c.requestPasswordReset('teen@example.com');
+      final link = Uri.parse(
+        'com.getyouthpay.bachat://auth/callback?code=retry-code',
+      );
+      await c.handleAuthLink(link);
+      expect(c.signedIn, isFalse);
+      expect(c.error, isNotNull);
+      await c.handleAuthLink(link);
+      expect(exchanges, 2);
+      expect(c.signedIn, isTrue);
+      expect(c.recoveringPassword, isTrue);
+      expect(c.error, isNull);
+      await c.handleAuthLink(link);
+      expect(exchanges, 2);
+    },
+  );
 }

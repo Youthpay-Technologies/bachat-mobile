@@ -1,0 +1,13 @@
+# Prepared settings for the Android-first release. Review the remote diff before applying.
+# SMTP remains managed separately in Supabase; no credentials belong in this file.
+project_id = "bachat-mobile"
+[auth]
+site_url = "com.getyouthpay.bachat://auth/callback"
+additional_redirect_urls = ["com.getyouthpay.bachat://auth/callback"]
+enable_signup = true
+enable_anonymous_sign_ins = false
+minimum_password_length = 10
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+double_confirm_changes = true

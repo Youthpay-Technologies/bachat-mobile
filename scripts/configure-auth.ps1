@@ -1,6 +1,10 @@
-param([switch]$Apply)
+param(
+  [switch]$Apply,
+  [ValidateSet('development', 'release')][string]$Environment = 'development'
+)
 $ErrorActionPreference='Stop'
-$hostedConfigRoot=Join-Path (Split-Path -Parent $PSScriptRoot) 'config/hosted'
+$authConfigFolder=if($Environment -eq 'release'){'release'}else{'hosted'}
+$hostedConfigRoot=Join-Path (Split-Path -Parent $PSScriptRoot) "config/$authConfigFolder"
 $projectRef='mqpcxptgmqzwylldiotr'
 function Invoke-Supabase {
   param([string[]]$CliArguments)

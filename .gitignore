@@ -12,6 +12,7 @@ build/
 .env.*
 !.env.example
 config/*.local.json
+**/supabase/.temp/
 android/local.properties
 android/.kotlin/
 android/key.properties

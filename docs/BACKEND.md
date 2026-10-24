@@ -10,22 +10,30 @@ The project was restored from its paused state on 2026-10-21. Email sign-up is e
 
 ## Hosted Auth configuration
 
-The connected Supabase MCP tools expose database operations but no Auth settings update. The CLI remains signed out. Live token verification honored the localhost web redirect, but rejected the native scheme and fell back to the web site URL. Native email links therefore need the allowlist applied before device use. Sign in with `npx supabase@2.120.0 login`, then review and apply the narrow hosted configuration:
+The owner approved the Android-first release settings on 2026-10-24. The CLI
+applied the exact native callback as the default site URL and only allowed
+redirect, and raised the server password minimum from 6 to 10. Confirmations stay
+required. A new invalid-token redirect probe returns the native callback and the
+remote diff has no remaining declared changes. No email was sent or account
+created. See [the sanitized application record](reports/ship-readiness-auth-2026-10-24.json).
+
+Review the release configuration without modifying the project:
 
 ```powershell
-./scripts/configure-auth.ps1
-./scripts/configure-auth.ps1 -Apply
+./scripts/configure-auth.ps1 -Environment release
 ```
 
-The script uses `config/hosted/supabase/config.toml`. It configures the local site URL, allowed local/native redirects, required email confirmation and minimum password length. Other undeclared settings are left unchanged. Review the diff before applying. CLI v2.120.0 was used to prepare this workflow.
+For an explicitly approved update, add `-Apply`. CLI v2.120.0 changes only declared
+properties; the seven undeclared differences in this project were preserved.
+Release settings live in `config/release/supabase/config.toml` and permit only:
 
-Allowed development redirects:
-
-- `http://127.0.0.1:8080` and its trailing-slash form
-- `http://localhost:8080` and its trailing-slash form
 - `com.getyouthpay.bachat://auth/callback`
 
-Add the deployed web origin before using another host. Use a separate environment for production.
+The older localhost preview settings remain under `config/hosted/supabase/config.toml`
+and are selected with `-Environment development`. They are not active release
+settings. Applying them to this same project changes the live default/allowlist;
+do not do so as routine production setup. Confirmed users can still sign into the
+browser preview, but confirmation/recovery links target the Android app.
 
 For email delivery beyond organization team addresses, configure custom SMTP in Supabase Authentication settings. Enter SMTP credentials in Supabase, never in this repository or chat. SMTP configuration and delivery to a real inbox were not verified in this run. Supabase's built-in mail service restricts recipients and rates; see [official SMTP guidance](https://supabase.com/docs/guides/auth/auth-smtp).
 
