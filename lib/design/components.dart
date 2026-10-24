@@ -56,24 +56,55 @@ class Surface extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
+    return Material(
+      color: tone ?? (tinted ? colors.primaryContainer : colors.surface),
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(BachatRadii.surface),
+        side: BorderSide(color: colors.outlineVariant.withValues(alpha: .6)),
       ),
-      child: Material(
-        color: tone ?? (tinted ? colors.primaryContainer : colors.surface),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(BachatRadii.surface),
-          side: BorderSide(color: colors.outlineVariant.withValues(alpha: .65)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: SizedBox(
-          width: double.infinity,
-          child: Padding(padding: padding, child: child),
-        ),
+      clipBehavior: Clip.antiAlias,
+      child: SizedBox(
+        width: double.infinity,
+        child: Padding(padding: padding, child: child),
       ),
     );
   }
+}
+
+/// One reading order for page titles, supporting context and optional actions.
+class PageHeading extends StatelessWidget {
+  const PageHeading(this.title, {super.key, this.subtitle, this.action});
+  final String title;
+  final String? subtitle;
+  final Widget? action;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 24),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Semantics(
+                header: true,
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.headlineLarge,
+                ),
+              ),
+            ),
+            ?action,
+          ],
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 8),
+          Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
+        ],
+      ],
+    ),
+  );
 }
 
 class SectionHeading extends StatelessWidget {
@@ -83,7 +114,7 @@ class SectionHeading extends StatelessWidget {
   final VoidCallback? onAction;
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 36, bottom: 18),
+    padding: const EdgeInsets.only(top: 28, bottom: 12),
     child: LayoutBuilder(
       builder: (context, constraints) {
         final heading = Semantics(
@@ -127,24 +158,24 @@ class EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Surface(
     child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(BachatRadii.surface),
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(BachatRadii.control),
           ),
           child: Icon(
             icon,
-            size: 30,
-            color: Theme.of(context).colorScheme.primary,
+            size: 24,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
         const SizedBox(height: 14),
         Text(
           title,
           style: Theme.of(context).textTheme.titleLarge,
-          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
@@ -152,7 +183,6 @@ class EmptyState extends StatelessWidget {
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
-          textAlign: TextAlign.center,
         ),
         if (action != null)
           Padding(
@@ -215,7 +245,7 @@ class StatusBadge extends StatelessWidget {
           ? Theme.of(context).colorScheme.errorContainer
           : highlight
           ? Theme.of(context).colorScheme.secondaryContainer
-          : Theme.of(context).colorScheme.primaryContainer,
+          : Theme.of(context).colorScheme.surfaceContainerLow,
       borderRadius: BorderRadius.circular(BachatRadii.compact),
     ),
     child: Row(
@@ -229,7 +259,7 @@ class StatusBadge extends StatelessWidget {
                 ? Theme.of(context).colorScheme.onErrorContainer
                 : highlight
                 ? Theme.of(context).colorScheme.onSecondaryContainer
-                : Theme.of(context).colorScheme.onPrimaryContainer,
+                : Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(width: 6),
         ],
@@ -241,7 +271,7 @@ class StatusBadge extends StatelessWidget {
                   ? Theme.of(context).colorScheme.onErrorContainer
                   : highlight
                   ? Theme.of(context).colorScheme.onSecondaryContainer
-                  : Theme.of(context).colorScheme.onPrimaryContainer,
+                  : Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ),
