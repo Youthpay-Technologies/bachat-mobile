@@ -619,15 +619,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
     return PageBody(
       storageKey: 'activity',
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Activity',
-                style: Theme.of(context).textTheme.headlineLarge,
-              ),
-            ),
-            IconButton.outlined(
+        PageHeading('Activity', action: IconButton.outlined(
               tooltip: 'Filter activity',
               icon: Badge(
                 isLabelVisible: options.activeCount > 0,
@@ -642,11 +634,7 @@ class _ActivityState extends ConsumerState<ActivityPage> {
                   setState(() => options = selected);
                 }
               },
-            ),
-          ],
-        ),
-
-        const SizedBox(height: 24),
+            )),
         ChildPicker(c),
         TextField(
           controller: search,
@@ -796,16 +784,9 @@ class PlanPage extends ConsumerWidget {
     return PageBody(
       storageKey: 'plan',
       children: [
-        Text('Plan', style: t.headlineLarge),
-        const SizedBox(height: 8),
-        Text(
-          'Make room for what matters.',
-          style: BachatBrand.editorial(context, size: 30),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          '${DateFormat.yMMMM().format(DateTime.now())} Â· Your monthly plan',
-          style: t.bodySmall,
+        PageHeading(
+          'Plan',
+          subtitle: '${DateFormat.yMMMM().format(DateTime.now())} · Your monthly plan',
         ),
         ChildPicker(c),
         const SectionHeading('Set aside'),
@@ -989,7 +970,6 @@ class GoalCard extends StatelessWidget {
   final AppController c;
   @override
   Widget build(BuildContext context) => Surface(
-    tone: Theme.of(context).colorScheme.secondaryContainer,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1058,11 +1038,10 @@ class LearnPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => PageBody(
     children: [
-      Text('Learn', style: Theme.of(context).textTheme.headlineLarge),
-      const SizedBox(height: 32),
+      const PageHeading('Learn'),
       Surface(
-        tone: Theme.of(context).colorScheme.secondaryContainer,
-        padding: const EdgeInsets.all(28),
+        tone: Theme.of(context).colorScheme.surfaceContainerLow,
+        padding: const EdgeInsets.all(24),
         child: const HabitIllustration(),
       ),
       const SizedBox(height: 28),
@@ -1388,8 +1367,7 @@ class SettingsPage extends ConsumerWidget {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
     return PageBody(
       children: [
-        Text('You', style: t.headlineLarge),
-        const SizedBox(height: 32),
+        const PageHeading('You'),
         Surface(
           child: ListTile(
             contentPadding: EdgeInsets.zero,
