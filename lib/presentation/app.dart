@@ -81,7 +81,7 @@ class PageBody extends StatelessWidget {
       MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
       24,
       MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
-      36,
+      36 + MediaQuery.paddingOf(context).bottom,
     ),
     child: Center(
       child: ConstrainedBox(
@@ -171,8 +171,10 @@ class _ShellState extends ConsumerState<DashboardShell> {
         if (!didPop) handleBack();
       },
       child: Scaffold(
+        extendBody: !wide,
         body: BachatBackdrop(
           child: SafeArea(
+            bottom: wide,
             child: Row(
               children: [
                 if (wide) ...[
@@ -232,7 +234,11 @@ class _ShellState extends ConsumerState<DashboardShell> {
                 child: Center(
                   heightFactor: 1,
                   child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 440),
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.textScalerOf(context).scale(12) > 18
+                          ? 344
+                          : 280,
+                    ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(999),
                       child: NavigationBar(
