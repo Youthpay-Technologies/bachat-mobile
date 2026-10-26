@@ -216,7 +216,7 @@ abstract final class BachatTheme {
         height: 74,
         indicatorColor: scheme.primaryContainer,
         indicatorShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(BachatRadii.compact),
+          borderRadius: BorderRadius.circular(BachatRadii.pill),
         ),
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
@@ -285,7 +285,7 @@ abstract final class BachatTheme {
         ),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(BachatRadii.compact),
+          borderRadius: BorderRadius.circular(BachatRadii.pill),
         ),
       ),
       segmentedButtonTheme: SegmentedButtonThemeData(
@@ -298,6 +298,14 @@ abstract final class BachatTheme {
       datePickerTheme: DatePickerThemeData(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BachatRadii.sheet),
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: scheme.surface,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(BachatRadii.surface),
+          side: BorderSide(color: scheme.outlineVariant.withValues(alpha: .6)),
         ),
       ),
       dialogTheme: DialogThemeData(
