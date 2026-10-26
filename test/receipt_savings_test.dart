@@ -78,8 +78,8 @@ void main() {
       final c = await setup('receipt-lifecycle');
       await c.saveEntry(receipt());
       expect(c.availableMinor, 120000);
-      expect(c.goals.first.totalSavedMinor, 40000);
-      expect(c.goals.first.savedMinor, 10000);
+      expect(c.goals.singleWhere((g) => g.id == 'a').totalSavedMinor, 40000);
+      expect(c.goals.singleWhere((g) => g.id == 'a').savedMinor, 10000);
       expect(c.totalSetAsideMinor, 40000);
       expect(MoneySummary(c.entries, DateTime.now()).spentMinor, 0);
       await c.saveEntry(expense());
@@ -106,14 +106,14 @@ void main() {
       expect(c.totalSetAsideMinor, 55000);
       await c.saveEntry(receipt(saved: 50000));
       expect(c.availableMinor, 65000);
-      expect(c.goals.first.totalSavedMinor, 65000);
+      expect(c.goals.singleWhere((g) => g.id == 'a').totalSavedMinor, 65000);
       await c.saveEntry(receipt(saved: 50000, goal: 'b'));
       expect(c.availableMinor, 65000);
-      expect(c.goals.first.totalSavedMinor, 15000);
-      expect(c.goals.last.totalSavedMinor, 50000);
+      expect(c.goals.singleWhere((g) => g.id == 'a').totalSavedMinor, 15000);
+      expect(c.goals.singleWhere((g) => g.id == 'b').totalSavedMinor, 50000);
       await c.saveEntry(receipt(amount: 120000, saved: 40000, goal: 'b'));
       expect(c.availableMinor, 95000);
-      expect(c.goals.last.totalSavedMinor, 40000);
+      expect(c.goals.singleWhere((g) => g.id == 'b').totalSavedMinor, 40000);
       final summary = MoneySummary(c.entries, DateTime.now());
       expect(summary.incomeMinor, 120000);
       expect(summary.savedMinor, 50000);
@@ -122,8 +122,8 @@ void main() {
         receipt(amount: 120000, saved: 40000, goal: 'b', deleted: true),
       );
       expect(c.availableMinor, 15000);
-      expect(c.goals.last.totalSavedMinor, 0);
-      expect(c.goals.first.totalSavedMinor, 15000);
+      expect(c.goals.singleWhere((g) => g.id == 'b').totalSavedMinor, 0);
+      expect(c.goals.singleWhere((g) => g.id == 'a').totalSavedMinor, 15000);
       await c.saveEntry(expense(deleted: true));
       expect(c.availableMinor, 35000);
       expect(MoneySummary(c.entries, DateTime.now()).byCategory, isEmpty);
@@ -146,7 +146,7 @@ void main() {
         expect(c.entries, isEmpty);
       }
       await c.saveEntry(receipt(saved: 90000));
-      expect(c.goals.first.progress, 1);
+      expect(c.goals.singleWhere((g) => g.id == 'a').progress, 1);
       await expectLater(c.addSavings('a', 1), throwsFormatException);
       await expectLater(
         c.saveGoal(
@@ -173,7 +173,7 @@ void main() {
         ),
         throwsFormatException,
       );
-      expect(c.goals.first.totalSavedMinor, 100000);
+      expect(c.goals.singleWhere((g) => g.id == 'a').totalSavedMinor, 100000);
       await c.saveEntry(receipt(saved: 0, goal: null));
       expect(c.availableMinor, 150000);
       await c.saveGoal(
@@ -199,13 +199,19 @@ void main() {
       addTearDown(restored.dispose);
       await restored.startDemo(UserRole.teen);
       expect(restored.availableMinor, 120000);
-      expect(restored.goals.first.totalSavedMinor, 40000);
-      expect(restored.goals.first.savedMinor, 10000);
+      expect(
+        restored.goals.singleWhere((g) => g.id == 'a').totalSavedMinor,
+        40000,
+      );
+      expect(restored.goals.singleWhere((g) => g.id == 'a').savedMinor, 10000);
       await restored.setAvailableMoney(60000);
       expect(restored.availableMinor, 60000);
       await restored.saveEntry(receipt(saved: 40000));
       expect(restored.availableMinor, 50000);
-      expect(restored.goals.first.totalSavedMinor, 50000);
+      expect(
+        restored.goals.singleWhere((g) => g.id == 'a').totalSavedMinor,
+        50000,
+      );
       expect(
         restored.entries
             .where((e) => e.direction == EntryDirection.income)
