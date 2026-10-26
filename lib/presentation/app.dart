@@ -155,7 +155,13 @@ class _ShellState extends ConsumerState<DashboardShell> {
       ),
     ];
     return Scaffold(
-      body: SafeArea(
+      body: DecoratedBox(
+        decoration: BoxDecoration(gradient: RadialGradient(
+          center: const Alignment(-.9, -1), radius: 1.15,
+          colors: [BachatBrand.cobaltGlow.withValues(alpha:
+              Theme.of(context).brightness == Brightness.dark ? .7 : .1),
+            Theme.of(context).scaffoldBackgroundColor], stops: const [0, .8])),
+        child: SafeArea(
         child: Row(
           children: [
             if (wide) ...[
@@ -206,6 +212,7 @@ class _ShellState extends ConsumerState<DashboardShell> {
             ),
           ],
         ),
+      ),
       ),
       bottomNavigationBar: wide
           ? null
@@ -313,85 +320,91 @@ class HomePage extends ConsumerWidget {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
     final now = DateTime.now();
     final summary = MoneySummary(c.entries, now);
-    final expenseCount = c.entries
-        .where(
-          (entry) =>
-              entry.direction == EntryDirection.expense &&
-              entry.occurredAt.year == now.year &&
-              entry.occurredAt.month == now.month,
-        )
-        .length;
+    final previous = MoneySummary(c.entries, DateTime(now.year, now.month - 1));
+    final difference = summary.spentMinor - previous.spentMinor;
+    final dailyTotals = <int>[];
+    var cumulative = 0;
+    for (var day = 1; day <= now.day; day++) {
+      cumulative += c.entries.where((e) => e.direction == EntryDirection.expense &&
+        e.occurredAt.year == now.year && e.occurredAt.month == now.month &&
+        e.occurredAt.day == day).fold<int>(0, (v, e) => v + e.amountMinor);
+      dailyTotals.add(cumulative);
+    }
+    final limit = c.budgets.fold<int>(0, (v, b) => v + b.limitMinor);
+    final budgetSpent = c.budgets.fold<int>(0,
+      (v, b) => v + (summary.byCategory[b.category] ?? 0));
+    final colors = Theme.of(context).colorScheme;
     return RefreshIndicator(
       onRefresh: c.refresh,
       child: PageBody(
         storageKey: 'home',
         children: [
-          Row(
-            children: [
-              const BachatSymbol(size: 40),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        DateFormat.MMMM().format(now),
-                        style: TextStyle(
-                          fontFamily: BachatBrand.headingFont,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      c.profile!.name,
-                      style: t.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                onPressed: () => accountSheet(context, c),
-                tooltip: c.preview ? 'Switch profile' : 'Account',
-                icon: Icon(
-                  c.preview ? Icons.swap_horiz_rounded : Icons.person_outline,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
+          Row(children: [
+            Container(padding: const EdgeInsets.fromLTRB(5, 5, 14, 5),
+              decoration: BoxDecoration(color: colors.primaryContainer.withValues(alpha: .7),
+                borderRadius: BorderRadius.circular(BachatRadii.pill),
+                border: Border.all(color: colors.primary.withValues(alpha: .3))),
+              child: const Row(children: [BachatSymbol(size: 30),
+                SizedBox(width: 8), Text('Home')])),
+            const Spacer(),
+            if (c.preview) const Padding(padding: EdgeInsets.only(right: 8),
+              child: Text('Demo', style: TextStyle(fontSize: 12))),
+            IconButton.outlined(onPressed: onPlan, tooltip: 'Your plan',
+              icon: const Icon(Icons.account_balance_wallet_outlined)),
+            const SizedBox(width: 8),
+            IconButton.outlined(onPressed: () => accountSheet(context, c),
+              tooltip: c.preview ? 'Switch profile' : 'Account',
+              icon: Icon(c.preview ? Icons.swap_horiz_rounded : Icons.person_outline)),
+          ]),
           ChildPicker(c),
           if (c.isParent && c.children.isEmpty)
             const FamilyPage(embedded: true)
           else ...[
-            SpendingHero(
-              month: DateFormat.MMMM().format(now),
+            SpendingHero(month: DateFormat.MMMM().format(now),
               amount: money(summary.spentMinor),
-              contextLabel: expenseCount == 0
-                  ? 'Start this month with your first expense.'
-                  : '\ \ recorded this month.',
-            ),
+              contextLabel: previous.spentMinor == 0 ? 'Your recorded spending this month'
+                : '${difference >= 0 ? '+' : '-'}${money(difference.abs())} vs last month',
+              dailyTotals: dailyTotals),
             const SizedBox(height: 16),
-            BuddyPlannerCard(
-              amount: c.budgets.isNotEmpty
-                  ? money(c.budgets.first.limitMinor)
-                  : (summary.spentMinor > 0 ? 'Rs 5,000' : 'Rs 0'),
-              categoryName: c.budgets.isNotEmpty
-                  ? c.budgets.first.category
-                  : (summary.byCategory.isNotEmpty ? summary.byCategory.keys.first : 'Bills & Utilities'),
-              progress: summary.spentMinor > 0 ? 0.65 : 0.25,
-            ),
-            const SizedBox(height: 16),
+            BudgetSummaryCard(progress: limit == 0 ? 0 : (budgetSpent / limit).clamp(0, 1),
+              overBudget: budgetSpent > limit,
+              title: limit == 0 ? 'Make room for what matters'
+                : budgetSpent > limit ? '${money(budgetSpent - limit)} over budget'
+                : '${money(limit - budgetSpent)} left in budget',
+              subtitle: limit == 0 ? 'Set your first category budget in Plan.'
+                : 'Across your monthly category budgets.', onTap: onPlan),
+            SectionHeading('Spending by category', action: 'View all', onAction: onActivity),
+            if (summary.byCategory.isEmpty)
+              EmptyState(icon: Icons.pie_chart_outline, title: 'A clearer picture starts here',
+                body: 'Record an expense to see your spending by category.',
+                action: c.isParent ? null : 'Record an expense',
+                onAction: () => entryForm(context, c))
+            else
+              SingleChildScrollView(scrollDirection: Axis.horizontal,
+                child: Row(crossAxisAlignment: CrossAxisAlignment.start,
+                  children: summary.byCategory.entries.indexed.map((item) {
+                    final (index, category) = item;
+                    final budget = c.budgets.where((b) => b.category == category.key).firstOrNull;
+                    final accent = [BachatBrand.categoryOrange,
+                      BachatBrand.categoryGreen, BachatBrand.cobalt][index % 3];
+                    return Padding(padding: const EdgeInsets.only(right: 8),
+                      child: SizedBox(width: 164, child: Surface(padding: const EdgeInsets.all(16),
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Container(width: 48, height: 48,
+                            decoration: BoxDecoration(shape: BoxShape.circle,
+                              color: accent.withValues(alpha: .16),
+                              border: Border.all(color: accent, width: 3),
+                              boxShadow: [BoxShadow(color: accent.withValues(alpha: .15), blurRadius: 20)]),
+                            child: Icon(categoryIcon(category.key), color: accent, size: 25)),
+                          const SizedBox(height: 12), Text(category.key, style: t.bodyLarge),
+                          const SizedBox(height: 26),
+                          Text(money(category.value), style: BachatBrand.figure(context, size: 18, weight: FontWeight.w500)),
+                          Text(budget == null ? 'No budget set'
+                            : category.value > budget.limitMinor ? '${money(category.value - budget.limitMinor)} over'
+                            : '${money(budget.limitMinor - category.value)} left', style: t.bodySmall),
+                        ])))));
+                  }).toList())),
+            const SizedBox(height: 24),
             if (!c.isParent) MoneyActions(c),
             SectionHeading(
               'Recent activity',
@@ -445,49 +458,6 @@ class HomePage extends ConsumerWidget {
               'Net flow is money in minus spending and money set aside.',
               style: t.bodySmall,
             ),
-            const SectionHeading('Spending breakdown'),
-            if (summary.byCategory.isEmpty)
-              EmptyState(
-                icon: Icons.pie_chart_outline,
-                title: 'A clearer picture starts here',
-                body: 'Record an expense to see your spending by category.',
-                action: c.isParent ? null : 'Record an expense',
-                onAction: () => entryForm(context, c),
-              )
-            else
-              Surface(
-                child: Column(
-                  children: summary.byCategory.entries
-                      .map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Column(
-                            children: [
-                              Wrap(
-                                alignment: WrapAlignment.spaceBetween,
-                                spacing: 16,
-                                runSpacing: 4,
-                                children: [
-                                  Text(e.key),
-                                  Text(money(e.value), style: t.titleSmall),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Semantics(
-                                label: '${e.key}: ${money(e.value)}',
-                                child: LinearProgressIndicator(
-                                  value: e.value / summary.spentMinor,
-                                  minHeight: 5,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
             SectionHeading(
               'Savings goals',
               action: 'Your plan',
@@ -550,7 +520,7 @@ class MoneyActions extends StatelessWidget {
       Widget spendBtn = FilledButton.icon(
         style: FilledButton.styleFrom(
           backgroundColor: dark ? colors.surfaceContainer : BachatBrand.obsidian,
-          foregroundColor: Colors.white,
+          foregroundColor: colors.onSurface,
           minimumSize: const Size(48, 54),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           shape: RoundedRectangleBorder(
@@ -564,8 +534,8 @@ class MoneyActions extends StatelessWidget {
 
       Widget receiveBtn = FilledButton.icon(
         style: FilledButton.styleFrom(
-          backgroundColor: BachatBrand.coral,
-          foregroundColor: Colors.white,
+          backgroundColor: colors.primaryContainer,
+          foregroundColor: colors.onSurface,
           minimumSize: const Size(48, 54),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           shape: RoundedRectangleBorder(
