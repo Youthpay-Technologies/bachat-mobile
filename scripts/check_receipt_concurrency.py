@@ -24,9 +24,12 @@ def main() -> None:
         def query(sql: str, *, allow_error: bool = False):
             file = Path(directory) / f'{uuid.uuid4()}.sql'
             file.write_text(sql, encoding='utf-8')
-            result = subprocess.run([str(args.cli), '--yes', 'db', 'query', '--linked',
-                '--project-ref', args.project_ref, '--file', str(file)],
-                input='', capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=45)
+            try:
+                result = subprocess.run([str(args.cli), '--yes', 'db', 'query', '--linked',
+                    '--project-ref', args.project_ref, '--file', str(file)],
+                    input='', capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)
+            except subprocess.TimeoutExpired as error:
+                raise RuntimeError('CLI timed out: ' + str(error.stdout) + str(error.stderr)) from error
             if result.returncode and not allow_error:
                 raise RuntimeError('Scoped SQL probe failed: ' + (result.stderr or result.stdout))
             return result
