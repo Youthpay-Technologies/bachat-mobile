@@ -29,6 +29,7 @@ void main() {
         expect(contrast(c.primary, surface), greaterThanOrEqualTo(4.5));
       }
       expect(contrast(c.primary, c.onPrimary), greaterThanOrEqualTo(4.5));
+      expect(contrast(c.secondary, c.onSecondary), greaterThanOrEqualTo(4.5));
       expect(contrast(c.error, c.onError), greaterThanOrEqualTo(4.5));
       expect(contrast(c.outline, c.surface), greaterThanOrEqualTo(3));
       for (final accent in [

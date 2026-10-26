@@ -26,7 +26,7 @@ abstract final class BachatTheme {
           ? const Color(0xFFCBD7FF)
           : BachatBrand.cobaltOnLight,
       secondary: dark ? BachatBrand.mint : BachatBrand.greenOnLight,
-      onSecondary: dark ? Colors.black : const Color(0xFF062010),
+      onSecondary: dark ? Colors.black : Colors.white,
       secondaryContainer: dark
           ? const Color(0xFF133621)
           : BachatBrand.mintLight,
