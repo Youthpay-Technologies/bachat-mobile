@@ -39,6 +39,24 @@ flutter:
     - family: Instrument Sans
       fonts:
         - asset: assets/fonts/InstrumentSans.ttf
+    - family: FK Grotesk
+      fonts:
+        - asset: assets/fonts/FKGrotesk-Regular.otf
+          weight: 400
+        - asset: assets/fonts/FKGrotesk-Medium.otf
+          weight: 500
+        - asset: assets/fonts/FKGrotesk-Bold.otf
+          weight: 700
+        - asset: assets/fonts/FKGrotesk-Black.otf
+          weight: 900
+    - family: FK Grotesk Mono
+      fonts:
+        - asset: assets/fonts/FKGroteskMono-Regular.otf
+          weight: 400
+        - asset: assets/fonts/FKGroteskMono-Medium.otf
+          weight: 500
+        - asset: assets/fonts/FKGroteskMono-Bold.otf
+          weight: 700
     - family: Instrument Serif
       fonts:
         - asset: assets/fonts/InstrumentSerif-Regular.ttf

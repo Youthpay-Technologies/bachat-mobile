@@ -8,7 +8,9 @@ abstract final class BachatBrand {
   static const ink = Color(0xFF142344);
   static const canvas = Color(0xFFF6F7FB);
   static const headingFont = 'Instrument Sans';
-  static const interfaceFont = 'Inter';
+  static const interfaceFont = 'Instrument Sans';
+  static const figuresFont = 'FK Grotesk';
+  static const figuresMonoFont = 'FK Grotesk Mono';
   static const editorialFont = 'Instrument Serif';
 
   static TextStyle editorial(BuildContext context, {double size = 38}) =>
