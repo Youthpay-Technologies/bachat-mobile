@@ -231,31 +231,38 @@ class _ShellState extends ConsumerState<DashboardShell> {
             : SafeArea(
                 top: false,
                 minimum: const EdgeInsets.symmetric(horizontal: 12),
-                child: Center(
-                  heightFactor: 1,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxWidth: MediaQuery.textScalerOf(context).scale(12) > 18
-                          ? 344
-                          : 280,
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: NavigationBar(
-                        height: MediaQuery.textScalerOf(context).scale(12) > 18
-                            ? 88
-                            : 64,
-                        backgroundColor: Theme.of(context).colorScheme.surface,
-                        surfaceTintColor: Colors.transparent,
-                        indicatorColor: Colors.transparent,
-                        selectedIndex: tab,
-                        animationDuration:
-                            MediaQuery.disableAnimationsOf(context)
-                            ? Duration.zero
-                            : const Duration(milliseconds: 150),
-                        onDestinationSelected: (value) =>
-                            setState(() => tab = value),
-                        destinations: destinations,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Center(
+                    heightFactor: 1,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth:
+                            MediaQuery.textScalerOf(context).scale(12) > 18
+                            ? 344
+                            : 280,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: NavigationBar(
+                          height:
+                              MediaQuery.textScalerOf(context).scale(12) > 18
+                              ? 88
+                              : 64,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
+                          surfaceTintColor: Colors.transparent,
+                          indicatorColor: Colors.transparent,
+                          selectedIndex: tab,
+                          animationDuration:
+                              MediaQuery.disableAnimationsOf(context)
+                              ? Duration.zero
+                              : const Duration(milliseconds: 150),
+                          onDestinationSelected: (value) =>
+                              setState(() => tab = value),
+                          destinations: destinations,
+                        ),
                       ),
                     ),
                   ),

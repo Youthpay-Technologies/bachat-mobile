@@ -53,7 +53,7 @@ void main() {
       expect(navigation.height, 64);
       expect(
         tester.getRect(find.byType(NavigationBar)).bottom,
-        tester.view.physicalSize.height / tester.view.devicePixelRatio,
+        tester.view.physicalSize.height / tester.view.devicePixelRatio - 12,
       );
       expect(find.byType(FloatingActionButton), findsNothing);
       expect(find.text('Learn'), findsNothing);
@@ -106,6 +106,7 @@ void main() {
           final content = tester.getRect(find.byType(IndexedStack));
           final navigation = tester.getRect(find.byType(NavigationBar));
           expect(content.bottom, 844);
+          expect(navigation.bottom, 832);
           expect(content.contains(navigation.center), isTrue);
           expect(navigation.width, lessThanOrEqualTo(large ? 296 : 280));
           expect(tester.takeException(), isNull);
