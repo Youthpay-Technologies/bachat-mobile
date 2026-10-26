@@ -51,6 +51,13 @@ void main() {
         expect(item.selectedIcon, isA<Icon>());
       }
       expect(navigation.height, 64);
+      expect(navigation.backgroundColor, Colors.transparent);
+      expect(
+        tester
+            .widget<BackdropFilter>(find.byType(BackdropFilter).first)
+            .enabled,
+        isTrue,
+      );
       expect(
         tester.getRect(find.byType(NavigationBar)).bottom,
         tester.view.physicalSize.height / tester.view.devicePixelRatio - 12,

@@ -66,8 +66,9 @@ class BachatRepository {
     String account,
     String table,
     Map<String, dynamic> row,
-    Map<String, dynamic> snapshot,
-  ) async {
+    Map<String, dynamic> snapshot, {
+    bool atomicMoneySync = false,
+  }) async {
     if (![
       'transactions',
       'budgets',
@@ -78,11 +79,16 @@ class BachatRepository {
     }
     await database.transaction((txn) async {
       await _snapshots.record(account).put(txn, snapshot);
+      final previous = await _outbox
+          .record('$account:$table:${row['id']}')
+          .get(txn);
       await _outbox.record('$account:$table:${row['id']}').put(txn, {
         'account': account,
         'table': table,
         'row': row,
         'operation': const Uuid().v4(),
+        'atomic_money_sync':
+            atomicMoneySync || previous?['atomic_money_sync'] == true,
       });
     });
   }
@@ -119,7 +125,32 @@ class BachatRepository {
   Future<void> synchronize(String account) async {
     final client = cloud;
     if (client == null) return;
-    for (final operation in await pending(account)) {
+    final operations = await pending(account);
+    if (operations.any((op) => op.value['atomic_money_sync'] == true)) {
+      if (client.auth.currentUser?.id != account) {
+        throw const FormatException('Your account changed. Sign in again.');
+      }
+      final changes = operations.map((op) {
+        final row = Map<String, dynamic>.from(op.value['row'] as Map);
+        if (row['owner_id'] != account) {
+          throw const FormatException(
+            'Cannot sync a record owned by another account.',
+          );
+        }
+        return {'table': op.value['table'], 'row': row};
+      }).toList();
+      await client.rpc('apply_money_changes', params: {'p_changes': changes});
+      await database.transaction((txn) async {
+        for (final operation in operations) {
+          final latest = await _outbox.record(operation.key).get(txn);
+          if (latest?['operation'] == operation.value['operation']) {
+            await _outbox.record(operation.key).delete(txn);
+          }
+        }
+      });
+      return;
+    }
+    for (final operation in operations) {
       final value = operation.value;
       if (client.auth.currentUser?.id != account) {
         throw const FormatException('Your account changed. Sign in again.');
