@@ -97,12 +97,28 @@ abstract final class BachatTheme {
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
             headlineMedium: TextStyle(
-              fontFamily: BachatBrand.headingFont,
-              fontFamilyFallback: const [BachatBrand.interfaceFont],
+              fontFamily: BachatBrand.figuresFont,
+              fontFamilyFallback: const [
+                BachatBrand.headingFont,
+                BachatBrand.interfaceFont,
+              ],
               fontSize: 26,
               fontWeight: FontWeight.w700,
               height: 1.2,
               color: text,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+            headlineSmall: TextStyle(
+              fontFamily: BachatBrand.figuresFont,
+              fontFamilyFallback: const [
+                BachatBrand.headingFont,
+                BachatBrand.interfaceFont,
+              ],
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+              color: text,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
             titleLarge: TextStyle(
               fontFamily: BachatBrand.headingFont,
