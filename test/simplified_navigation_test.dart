@@ -90,22 +90,11 @@ void main() {
         tester.view.devicePixelRatio = 1;
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
-        final c = await mount(tester);
         if (large) {
-          await tester.pumpWidget(
-            ProviderScope(
-              overrides: [controllerProvider.overrideWith((ref) => c)],
-              child: MaterialApp(
-                theme: ThemeData(),
-                home: MediaQuery(
-                  data: const MediaQueryData(textScaler: TextScaler.linear(2)),
-                  child: const DashboardShell(),
-                ),
-              ),
-            ),
-          );
-          await tester.pumpAndSettle();
+          tester.platformDispatcher.textScaleFactorTestValue = 2;
+          addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
         }
+        await mount(tester);
         for (final label in ['Home', 'Activity', 'Plan']) {
           await tester.tap(
             find.descendant(
