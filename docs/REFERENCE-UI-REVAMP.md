@@ -45,3 +45,14 @@ flutter build apk --debug
 ```
 
 Work is isolated in `bachat-reference-ui` on `feat/reference-ui-complete` because the original checkout was concurrently switched and reset during implementation. Each implementation step and follow-up fix has its own commit.
+
+## Final verification
+
+- `flutter analyze --no-pub`: no issues.
+- Dart formatting for changed sources and `git diff --check`: pass.
+- `flutter test --no-pub test tool/aesthetics_preview_test.dart`: all 99 checks pass.
+- `flutter build apk --debug`: pass; local artifact at `build/app/outputs/flutter-apk/app-debug.apk`. SDK XML and Java 8 deprecation warnings remain toolchain warnings.
+- iOS: not built or device-tested on this Windows host.
+- [Pull request #17](https://github.com/saim-x/bachat-mobile/pull/17).
+
+The merge from main resolves duplicated floating-action edits without changing the verified implementation tree.
