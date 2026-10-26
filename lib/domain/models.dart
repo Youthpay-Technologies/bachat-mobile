@@ -306,7 +306,7 @@ int spendingLedgerNet(List<MoneyEntry> entries, List<SavingsGoal> goals) =>
           (sum, e) =>
               sum +
               (e.direction == EntryDirection.income
-                  ? e.amountMinor
+                  ? e.amountMinor - e.savingsAmountMinor
                   : -e.amountMinor),
         ) -
     goals.where((g) => !g.deleted).fold<int>(0, (sum, g) => sum + g.savedMinor);
