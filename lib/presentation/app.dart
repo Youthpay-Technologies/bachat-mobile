@@ -609,23 +609,10 @@ class HomePage extends ConsumerWidget {
                 spacing: 32,
                 runSpacing: 16,
                 children: [
-                  _Metric('Money in', money(summary.incomeMinor)),
-                  _Metric('Set aside', money(summary.savedMinor)),
-                  _Metric(
-                    'Net flow',
-                    money(
-                      summary.incomeMinor -
-                          summary.spentMinor -
-                          summary.savedMinor,
-                    ),
-                  ),
+                  _Metric('Money in this month', money(summary.incomeMinor)),
+                  _Metric('Total set aside', money(c.totalSetAsideMinor)),
                 ],
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Net flow is money in minus spending and money set aside.',
-              style: t.bodySmall,
             ),
             SectionHeading(
               'Savings goals',
@@ -903,6 +890,11 @@ class EntryTile extends StatelessWidget {
                         ),
                       ],
                     ),
+                    if (entry.savingsAmountMinor > 0)
+                      Text(
+                        '${money(entry.savingsAmountMinor)} saved to ${c.goals.where((g) => g.id == entry.savingsGoalId).firstOrNull?.title ?? 'a savings goal'}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
                     if (compact)
                       Padding(
                         padding: const EdgeInsets.only(top: 8),
@@ -1182,15 +1174,8 @@ class PlanPage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      money(
-                        c.entries
-                            .where((e) => e.direction == EntryDirection.savings)
-                            .fold<int>(0, (total, e) => total + e.amountMinor),
-                      ),
-                      style: t.headlineMedium,
-                    ),
-                    const Text('Recorded savings'),
+                    Text(money(c.totalSetAsideMinor), style: t.headlineMedium),
+                    const Text('Across goals and standalone savings'),
                   ],
                 ),
               ),
@@ -1385,11 +1370,11 @@ class GoalCard extends StatelessWidget {
           highlight: true,
         ),
         const SizedBox(height: 16),
-        Text('${money(goal.savedMinor)} of ${money(goal.targetMinor)}'),
+        Text('${money(goal.totalSavedMinor)} of ${money(goal.targetMinor)}'),
         const SizedBox(height: 12),
         LinearProgressIndicator(
           semanticsLabel:
-              '${goal.title} savings goal: ${money(goal.savedMinor)} saved of ${money(goal.targetMinor)}',
+              '${goal.title} savings goal: ${money(goal.totalSavedMinor)} saved of ${money(goal.targetMinor)}',
           value: goal.progress,
           minHeight: 6,
           borderRadius: BorderRadius.circular(6),
@@ -1398,7 +1383,7 @@ class GoalCard extends StatelessWidget {
         Text(
           goal.progress == 1
               ? 'Goal reached'
-              : '${money(goal.targetMinor - goal.savedMinor)} to go',
+              : '${money(goal.targetMinor - goal.totalSavedMinor)} to go',
         ),
         if (!c.isParent && goal.progress < 1) ...[
           const SizedBox(height: 20),

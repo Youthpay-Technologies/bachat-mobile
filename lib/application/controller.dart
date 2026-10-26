@@ -636,8 +636,9 @@ class AppController extends ChangeNotifier {
     }
     if (!entry.deleted && entry.savingsGoalId != null) {
       final goal = goals.where((g) => g.id == entry.savingsGoalId).firstOrNull;
-      if (goal == null)
+      if (goal == null) {
         throw const FormatException('Choose an available savings goal.');
+      }
       final remaining =
           goal.targetMinor -
           goal.savedMinor -

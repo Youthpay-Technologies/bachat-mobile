@@ -42,12 +42,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Receive money'), findsOneWidget);
     expect(find.byType(SegmentedButton<EntryDirection>), findsNothing);
-    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.tap(
+      find.widgetWithText(DropdownButtonFormField<String>, 'Category'),
+    );
     await tester.pumpAndSettle();
     expect(find.text('Pocket money'), findsWidgets);
     expect(find.text('Salary'), findsWidgets);
     final receiveCategories = tester.widget<DropdownButton<String>>(
-      find.byType(DropdownButton<String>).last,
+      find.descendant(
+        of: find.widgetWithText(DropdownButtonFormField<String>, 'Category'),
+        matching: find.byType(DropdownButton<String>),
+      ),
     );
     expect(
       receiveCategories.items!.map((item) => item.value),
@@ -80,7 +85,9 @@ void main() {
     await tester.ensureVisible(find.text('Spend').first);
     await tester.tap(find.text('Spend').first);
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.tap(
+      find.widgetWithText(DropdownButtonFormField<String>, 'Category'),
+    );
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Other').last);
     await tester.tap(find.text('Other').last);
@@ -111,7 +118,9 @@ void main() {
     await tester.ensureVisible(find.text('Put aside'));
     await tester.tap(find.text('Put aside'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(DropdownButtonFormField<String>).last);
+    await tester.tap(
+      find.widgetWithText(DropdownButtonFormField<String>, 'Category'),
+    );
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Food & dining').last);
     await tester.tap(find.text('Food & dining').last);

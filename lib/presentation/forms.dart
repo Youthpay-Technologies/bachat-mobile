@@ -90,8 +90,9 @@ class _EntryFormState extends State<EntryForm> {
     try {
       final received = parseMoney(amount.text);
       final allocated = parseMoney(input!);
-      if (allocated > received)
+      if (allocated > received) {
         return 'Savings cannot exceed the received amount.';
+      }
       final goal = widget.c.goals
           .where((g) => g.id == savingsGoalId)
           .firstOrNull;
@@ -103,8 +104,9 @@ class _EntryFormState extends State<EntryForm> {
             goal.id,
             excludingEntryId: widget.existing?.id,
           );
-      if (allocated > remaining)
+      if (allocated > remaining) {
         return '${money(remaining)} left in this goal.';
+      }
       return null;
     } on FormatException {
       return 'Enter valid received and savings amounts.';
