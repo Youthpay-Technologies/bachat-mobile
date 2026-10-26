@@ -300,3 +300,9 @@ int spendingLedgerNet(List<MoneyEntry> entries, List<SavingsGoal> goals) =>
                   : -e.amountMinor),
         ) -
     goals.where((g) => !g.deleted).fold<int>(0, (sum, g) => sum + g.savedMinor);
+
+int parseAvailableMoney(String input) {
+  final clean = input.trim().replaceAll(',', '');
+  if (RegExp(r'^0+(\.0{1,2})?$').hasMatch(clean)) return 0;
+  return parseMoney(input);
+}

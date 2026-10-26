@@ -455,6 +455,8 @@ class HomePage extends ConsumerWidget {
                   : 'Across your monthly category budgets.',
               onTap: onPlan,
             ),
+            const SizedBox(height: 16),
+            MoneySetupCard(c),
             SectionHeading(
               'Spending by category',
               action: 'View all',
@@ -611,6 +613,106 @@ class HomePage extends ConsumerWidget {
               GoalCarousel(c),
           ],
           AppError(c),
+        ],
+      ),
+    );
+  }
+}
+
+/// Optional setup keeps the expense actions available at every stage.
+class MoneySetupCard extends StatelessWidget {
+  const MoneySetupCard(this.c, {super.key});
+  final AppController c;
+
+  Future<void> choosePlan(BuildContext context, bool budget) async {
+    if (budget) {
+      await budgetForm(context, c);
+    } else {
+      await goalForm(context, c);
+    }
+    if (context.mounted &&
+        c.cashBalance == null &&
+        (c.budgets.isNotEmpty || c.goals.isNotEmpty)) {
+      await availableMoneyForm(context, c);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final available = c.availableMinor;
+    if (available != null)
+      return Surface(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(child: Text('Available to spend', style: t.bodySmall)),
+                if (!c.isParent)
+                  IconButton(
+                    tooltip: 'Update available money',
+                    onPressed: () => availableMoneyForm(context, c),
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+              ],
+            ),
+            Text(
+              money(available),
+              style: BachatBrand.figure(
+                context,
+                size: 28,
+                weight: FontWeight.w400,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              available < 0
+                  ? 'Recorded spending exceeds your available money. Review your entries or update this amount.'
+                  : 'Tracked from your entered amount, expenses, savings and received money.',
+              style: t.bodySmall,
+            ),
+          ],
+        ),
+      );
+    if (c.isParent) return const SizedBox.shrink();
+    final hasPlan = c.budgets.isNotEmpty || c.goals.isNotEmpty;
+    return Surface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            hasPlan ? 'Add your available money' : 'Start with a simple plan',
+            style: t.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hasPlan
+                ? 'Your plan is ready. Enter what you can spend now, then track expenses as you go.'
+                : 'Choose a budget or savings goal, add your available money, then track everyday expenses. You can also start tracking right away.',
+            style: t.bodySmall,
+          ),
+          const SizedBox(height: 16),
+          if (hasPlan)
+            OutlinedButton(
+              onPressed: () => availableMoneyForm(context, c),
+              child: const Text('Add available money'),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton(
+                  onPressed: () => choosePlan(context, true),
+                  child: const Text('Set a budget'),
+                ),
+                OutlinedButton(
+                  onPressed: () => choosePlan(context, false),
+                  child: const Text('Set a savings goal'),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -1036,6 +1138,7 @@ class PlanPage extends ConsumerWidget {
               '${DateFormat.yMMMM().format(DateTime.now())} · Your monthly plan',
         ),
         ChildPicker(c),
+        MoneySetupCard(c),
         const SectionHeading('Set aside'),
         Surface(
           child: Row(

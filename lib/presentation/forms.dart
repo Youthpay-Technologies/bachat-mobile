@@ -713,3 +713,114 @@ class _AddSavingsSheetState extends State<AddSavingsSheet> {
     }
   }
 }
+
+Future<void> availableMoneyForm(BuildContext context, AppController c) =>
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+          ? AnimationStyle.noAnimation
+          : null,
+      builder: (_) => AvailableMoneyForm(c: c),
+    );
+
+class AvailableMoneyForm extends StatefulWidget {
+  const AvailableMoneyForm({super.key, required this.c});
+  final AppController c;
+  @override
+  State<AvailableMoneyForm> createState() => _AvailableMoneyFormState();
+}
+
+class _AvailableMoneyFormState extends State<AvailableMoneyForm> {
+  final form = GlobalKey<FormState>();
+  final amount = TextEditingController();
+  bool saving = false;
+  String? error;
+  @override
+  void dispose() {
+    amount.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => SheetBody(
+    children: [
+      Text(
+        widget.c.cashBalance == null
+            ? 'Add available money'
+            : 'Update available money',
+        style: Theme.of(context).textTheme.headlineSmall,
+      ),
+      const SizedBox(height: 12),
+      const Text(
+        'How much can you spend right now? Exclude money already set aside for savings.',
+      ),
+      const SizedBox(height: 20),
+      Form(
+        key: form,
+        child: TextFormField(
+          controller: amount,
+          enabled: !saving,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(
+            labelText: 'Available amount',
+            prefixText: 'Rs ',
+            hintText: '0.00',
+          ),
+          validator: (value) {
+            try {
+              parseAvailableMoney(value ?? '');
+              return null;
+            } on FormatException catch (e) {
+              return e.message;
+            }
+          },
+        ),
+      ),
+      const SizedBox(height: 12),
+      const Text(
+        'This is your own estimate. New expenses and savings reduce it; received money adds to it. Updating it sets a fresh starting point.',
+      ),
+      if (error != null)
+        Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Semantics(
+            liveRegion: true,
+            child: Text(
+              error!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ),
+      const SizedBox(height: 24),
+      FilledButton(
+        onPressed: saving
+            ? null
+            : () async {
+                if (!form.currentState!.validate()) return;
+                setState(() {
+                  saving = true;
+                  error = null;
+                });
+                try {
+                  await widget.c.setAvailableMoney(
+                    parseAvailableMoney(amount.text),
+                  );
+                  if (context.mounted) Navigator.pop(context);
+                } catch (e) {
+                  if (mounted)
+                    setState(() {
+                      saving = false;
+                      error = e is FormatException
+                          ? e.message
+                          : 'Unable to save available money. Try again.';
+                    });
+                }
+              },
+        child: Text(saving ? 'Saving...' : 'Save available money'),
+      ),
+    ],
+  );
+}
