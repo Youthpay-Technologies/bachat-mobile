@@ -4,6 +4,7 @@ import 'package:bachat_mobile/design/theme.dart';
 import 'package:bachat_mobile/domain/models.dart';
 import 'package:bachat_mobile/presentation/app.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sembast/sembast_memory.dart';
@@ -101,7 +102,13 @@ void main() {
         await tester.pumpAndSettle();
         await tester.ensureVisible(find.byType(MoneySetupCard).first);
         await capture('home-with-available-money');
-        await tester.binding.handlePopRoute();
+        await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+          'flutter/navigation',
+          const JSONMethodCodec().encodeMethodCall(
+            const MethodCall('popRoute'),
+          ),
+          null,
+        );
         await capture('exit-confirmation');
         await tester.tap(find.text('Cancel'));
         await tester.pumpAndSettle();
