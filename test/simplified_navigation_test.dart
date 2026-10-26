@@ -68,7 +68,7 @@ void main() {
     final c = await mount(tester);
     await tester.tap(find.byTooltip('Profile'));
     await tester.pumpAndSettle();
-    await c.signOut();
+    await tester.runAsync(c.signOut);
     await tester.pumpAndSettle();
     expect(find.byType(ProfileScreen), findsNothing);
     expect(c.signedIn, isFalse);

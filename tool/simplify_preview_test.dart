@@ -49,15 +49,17 @@ void main() {
         Future<void> capture(String name) =>
             capturePreview(tester, 'simplify-$name', dark: true, large: large);
         await capture('empty-home');
-        await c.saveEntry(
-          MoneyEntry(
-            id: 'first',
-            ownerId: 'preview-teen',
-            merchant: 'Lunch',
-            amountMinor: 12500,
-            direction: EntryDirection.expense,
-            category: 'Food & dining',
-            occurredAt: DateTime.now(),
+        await tester.runAsync(
+          () => c.saveEntry(
+            MoneyEntry(
+              id: 'first',
+              ownerId: 'preview-teen',
+              merchant: 'Lunch',
+              amountMinor: 12500,
+              direction: EntryDirection.expense,
+              category: 'Food & dining',
+              occurredAt: DateTime.now(),
+            ),
           ),
         );
         await capture('one-day-home');
