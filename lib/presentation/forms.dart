@@ -810,13 +810,14 @@ class _AvailableMoneyFormState extends State<AvailableMoneyForm> {
                   );
                   if (context.mounted) Navigator.pop(context);
                 } catch (e) {
-                  if (mounted)
+                  if (mounted) {
                     setState(() {
                       saving = false;
                       error = e is FormatException
                           ? e.message
                           : 'Unable to save available money. Try again.';
                     });
+                  }
                 }
               },
         child: Text(saving ? 'Saving...' : 'Save available money'),

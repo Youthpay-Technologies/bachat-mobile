@@ -524,8 +524,9 @@ class AppController extends ChangeNotifier {
       next['budgets'] = budgets.map((e) => e.toJson()).toList();
     }
     if (goals != null) next['goals'] = goals.map((e) => e.toJson()).toList();
-    if (cashBalances != null)
+    if (cashBalances != null) {
       next['cash_balances'] = cashBalances.map((b) => b.toJson()).toList();
+    }
     _localRevision++;
     if (preview) {
       await repository.save(demoKey, next);

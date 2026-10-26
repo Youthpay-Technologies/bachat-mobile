@@ -267,19 +267,37 @@ Future<void> openProfile(BuildContext context) => Navigator.push<void>(
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
   @override
-  Widget build(BuildContext context, WidgetRef ref) => Scaffold(
-    appBar: AppBar(leading: const BackButton()),
-    body: BachatBackdrop(
-      child: SafeArea(
-        child: Column(
-          children: [
-            SyncStatus(ref.watch(controllerProvider)),
-            const Expanded(child: SettingsPage()),
-          ],
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen<bool>(controllerProvider.select((c) => c.signedIn), (
+      _,
+      signedIn,
+    ) {
+      if (!signedIn) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted)
+            Navigator.of(context).popUntil((route) => route.isFirst);
+        });
+      }
+    });
+    final c = ref.watch(controllerProvider);
+    return Scaffold(
+      appBar: AppBar(leading: const BackButton()),
+      body: BachatBackdrop(
+        child: SafeArea(
+          child: Column(
+            children: [
+              SyncStatus(c),
+              Expanded(
+                child: c.profile == null
+                    ? const SizedBox.shrink()
+                    : const SettingsPage(),
+              ),
+            ],
+          ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// A local save is distinct from a completed server sync on every tab.
@@ -657,7 +675,7 @@ class MoneySetupCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
     final available = c.availableMinor;
-    if (available != null)
+    if (available != null) {
       return Surface(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -691,6 +709,7 @@ class MoneySetupCard extends StatelessWidget {
           ],
         ),
       );
+    }
     if (c.isParent) return const SizedBox.shrink();
     final hasPlan = c.budgets.isNotEmpty || c.goals.isNotEmpty;
     return Surface(
