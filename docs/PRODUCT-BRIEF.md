@@ -63,3 +63,10 @@ Available money is manually reconciled cash, not a bank balance. Users may set a
 The time-axis correction uses actual transaction timestamps: the initial window is the trailing 24 hours, with hour labels; once current-month expense history exceeds a day, the window expands to cover that history. Profile uses the same in-content heading and backdrop as Activity and Plan, with an inline Back button. Light mode has opaque pale surfaces and stronger text/control contrast while the approved dark palette is unchanged. See [time-axis and appearance verification](TIME-AXIS-AND-APPEARANCE.md).
 
 The mobile navigation pill floats over full-height Home, Activity and Plan content. Its normal maximum width is 280 logical pixels, with a larger allowance for enlarged system text; scroll-end padding keeps final actions reachable above the overlay. The wide-screen rail is retained.
+
+
+## Confirmed receipt allocation (26 October 2026)
+
+Received money can optionally be split into a chosen savings goal and available spending money. The user chooses both goal and amount. A receipt keeps its full income amount; only the allocated part is excluded from available spending. Editing, moving or deleting a receipt updates its goal contribution. Separate goal savings and standalone savings also reduce available spending. Expenses alone consume category budgets. Manual available-balance reconciliation remains a checkpoint, not a bank connection.
+
+Goal totals combine separately recorded savings with active linked receipts, without copying receipts into a mutable credited counter. Goal targets cannot be reduced below saved funds; allocated receipts must be moved or unassigned before deleting a goal. Linked offline changes synchronize atomically with server-side ownership and capacity checks.
