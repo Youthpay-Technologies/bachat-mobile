@@ -1,4 +1,6 @@
 import 'dart:math' as math;
+import 'package:intl/intl.dart';
+import '../domain/models.dart';
 import 'package:flutter/material.dart';
 
 import 'brand.dart';
@@ -23,18 +25,17 @@ class BrandHeadline extends StatelessWidget {
   );
 }
 
-/// Monthly spending with an honest, cumulative daily series.
+/// Monthly spending plotted against an adaptive, explicitly labeled time axis.
 class SpendingHero extends StatelessWidget {
   const SpendingHero({
     super.key,
     required this.month,
     required this.amount,
     required this.contextLabel,
-    required this.dailyTotals,
-    required this.timeframe,
+    required this.timeline,
   });
-  final String month, amount, contextLabel, timeframe;
-  final List<int> dailyTotals;
+  final String month, amount, contextLabel;
+  final SpendingTimeline timeline;
 
   @override
   Widget build(BuildContext context) {
@@ -60,19 +61,56 @@ class SpendingHero extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         Semantics(
-          label: 'Cumulative daily spending. $timeframe. Total $amount.',
+          label:
+              'Cumulative spending from ${DateFormat.yMMMd().add_Hm().format(timeline.start)} to ${DateFormat.yMMMd().add_Hm().format(timeline.end)}. Total $amount.',
           image: true,
           child: SizedBox(
             height: 96,
             width: double.infinity,
             child: CustomPaint(
-              painter: _SpendingPainter(dailyTotals, colors.onSurface),
+              painter: _SpendingPainter(timeline, colors.onSurface),
             ),
           ),
         ),
         const SizedBox(height: 8),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final count = MediaQuery.textScalerOf(context).scale(13) > 20
+                ? 2
+                : constraints.maxWidth >= 480
+                ? 5
+                : 3;
+            final times = timeline.tickTimes(count);
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: times.indexed.map((item) {
+                final (index, time) = item;
+                final label =
+                    timeline.isHourly && index > 0 && index < count - 1
+                    ? DateFormat.Hm().format(time)
+                    : DateFormat('MMM d\nHH:mm').format(time);
+                return Expanded(
+                  child: Text(
+                    label,
+                    textAlign: index == 0
+                        ? TextAlign.start
+                        : index == count - 1
+                        ? TextAlign.end
+                        : TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
+        const SizedBox(height: 8),
         Text(
-          timeframe,
+          timeline.hasExpenses
+              ? timeline.isHourly
+                    ? 'Last 24 hours'
+                    : '${(timeline.end.difference(timeline.start).inHours / 24).ceil()} days of activity'
+              : 'Your expenses will appear across this 24-hour window',
           style: Theme.of(context).textTheme.bodySmall,
           textAlign: TextAlign.center,
         ),
@@ -82,35 +120,28 @@ class SpendingHero extends StatelessWidget {
 }
 
 class _SpendingPainter extends CustomPainter {
-  const _SpendingPainter(this.values, this.color);
-  final List<int> values;
+  const _SpendingPainter(this.timeline, this.color);
+  final SpendingTimeline timeline;
   final Color color;
   @override
   void paint(Canvas canvas, Size size) {
-    if (values.isEmpty) return;
-    final maximum = values.reduce(math.max);
-    if (values.length == 1 && maximum > 0) {
-      final point = Offset(size.width / 2, size.height / 2);
-      canvas.drawCircle(
-        point,
-        10,
-        Paint()..color = color.withValues(alpha: .12),
-      );
-      canvas.drawCircle(point, 3.5, Paint()..color = color);
-      return;
-    }
-    final path = Path();
-    for (var i = 0; i < values.length; i++) {
-      final x = size.width * i / math.max(1, values.length - 1);
-      final y =
-          size.height -
-          8 -
-          (maximum == 0 ? 0 : values[i] / maximum * (size.height - 20));
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
+    final points = timeline.points;
+    final maximum = points.map((p) => p.totalMinor).reduce(math.max);
+    final duration = timeline.end.difference(timeline.start).inMicroseconds;
+    double y(int value) =>
+        size.height -
+        8 -
+        (maximum == 0 ? 0 : value / maximum * (size.height - 20));
+    final path = Path()..moveTo(0, y(0));
+    var previous = 0;
+    for (final point in points) {
+      final x =
+          size.width *
+          point.at.difference(timeline.start).inMicroseconds /
+          duration;
+      path.lineTo(x, y(previous));
+      path.lineTo(x, y(point.totalMinor));
+      previous = point.totalMinor;
     }
     final area = Path.from(path)
       ..lineTo(size.width, size.height)
@@ -137,7 +168,7 @@ class _SpendingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SpendingPainter old) =>
-      old.values != values || old.color != color;
+      old.timeline != timeline || old.color != color;
 }
 
 class BudgetSummaryCard extends StatelessWidget {

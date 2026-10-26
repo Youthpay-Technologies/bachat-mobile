@@ -307,40 +307,54 @@ int parseAvailableMoney(String input) {
   return parseMoney(input);
 }
 
-/// The current-month series starts with the first expense, not an artificial month of zeros.
+/// A real time axis: at least 24 hours, expanding with current-month activity.
 class SpendingTimeline {
   SpendingTimeline(List<MoneyEntry> entries, DateTime now) {
-    final expenses = entries
-        .where(
-          (e) =>
-              !e.deleted &&
-              e.direction == EntryDirection.expense &&
-              e.occurredAt.year == now.year &&
-              e.occurredAt.month == now.month &&
-              e.occurredAt.day <= now.day,
-        )
-        .toList();
-    final byDay = <int, int>{};
-    for (final entry in expenses) {
-      byDay.update(
-        entry.occurredAt.day,
-        (v) => v + entry.amountMinor,
-        ifAbsent: () => entry.amountMinor,
-      );
-    }
-    final firstDay = byDay.isEmpty
-        ? now.day
-        : byDay.keys.reduce((a, b) => a < b ? a : b);
-    start = DateTime(now.year, now.month, firstDay);
-    end = DateTime(now.year, now.month, now.day);
-    var total = 0;
-    for (var day = firstDay; day <= now.day; day++) {
-      total += byDay[day] ?? 0;
-      dailyTotals.add(total);
-    }
+    final expenses =
+        entries
+            .where(
+              (e) =>
+                  !e.deleted &&
+                  e.direction == EntryDirection.expense &&
+                  e.occurredAt.toLocal().year == now.year &&
+                  e.occurredAt.toLocal().month == now.month &&
+                  !e.occurredAt.isAfter(now),
+            )
+            .toList()
+          ..sort((a, b) => a.occurredAt.compareTo(b.occurredAt));
+    final minimumStart = now.subtract(const Duration(hours: 24));
+    final first = expenses.firstOrNull?.occurredAt.toLocal();
+    start = first != null && first.isBefore(minimumStart)
+        ? first
+        : minimumStart;
+    end = now;
     hasExpenses = expenses.isNotEmpty;
+    points.add(SpendingPoint(start, 0));
+    var total = 0;
+    for (final expense in expenses) {
+      total += expense.amountMinor;
+      points.add(SpendingPoint(expense.occurredAt.toLocal(), total));
+    }
+    if (points.last.at != end) points.add(SpendingPoint(end, total));
   }
   late final DateTime start, end;
   late final bool hasExpenses;
-  final dailyTotals = <int>[];
+  final points = <SpendingPoint>[];
+  bool get isHourly => end.difference(start) <= const Duration(hours: 24);
+  List<DateTime> tickTimes(int count) => List.generate(
+    count,
+    (index) => start.add(
+      Duration(
+        microseconds:
+            (end.difference(start).inMicroseconds * index / (count - 1))
+                .round(),
+      ),
+    ),
+  );
+}
+
+class SpendingPoint {
+  const SpendingPoint(this.at, this.totalMinor);
+  final DateTime at;
+  final int totalMinor;
 }

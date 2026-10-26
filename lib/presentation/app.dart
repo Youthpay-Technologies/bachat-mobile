@@ -456,12 +456,7 @@ class HomePage extends ConsumerWidget {
               contextLabel: previous.spentMinor == 0
                   ? 'Your recorded spending this month'
                   : '${difference >= 0 ? '+' : '-'}${money(difference.abs())} vs last month',
-              dailyTotals: timeline.dailyTotals,
-              timeframe: !timeline.hasExpenses
-                  ? 'Add your first expense to start your graph'
-                  : timeline.start == timeline.end
-                  ? '${DateFormat.MMMd().format(timeline.start)} · One day recorded'
-                  : '${DateFormat.MMMd().format(timeline.start)} - ${DateFormat.MMMd().format(timeline.end)}',
+              timeline: timeline,
             ),
             const SizedBox(height: 16),
             BudgetSummaryCard(

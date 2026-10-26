@@ -6,12 +6,12 @@ import 'package:sembast/sembast_memory.dart';
 
 void main() {
   test(
-    'spending timeline adapts to first activity, one day, gaps and removed entries',
+    'time axis begins at 24 hours and expands with timestamped activity',
     () {
-      final now = DateTime(2026, 10, 26);
+      final now = DateTime(2026, 10, 26, 18);
       MoneyEntry expense(
         String id,
-        int day,
+        DateTime at,
         int amount, {
         bool deleted = false,
       }) => MoneyEntry(
@@ -21,29 +21,41 @@ void main() {
         amountMinor: amount,
         direction: EntryDirection.expense,
         category: 'Food & dining',
-        occurredAt: DateTime(2026, 10, day),
+        occurredAt: at,
         deleted: deleted,
       );
       final empty = SpendingTimeline([], now);
       expect(empty.hasExpenses, isFalse);
-      expect(empty.dailyTotals, [0]);
-      final firstDay = SpendingTimeline([expense('today', 26, 12500)], now);
-      expect(firstDay.start, now);
-      expect(firstDay.dailyTotals, [12500]);
-      final active = SpendingTimeline([
-        expense('first', 24, 10000),
-        expense('last', 26, 12500),
-        expense('deleted', 1, 99900, deleted: true),
+      expect(empty.end.difference(empty.start), const Duration(hours: 24));
+      final firstDay = SpendingTimeline([
+        expense('today', now.subtract(const Duration(hours: 2)), 12500),
       ], now);
-      expect(active.start, DateTime(2026, 10, 24));
-      expect(active.dailyTotals, [10000, 10000, 22500]);
+      expect(firstDay.isHourly, isTrue);
+      expect(firstDay.start, now.subtract(const Duration(hours: 24)));
+      expect(firstDay.tickTimes(3), [
+        now.subtract(const Duration(hours: 24)),
+        now.subtract(const Duration(hours: 12)),
+        now,
+      ]);
+      expect(firstDay.points.last.totalMinor, 12500);
+      final threeDays = SpendingTimeline([
+        expense('first', now.subtract(const Duration(days: 3)), 10000),
+        expense('last', now.subtract(const Duration(hours: 1)), 12500),
+        expense('deleted', DateTime(2026, 10, 1), 99900, deleted: true),
+        expense('future', now.add(const Duration(hours: 1)), 50000),
+        expense('previous-month', DateTime(2026, 9, 1), 50000),
+      ], now);
+      expect(threeDays.isHourly, isFalse);
       expect(
-        SpendingTimeline([
-          expense('first', 1, 10),
-          expense('last', 26, 20),
-        ], now).dailyTotals.length,
-        26,
+        threeDays.end.difference(threeDays.start),
+        const Duration(days: 3),
       );
+      expect(threeDays.points.last.totalMinor, 22500);
+      expect(threeDays.points[2].at, now.subtract(const Duration(hours: 1)));
+      final later = SpendingTimeline([
+        expense('first', now, 12500),
+      ], now.add(const Duration(days: 3)));
+      expect(later.end.difference(later.start), const Duration(days: 3));
     },
   );
 
