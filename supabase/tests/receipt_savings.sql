@@ -52,6 +52,13 @@ do $$begin
  if (select amount_minor from public.cash_balances where id=auth.uid())<>20000 then raise exception 'Atomic failure partially changed cash'; end if;
  if (select savings_amount_minor from public.transactions where id=current_setting('test.receipt_b')::uuid)<>6000 then raise exception 'Atomic failure partially changed receipt'; end if;
 end$$;
+-- Retrying the same linked receipts replaces rows without crediting twice.
+select public.apply_money_changes((select jsonb_agg(jsonb_build_object('table','transactions','row',to_jsonb(t))) from public.transactions t where owner_id=auth.uid()));
+select public.apply_money_changes((select jsonb_agg(jsonb_build_object('table','transactions','row',to_jsonb(t))) from public.transactions t where owner_id=auth.uid()));
+do $$begin
+ if (select sum(savings_amount_minor) from public.transactions where savings_goal_id=current_setting('test.goal_a')::uuid)<>6000 then raise exception 'Replay duplicated goal funding'; end if;
+ if (select count(*) from public.transactions where owner_id=auth.uid() and not deleted)<>2 then raise exception 'Replay duplicated receipt rows'; end if;
+end$$;
 -- Unassigning a receipt and removing its goal sync together without FK races.
 select public.apply_money_changes(jsonb_build_array(
  jsonb_build_object('table','transactions','row',(select to_jsonb(t)||jsonb_build_object('savings_goal_id',null,'savings_amount_minor',0) from public.transactions t where id=current_setting('test.receipt_a')::uuid)),
