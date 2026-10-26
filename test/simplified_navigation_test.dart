@@ -15,7 +15,6 @@ void main() {
     final db = await databaseFactoryMemory.openDatabase('simple-navigation');
     addTearDown(db.close);
     final c = AppController(BachatRepository(db, null))..ready = true;
-    addTearDown(c.dispose);
     c.startPreview(UserRole.teen);
     if (empty) {
       c.allEntries.clear();

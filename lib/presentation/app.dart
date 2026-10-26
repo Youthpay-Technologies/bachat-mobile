@@ -302,8 +302,9 @@ class ProfileScreen extends ConsumerWidget {
     ) {
       if (!signedIn) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (context.mounted)
+          if (context.mounted) {
             Navigator.of(context).popUntil((route) => route.isFirst);
+          }
         });
       }
     });
