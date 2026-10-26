@@ -98,10 +98,16 @@ class Surface extends StatelessWidget {
 
 /// One reading order for page titles, supporting context and optional actions.
 class PageHeading extends StatelessWidget {
-  const PageHeading(this.title, {super.key, this.subtitle, this.action});
+  const PageHeading(
+    this.title, {
+    super.key,
+    this.subtitle,
+    this.action,
+    this.leading,
+  });
   final String title;
   final String? subtitle;
-  final Widget? action;
+  final Widget? action, leading;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -111,6 +117,8 @@ class PageHeading extends StatelessWidget {
       children: [
         Row(
           children: [
+            ?leading,
+            if (leading != null) const SizedBox(width: 8),
             Expanded(
               child: Semantics(
                 header: true,

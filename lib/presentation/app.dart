@@ -150,24 +150,18 @@ class _ShellState extends ConsumerState<DashboardShell> {
     final wide = viewport.width >= 840 && viewport.height >= 600;
     const destinations = [
       NavigationDestination(
-        icon: _NavigationCircle(Icons.grid_view_outlined),
-        selectedIcon: _NavigationCircle(
-          Icons.grid_view_rounded,
-          selected: true,
-        ),
+        icon: Icon(Icons.grid_view_outlined),
+        selectedIcon: Icon(Icons.grid_view_rounded),
         label: 'Home',
       ),
       NavigationDestination(
-        icon: _NavigationCircle(Icons.receipt_long_outlined),
-        selectedIcon: _NavigationCircle(
-          Icons.receipt_long_rounded,
-          selected: true,
-        ),
+        icon: Icon(Icons.receipt_long_outlined),
+        selectedIcon: Icon(Icons.receipt_long_rounded),
         label: 'Activity',
       ),
       NavigationDestination(
-        icon: _NavigationCircle(Icons.savings_outlined),
-        selectedIcon: _NavigationCircle(Icons.savings_rounded, selected: true),
+        icon: Icon(Icons.savings_outlined),
+        selectedIcon: Icon(Icons.savings_rounded),
         label: 'Plan',
       ),
     ];
@@ -234,54 +228,33 @@ class _ShellState extends ConsumerState<DashboardShell> {
             ? null
             : SafeArea(
                 top: false,
+                minimum: const EdgeInsets.symmetric(horizontal: 12),
                 child: Center(
                   heightFactor: 1,
-                  child: SizedBox(
-                    width: 280,
-                    child: NavigationBar(
-                      height: MediaQuery.textScalerOf(context).scale(12) > 18
-                          ? 112
-                          : 80,
-                      backgroundColor: Colors.transparent,
-                      indicatorColor: Colors.transparent,
-                      selectedIndex: tab,
-                      animationDuration: MediaQuery.disableAnimationsOf(context)
-                          ? Duration.zero
-                          : const Duration(milliseconds: 150),
-                      onDestinationSelected: (value) =>
-                          setState(() => tab = value),
-                      destinations: destinations,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 440),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: NavigationBar(
+                        height: MediaQuery.textScalerOf(context).scale(12) > 18
+                            ? 88
+                            : 64,
+                        backgroundColor: Theme.of(context).colorScheme.surface,
+                        surfaceTintColor: Colors.transparent,
+                        indicatorColor: Colors.transparent,
+                        selectedIndex: tab,
+                        animationDuration:
+                            MediaQuery.disableAnimationsOf(context)
+                            ? Duration.zero
+                            : const Duration(milliseconds: 150),
+                        onDestinationSelected: (value) =>
+                            setState(() => tab = value),
+                        destinations: destinations,
+                      ),
                     ),
                   ),
                 ),
               ),
-      ),
-    );
-  }
-}
-
-class _NavigationCircle extends StatelessWidget {
-  const _NavigationCircle(this.icon, {this.selected = false});
-  final IconData icon;
-  final bool selected;
-  @override
-  Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: selected ? colors.primaryContainer : colors.surfaceContainer,
-        border: Border.all(
-          color: selected
-              ? colors.primary.withValues(alpha: .4)
-              : colors.outline,
-        ),
-      ),
-      child: Icon(
-        icon,
-        size: 22,
-        color: selected ? colors.onPrimaryContainer : colors.onSurfaceVariant,
       ),
     );
   }
@@ -310,7 +283,6 @@ class ProfileScreen extends ConsumerWidget {
     });
     final c = ref.watch(controllerProvider);
     return Scaffold(
-      appBar: AppBar(leading: const BackButton()),
       body: BachatBackdrop(
         child: SafeArea(
           child: Column(
@@ -1894,7 +1866,7 @@ class SettingsPage extends ConsumerWidget {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
     return PageBody(
       children: [
-        const PageHeading('Profile'),
+        const PageHeading('Profile', leading: BackButton()),
         Surface(
           child: ListTile(
             contentPadding: EdgeInsets.zero,
