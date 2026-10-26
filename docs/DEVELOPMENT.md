@@ -80,4 +80,3 @@ prove native callbacks or real email delivery are configured.
 Work on a focused branch, commit each coherent change, and use a pull request for review and merging. Run the checks relevant to the change. Keep credentials, signing keys, personal records, and generated build files out of version control.
 
 See [the working agreement](../AGENTS.md), [product brief](PRODUCT-BRIEF.md), [design system](DESIGN.md), and [verification notes](VERIFICATION.md).
-
