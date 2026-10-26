@@ -6,16 +6,19 @@ abstract final class BachatBrand {
   static const mint = Color(0xFF22E385);
   static const mintLight = Color(0xFFE2F9EE);
   static const obsidian = Color(0xFF111215);
-  static const darkCard = Color(0xFF181A20);
+  static const darkCard = Color(0xFF18191D);
   static const coral = Color(0xFFFF5252);
   static const coralLight = Color(0xFFFFEBEB);
   static const ink = Color(0xFF0E1217);
   static const canvas = Color(0xFFF6F8F7);
-  static const canvasDark = Color(0xFF0E1013);
+  static const canvasDark = Color(0xFF08090D);
   static const trackGrey = Color(0xFFE8ECEF);
 
   // Backward compatibility aliases
-  static const cobalt = obsidian;
+  static const cobalt = Color(0xFF3567FF);
+  static const cobaltGlow = Color(0xFF183BA8);
+  static const categoryOrange = Color(0xFFFFA010);
+  static const categoryGreen = Color(0xFF32D447);
   static const sunshine = mint;
   static const tangerine = coral;
 
@@ -31,16 +34,15 @@ abstract final class BachatBrand {
     FontWeight weight = FontWeight.w700,
     Color? color,
     double? letterSpacing = -0.5,
-  }) =>
-      TextStyle(
-        fontFamily: figuresFont,
-        fontFamilyFallback: const [headingFont, 'sans-serif'],
-        fontSize: size,
-        fontWeight: weight,
-        letterSpacing: letterSpacing,
-        color: color ?? Theme.of(context).colorScheme.onSurface,
-        fontFeatures: const [FontFeature.tabularFigures()],
-      );
+  }) => TextStyle(
+    fontFamily: figuresFont,
+    fontFamilyFallback: const [headingFont, 'sans-serif'],
+    fontSize: size,
+    fontWeight: weight,
+    letterSpacing: letterSpacing,
+    color: color ?? Theme.of(context).colorScheme.onSurface,
+    fontFeatures: const [FontFeature.tabularFigures()],
+  );
 
   static TextStyle editorial(BuildContext context, {double size = 38}) =>
       TextStyle(
