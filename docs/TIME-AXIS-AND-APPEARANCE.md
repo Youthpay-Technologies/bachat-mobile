@@ -47,3 +47,5 @@ The owner clarified that the pill must overlay the screens rather than reserve a
 The pill's normal maximum width is reduced from 440 to 280 logical pixels, bringing the three destinations closer together. Large text can use up to 344 pixels, constrained by the screen margins. The 64-pixel normal height, rounded corners, colors and plain icons are retained. Wide-screen navigation keeps its existing rail layout.
 
 Regression tests measure the actual content viewport overlapping the pill on every destination and scroll to the final Plan action to verify that it remains visible and tappable, both normally and at 200% system text size.
+
+Floating-pill verification: all 114 combined unit, widget and visual-capture checks pass; Flutter analysis reports no issues, formatting and diff checks pass, and the Android debug APK builds successfully. Updated captures show full-height content beneath the narrower pill in both appearances. The connected NOTE 23 is updated in place without clearing app data; iOS remains unverified on Windows.
