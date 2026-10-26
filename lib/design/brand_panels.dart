@@ -168,7 +168,7 @@ class BudgetSummaryCard extends StatelessWidget {
                             ? colors.error
                             : BachatBrand.categoryGreen,
                         semanticsLabel: 'Monthly category budgets used',
-                        semanticsValue: '${(progress * 100).round()} percent',
+                        semanticsValue: '${(progress * 100).round()}%',
                       ),
                     ),
                     Text(
