@@ -16,6 +16,7 @@ abstract final class BachatBrand {
 
   // Backward compatibility aliases
   static const cobalt = obsidian;
+  static const cobaltGlow = mint;
   static const sunshine = mint;
   static const tangerine = coral;
 
