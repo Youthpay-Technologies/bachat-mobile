@@ -13,9 +13,9 @@ Bachat is a Flutter expense tracker for teens aged 13-18, launching in English w
 - Monthly category budgets, including reuse of missing categories from the previous month.
 - Savings goals, recorded savings additions and progress. Adding savings does not transfer money or create an expense.
 - Offline account snapshots and a durable sync queue after initial online sign-in/setup; Realtime and catch-up reads synchronize money records and profiles across devices on the same account. PINs and appearance remain device preferences.
-- Three circular navigation destinations: Home, Activity and Plan. Full profile and preferences open from the Home profile icon; Learn is hidden for now.
+- Three destinations in one compact pill-shaped navigation bar: Home, Activity and Plan. Full profile and preferences open from the Home profile icon; Learn is hidden for now.
 - Optional budget-or-goal setup followed by manually entered available money. Expenses and savings reduce tracked available money; received money increases it. Checkpoints persist and sync per account without creating income or changing past transactions.
-- Home graph spans actual current-month expense activity, with a single point for a first day; Home Back confirms before exiting.
+- Home graph uses a minimum 24-hour time axis with hour labels and expands to the current-month activity span; Home Back confirms before exiting.
 
 Verified teens manage their own records without parent approval while parent registration is disabled. New accounts start empty. Sample personas are not exposed in the authenticated app. RLS independently enforces verified teen ownership for every cloud money operation.
 
@@ -56,6 +56,8 @@ The development database is deployed and live Auth/REST/browser checks pass with
 
 ## October 26 simplification
 
-The owner confirmed removing You and Learn from navigation and removing the duplicate floating Receive/Spend actions. The three remaining destinations use independent circular controls inspired by the reference. The Home header contains only the transparent green-b/red-dot mark and a right-aligned profile icon; its Plan shortcut and Home label are removed. Existing inline money actions remain above Recent activity.
+The owner confirmed removing You and Learn from navigation and removing the duplicate floating Receive/Spend actions. The three remaining destinations share a compact pill-shaped surface with plain icons and fully curved corners. The Home header contains only the transparent green-b/red-dot mark and a right-aligned profile icon; its Plan shortcut and Home label are removed. Existing inline money actions remain above Recent activity.
 
 Available money is manually reconciled cash, not a bank balance. Users may set a category budget or savings goal, then enter what they can spend now, or start tracking expenses immediately. Both savings entries and additions to goals reduce available money; users should record each savings addition once. Setting an available amount captures the existing ledger as a baseline so earlier activity is not deducted again. See [the implementation and verification record](SIMPLIFIED-EXPENSE-FLOW.md).
+
+The time-axis correction uses actual transaction timestamps: the initial window is the trailing 24 hours, with hour labels; once current-month expense history exceeds a day, the window expands to cover that history. Profile uses the same in-content heading and backdrop as Activity and Plan, with an inline Back button. Light mode has opaque pale surfaces and stronger text/control contrast while the approved dark palette is unchanged. See [time-axis and appearance verification](TIME-AXIS-AND-APPEARANCE.md).

@@ -26,7 +26,8 @@ void main() {
           );
           addTearDown(db.close);
           final controller = AppController(BachatRepository(db, null))
-            ..ready = true;
+            ..ready = true
+            ..theme = dark ? 'dark' : 'light';
           controller.startPreview(UserRole.teen);
           await loadPreviewFonts(tester);
           await tester.pumpWidget(

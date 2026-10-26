@@ -3,12 +3,12 @@
 ## Confirmed changes
 
 - Preserve the cobalt/charcoal layout, Instrument Sans workhorse font and FK Grotesk main figures.
-- Keep Home, Activity and Plan. Use separate rounded circular navigation controls inspired by the supplied reference. Remove Learn and You from navigation.
+- Keep Home, Activity and Plan. Use plain icons within one compact pill-shaped surface, with full-radius corners and no extra bottom gap beyond the system safe area. Remove Learn and You from navigation.
 - Open the entire profile section from the top-right Home profile icon, including appearance, PIN controls, account details, privacy and sign-out. Back returns to Home, and sign-out safely closes the profile route.
 - Show only the transparent green-b/red-dot logo at Home's top left; remove the Home label, logo background and header Plan shortcut.
 - Remove floating Receive/Spend actions. Preserve their inline forms above Recent activity and the existing Activity actions.
 - Back from Activity or Plan returns to Home. Back from Home opens a confirmation before the Android exit call. Cancel keeps the app open.
-- Adapt Home's monthly expense graph to the first recorded expense through today. Retain days without new expenses inside that range. A single recorded day is one point rather than a fabricated rising line. An empty account has an explicit first-expense cue.
+- Home plots timestamped cumulative expenses on an initial trailing 24-hour axis. When the current-month expense history grows beyond a day, the axis expands to its full elapsed span. Hour/date tick labels show the actual time range; a new user is no longer represented by a centered single point.
 
 ## Setup and tracked available money
 
@@ -56,3 +56,5 @@ flutter build apk --debug --no-pub
 - iOS build and physical-device testing remain unverified on Windows.
 
 These changes continue [PR #17](https://github.com/saim-x/bachat-mobile/pull/17), preserving the original reference revamp and its commit history.
+
+The subsequent owner clarification supersedes the earlier single-day point and separate-circle navigation treatment. See [the corrected time-axis and appearance record](TIME-AXIS-AND-APPEARANCE.md).
