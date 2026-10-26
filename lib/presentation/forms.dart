@@ -642,6 +642,10 @@ class _AddSavingsSheetState extends State<AddSavingsSheet> {
       Text('Add savings', style: Theme.of(context).textTheme.headlineMedium),
       const SizedBox(height: 12),
       Text(widget.goal.title),
+      const SizedBox(height: 12),
+      const Text(
+        'Adding savings reduces your available money. Record each savings addition once; this does not transfer money.',
+      ),
       const SizedBox(height: 24),
       Text(
         '${money(widget.goal.targetMinor - widget.goal.savedMinor)} to reach your goal',

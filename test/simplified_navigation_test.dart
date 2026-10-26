@@ -62,6 +62,19 @@ void main() {
     },
   );
 
+  testWidgets('signing out from profile returns to the welcome screen safely', (
+    tester,
+  ) async {
+    final c = await mount(tester);
+    await tester.tap(find.byTooltip('Profile'));
+    await tester.pumpAndSettle();
+    await c.signOut();
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfileScreen), findsNothing);
+    expect(c.signedIn, isFalse);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('back returns from Activity to Home and confirms before exit', (
     tester,
   ) async {
