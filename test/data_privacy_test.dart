@@ -69,7 +69,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    await tester.tap(find.text('You').last);
+    await tester.tap(find.byTooltip('Profile'));
     await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Your data'));
     await tester.tap(find.text('Your data'));

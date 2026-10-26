@@ -212,12 +212,13 @@ void main() {
     await tester.tap(find.text('Plan').last);
     await tester.pumpAndSettle();
     expect(find.text('Monthly budgets'), findsOneWidget);
-    await tester.tap(find.text('Learn').last);
+    await tester.tap(find.text('Home').last);
     await tester.pumpAndSettle();
-    expect(find.text('Coming soon'), findsOneWidget);
-    await tester.tap(find.text('You').last);
+    await tester.tap(find.byTooltip('Profile'));
     await tester.pumpAndSettle();
-    expect(find.text('Family connections'), findsOneWidget);
+    expect(find.text('Preferences'), findsOneWidget);
+    expect(find.text('Learn'), findsNothing);
+    expect(find.text('You'), findsNothing);
   });
   testWidgets('parent dashboard is read-only', (tester) async {
     final c = await controller();
@@ -417,13 +418,14 @@ void main() {
     final c = await controller();
     c.startPreview(UserRole.teen);
     await mount(tester, c);
-    await tester.tap(find.byTooltip('Switch profile'));
+    await tester.tap(find.byTooltip('Profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ayesha').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Sana'));
     await tester.pumpAndSettle();
     expect(c.isParent, isTrue);
-    await tester.tap(find.text('You').last);
-    await tester.pumpAndSettle();
+
     await tester.tap(find.text('Appearance'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Dark').last);

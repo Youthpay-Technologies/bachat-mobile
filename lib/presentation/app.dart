@@ -212,6 +212,9 @@ class _ShellState extends ConsumerState<DashboardShell> {
                 child: SizedBox(
                   width: 280,
                   child: NavigationBar(
+                    height: MediaQuery.textScalerOf(context).scale(12) > 18
+                        ? 112
+                        : 80,
                     backgroundColor: Colors.transparent,
                     indicatorColor: Colors.transparent,
                     selectedIndex: tab,
@@ -258,13 +261,26 @@ class _NavigationCircle extends StatelessWidget {
 
 Future<void> openProfile(BuildContext context) => Navigator.push<void>(
   context,
-  MaterialPageRoute(
-    builder: (_) => Scaffold(
-      appBar: AppBar(leading: const BackButton()),
-      body: const BachatBackdrop(child: SafeArea(child: SettingsPage())),
-    ),
-  ),
+  MaterialPageRoute(builder: (_) => const ProfileScreen()),
 );
+
+class ProfileScreen extends ConsumerWidget {
+  const ProfileScreen({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) => Scaffold(
+    appBar: AppBar(leading: const BackButton()),
+    body: BachatBackdrop(
+      child: SafeArea(
+        child: Column(
+          children: [
+            SyncStatus(ref.watch(controllerProvider)),
+            const Expanded(child: SettingsPage()),
+          ],
+        ),
+      ),
+    ),
+  );
+}
 
 /// A local save is distinct from a completed server sync on every tab.
 class SyncStatus extends StatelessWidget {
@@ -455,8 +471,6 @@ class HomePage extends ConsumerWidget {
                   : 'Across your monthly category budgets.',
               onTap: onPlan,
             ),
-            const SizedBox(height: 16),
-            MoneySetupCard(c),
             SectionHeading(
               'Spending by category',
               action: 'View all',
@@ -542,6 +556,8 @@ class HomePage extends ConsumerWidget {
                 ),
               ),
             const SizedBox(height: 24),
+            MoneySetupCard(c),
+            const SizedBox(height: 16),
             if (!c.isParent) MoneyActions(c),
             SectionHeading(
               'Recent activity',

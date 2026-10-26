@@ -110,18 +110,13 @@ void main() {
       expect(c1.error, contains('already registered'));
 
       final c2 = await setup(
-        (_) async => json({
-          'msg': 'User already registered',
-        }, 422),
+        (_) async => json({'msg': 'User already registered'}, 422),
       );
       expect(await c2.signUp('teen@example.com', 'a long passphrase'), isFalse);
       expect(c2.error, contains('already registered'));
 
       final c3 = await setup(
-        (_) async => json({
-          ...fixtureUser(),
-          'identities': <dynamic>[],
-        }, 200),
+        (_) async => json({...fixtureUser(), 'identities': <dynamic>[]}, 200),
       );
       expect(await c3.signUp('teen@example.com', 'a long passphrase'), isFalse);
       expect(c3.error, contains('already registered'));

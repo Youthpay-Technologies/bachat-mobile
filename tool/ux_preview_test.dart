@@ -7,7 +7,8 @@ import 'package:bachat_mobile/domain/models.dart';
 import 'package:bachat_mobile/main.dart';
 import 'package:bachat_mobile/design/theme.dart';
 import 'package:bachat_mobile/presentation/forms.dart' show SheetBody;
-import 'package:bachat_mobile/presentation/app.dart' show EntryTile;
+import 'package:bachat_mobile/presentation/app.dart'
+    show EntryTile, ProfileScreen;
 import 'package:flutter/material.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,7 +76,7 @@ void main() {
           controller.startPreview(UserRole.teen);
           await tester.pumpAndSettle();
           await capture('home');
-          for (final tab in ['Activity', 'Plan', 'Learn', 'You']) {
+          for (final tab in ['Activity', 'Plan']) {
             await tester.tap(find.text(tab).last);
             await tester.pumpAndSettle();
             await capture(tab.toLowerCase());
@@ -83,7 +84,17 @@ void main() {
 
           if (!large) {
             Future<void> selectTab(String name) async {
-              await tester.tap(find.text(name).last);
+              if (find.byType(ProfileScreen).evaluate().isNotEmpty) {
+                await tester.pageBack();
+                await tester.pumpAndSettle();
+              }
+              if (name == 'Profile') {
+                await tester.tap(find.text('Home').last);
+                await tester.pumpAndSettle();
+                await tester.tap(find.byTooltip('Profile'));
+              } else {
+                await tester.tap(find.text(name).last);
+              }
               await tester.pumpAndSettle();
             }
 
@@ -103,7 +114,7 @@ void main() {
             }
 
             await selectTab('Home');
-            await tester.ensureVisible(find.text('Spending breakdown'));
+            await tester.ensureVisible(find.text('Spending by category'));
             await tester.drag(
               find.byType(Scrollable).first,
               const Offset(0, -300),
@@ -188,7 +199,7 @@ void main() {
             );
             await capture('add-savings');
             await dismiss();
-            await selectTab('You');
+            await selectTab('Profile');
             await tapText('Appearance');
             await capture('appearance');
             await dismiss();

@@ -49,7 +49,7 @@ void main() {
             'aesthetics-${wide ? "wide" : "phone"}-home',
             dark: dark,
           );
-          for (final tab in ['Activity', 'Plan', 'Learn', 'You']) {
+          for (final tab in ['Activity', 'Plan']) {
             await tester.tap(
               find.descendant(
                 of: wide
@@ -64,6 +64,14 @@ void main() {
               dark: dark,
             );
           }
+          await tester.tap(find.text('Home').last);
+          await tester.pumpAndSettle();
+          await tester.tap(find.byTooltip('Profile'));
+          await capturePreview(
+            tester,
+            'aesthetics-${wide ? "wide" : "phone"}-profile',
+            dark: dark,
+          );
         },
       );
     }

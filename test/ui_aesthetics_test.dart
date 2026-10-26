@@ -48,7 +48,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       await mount(tester, brightness, 2);
       expect(tester.takeException(), isNull);
-      for (final label in ['Activity', 'Plan', 'Learn', 'You']) {
+      for (final label in ['Activity', 'Plan']) {
         await tester.tap(
           find.descendant(
             of: find.byType(NavigationBar),
@@ -121,11 +121,11 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byType(NavigationBar),
-        matching: find.text('You'),
+        matching: find.text('Plan'),
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.widgetWithText(PageHeading, 'You'), findsOneWidget);
+    expect(find.widgetWithText(PageHeading, 'Plan'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }
