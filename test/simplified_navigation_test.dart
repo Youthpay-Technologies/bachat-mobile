@@ -42,6 +42,19 @@ void main() {
             .length,
         3,
       );
+      final navigation = tester.widget<NavigationBar>(
+        find.byType(NavigationBar),
+      );
+      for (final item
+          in navigation.destinations.cast<NavigationDestination>()) {
+        expect(item.icon, isA<Icon>());
+        expect(item.selectedIcon, isA<Icon>());
+      }
+      expect(navigation.height, 64);
+      expect(
+        tester.getRect(find.byType(NavigationBar)).bottom,
+        tester.view.physicalSize.height / tester.view.devicePixelRatio,
+      );
       expect(find.byType(FloatingActionButton), findsNothing);
       expect(find.text('Learn'), findsNothing);
       expect(find.text('You'), findsNothing);
@@ -55,6 +68,13 @@ void main() {
       expect(find.text('Profile'), findsOneWidget);
       expect(find.text('Preferences'), findsOneWidget);
       expect(find.byType(ProfileScreen), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byType(ProfileScreen),
+          matching: find.byType(AppBar),
+        ),
+        findsNothing,
+      );
       await tester.pageBack();
       await tester.pumpAndSettle();
       expect(find.byType(ProfileScreen), findsNothing);

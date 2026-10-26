@@ -467,10 +467,16 @@ class HomePage extends ConsumerWidget {
                     final budget = c.budgets
                         .where((b) => b.category == category.key)
                         .firstOrNull;
+                    final dark =
+                        Theme.of(context).brightness == Brightness.dark;
                     final accent = [
-                      BachatBrand.categoryOrange,
-                      BachatBrand.categoryGreen,
-                      BachatBrand.cobalt,
+                      dark
+                          ? BachatBrand.categoryOrange
+                          : BachatBrand.orangeOnLight,
+                      dark
+                          ? BachatBrand.categoryGreen
+                          : BachatBrand.greenOnLight,
+                      dark ? BachatBrand.cobalt : BachatBrand.cobaltOnLight,
                     ][index % 3];
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
