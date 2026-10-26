@@ -156,63 +156,73 @@ class _ShellState extends ConsumerState<DashboardShell> {
     ];
     return Scaffold(
       body: DecoratedBox(
-        decoration: BoxDecoration(gradient: RadialGradient(
-          center: const Alignment(-.9, -1), radius: 1.15,
-          colors: [BachatBrand.cobaltGlow.withValues(alpha:
-              Theme.of(context).brightness == Brightness.dark ? .7 : .1),
-            Theme.of(context).scaffoldBackgroundColor], stops: const [0, .8])),
-        child: SafeArea(
-        child: Row(
-          children: [
-            if (wide) ...[
-              NavigationRail(
-                selectedIndex: tab,
-                onDestinationSelected: (value) => setState(() => tab = value),
-                minWidth: MediaQuery.textScalerOf(context).scale(12) > 18
-                    ? 160
-                    : 104,
-                labelType: NavigationRailLabelType.all,
-                leading: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: BachatSymbol(),
-                ),
-                destinations: destinations
-                    .map(
-                      (destination) => NavigationRailDestination(
-                        icon: destination.icon,
-                        selectedIcon: destination.selectedIcon,
-                        label: Text(destination.label),
-                      ),
-                    )
-                    .toList(),
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: const Alignment(-.9, -1),
+            radius: 1.15,
+            colors: [
+              BachatBrand.cobaltGlow.withValues(
+                alpha: Theme.of(context).brightness == Brightness.dark
+                    ? .7
+                    : .1,
               ),
-              const VerticalDivider(width: 1),
+              Theme.of(context).scaffoldBackgroundColor,
             ],
-            Expanded(
-              child: Column(
-                children: [
-                  SyncStatus(c),
-                  Expanded(
-                    child: IndexedStack(
-                      index: tab,
-                      children: [
-                        HomePage(
-                          onActivity: () => setState(() => tab = 1),
-                          onPlan: () => setState(() => tab = 2),
-                        ),
-                        const ActivityPage(),
-                        const PlanPage(),
-                        const LearnPage(),
-                        const SettingsPage(),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            stops: const [0, .8],
+          ),
         ),
-      ),
+        child: SafeArea(
+          child: Row(
+            children: [
+              if (wide) ...[
+                NavigationRail(
+                  selectedIndex: tab,
+                  onDestinationSelected: (value) => setState(() => tab = value),
+                  minWidth: MediaQuery.textScalerOf(context).scale(12) > 18
+                      ? 160
+                      : 104,
+                  labelType: NavigationRailLabelType.all,
+                  leading: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: BachatSymbol(),
+                  ),
+                  destinations: destinations
+                      .map(
+                        (destination) => NavigationRailDestination(
+                          icon: destination.icon,
+                          selectedIcon: destination.selectedIcon,
+                          label: Text(destination.label),
+                        ),
+                      )
+                      .toList(),
+                ),
+                const VerticalDivider(width: 1),
+              ],
+              Expanded(
+                child: Column(
+                  children: [
+                    SyncStatus(c),
+                    Expanded(
+                      child: IndexedStack(
+                        index: tab,
+                        children: [
+                          HomePage(
+                            onActivity: () => setState(() => tab = 1),
+                            onPlan: () => setState(() => tab = 2),
+                          ),
+                          const ActivityPage(),
+                          const PlanPage(),
+                          const LearnPage(),
+                          const SettingsPage(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
       bottomNavigationBar: wide
           ? null
@@ -325,85 +335,178 @@ class HomePage extends ConsumerWidget {
     final dailyTotals = <int>[];
     var cumulative = 0;
     for (var day = 1; day <= now.day; day++) {
-      cumulative += c.entries.where((e) => e.direction == EntryDirection.expense &&
-        e.occurredAt.year == now.year && e.occurredAt.month == now.month &&
-        e.occurredAt.day == day).fold<int>(0, (v, e) => v + e.amountMinor);
+      cumulative += c.entries
+          .where(
+            (e) =>
+                e.direction == EntryDirection.expense &&
+                e.occurredAt.year == now.year &&
+                e.occurredAt.month == now.month &&
+                e.occurredAt.day == day,
+          )
+          .fold<int>(0, (v, e) => v + e.amountMinor);
       dailyTotals.add(cumulative);
     }
     final limit = c.budgets.fold<int>(0, (v, b) => v + b.limitMinor);
-    final budgetSpent = c.budgets.fold<int>(0,
-      (v, b) => v + (summary.byCategory[b.category] ?? 0));
+    final budgetSpent = c.budgets.fold<int>(
+      0,
+      (v, b) => v + (summary.byCategory[b.category] ?? 0),
+    );
     final colors = Theme.of(context).colorScheme;
     return RefreshIndicator(
       onRefresh: c.refresh,
       child: PageBody(
         storageKey: 'home',
         children: [
-          Row(children: [
-            Container(padding: const EdgeInsets.fromLTRB(5, 5, 14, 5),
-              decoration: BoxDecoration(color: colors.primaryContainer.withValues(alpha: .7),
-                borderRadius: BorderRadius.circular(BachatRadii.pill),
-                border: Border.all(color: colors.primary.withValues(alpha: .3))),
-              child: const Row(children: [BachatSymbol(size: 30),
-                SizedBox(width: 8), Text('Home')])),
-            const Spacer(),
-            if (c.preview) const Padding(padding: EdgeInsets.only(right: 8),
-              child: Text('Demo', style: TextStyle(fontSize: 12))),
-            IconButton.outlined(onPressed: onPlan, tooltip: 'Your plan',
-              icon: const Icon(Icons.account_balance_wallet_outlined)),
-            const SizedBox(width: 8),
-            IconButton.outlined(onPressed: () => accountSheet(context, c),
-              tooltip: c.preview ? 'Switch profile' : 'Account',
-              icon: Icon(c.preview ? Icons.swap_horiz_rounded : Icons.person_outline)),
-          ]),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.fromLTRB(5, 5, 14, 5),
+                decoration: BoxDecoration(
+                  color: colors.primaryContainer.withValues(alpha: .7),
+                  borderRadius: BorderRadius.circular(BachatRadii.pill),
+                  border: Border.all(
+                    color: colors.primary.withValues(alpha: .3),
+                  ),
+                ),
+                child: const Row(
+                  children: [
+                    BachatSymbol(size: 30),
+                    SizedBox(width: 8),
+                    Text('Home'),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              if (c.preview)
+                const Padding(
+                  padding: EdgeInsets.only(right: 8),
+                  child: Text('Demo', style: TextStyle(fontSize: 12)),
+                ),
+              IconButton.outlined(
+                onPressed: onPlan,
+                tooltip: 'Your plan',
+                icon: const Icon(Icons.account_balance_wallet_outlined),
+              ),
+              const SizedBox(width: 8),
+              IconButton.outlined(
+                onPressed: () => accountSheet(context, c),
+                tooltip: c.preview ? 'Switch profile' : 'Account',
+                icon: Icon(
+                  c.preview ? Icons.swap_horiz_rounded : Icons.person_outline,
+                ),
+              ),
+            ],
+          ),
           ChildPicker(c),
           if (c.isParent && c.children.isEmpty)
             const FamilyPage(embedded: true)
           else ...[
-            SpendingHero(month: DateFormat.MMMM().format(now),
+            SpendingHero(
+              month: DateFormat.MMMM().format(now),
               amount: money(summary.spentMinor),
-              contextLabel: previous.spentMinor == 0 ? 'Your recorded spending this month'
-                : '${difference >= 0 ? '+' : '-'}${money(difference.abs())} vs last month',
-              dailyTotals: dailyTotals),
+              contextLabel: previous.spentMinor == 0
+                  ? 'Your recorded spending this month'
+                  : '${difference >= 0 ? '+' : '-'}${money(difference.abs())} vs last month',
+              dailyTotals: dailyTotals,
+            ),
             const SizedBox(height: 16),
-            BudgetSummaryCard(progress: limit == 0 ? 0 : (budgetSpent / limit).clamp(0, 1),
+            BudgetSummaryCard(
+              progress: limit == 0 ? 0 : (budgetSpent / limit).clamp(0, 1),
               overBudget: budgetSpent > limit,
-              title: limit == 0 ? 'Make room for what matters'
-                : budgetSpent > limit ? '${money(budgetSpent - limit)} over budget'
-                : '${money(limit - budgetSpent)} left in budget',
-              subtitle: limit == 0 ? 'Set your first category budget in Plan.'
-                : 'Across your monthly category budgets.', onTap: onPlan),
-            SectionHeading('Spending by category', action: 'View all', onAction: onActivity),
+              title: limit == 0
+                  ? 'Make room for what matters'
+                  : budgetSpent > limit
+                  ? '${money(budgetSpent - limit)} over budget'
+                  : '${money(limit - budgetSpent)} left in budget',
+              subtitle: limit == 0
+                  ? 'Set your first category budget in Plan.'
+                  : 'Across your monthly category budgets.',
+              onTap: onPlan,
+            ),
+            SectionHeading(
+              'Spending by category',
+              action: 'View all',
+              onAction: onActivity,
+            ),
             if (summary.byCategory.isEmpty)
-              EmptyState(icon: Icons.pie_chart_outline, title: 'A clearer picture starts here',
+              EmptyState(
+                icon: Icons.pie_chart_outline,
+                title: 'A clearer picture starts here',
                 body: 'Record an expense to see your spending by category.',
                 action: c.isParent ? null : 'Record an expense',
-                onAction: () => entryForm(context, c))
+                onAction: () => entryForm(context, c),
+              )
             else
-              SingleChildScrollView(scrollDirection: Axis.horizontal,
-                child: Row(crossAxisAlignment: CrossAxisAlignment.start,
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: summary.byCategory.entries.indexed.map((item) {
                     final (index, category) = item;
-                    final budget = c.budgets.where((b) => b.category == category.key).firstOrNull;
-                    final accent = [BachatBrand.categoryOrange,
-                      BachatBrand.categoryGreen, BachatBrand.cobalt][index % 3];
-                    return Padding(padding: const EdgeInsets.only(right: 8),
-                      child: SizedBox(width: 164, child: Surface(padding: const EdgeInsets.all(16),
-                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                          Container(width: 48, height: 48,
-                            decoration: BoxDecoration(shape: BoxShape.circle,
-                              color: accent.withValues(alpha: .16),
-                              border: Border.all(color: accent, width: 3),
-                              boxShadow: [BoxShadow(color: accent.withValues(alpha: .15), blurRadius: 20)]),
-                            child: Icon(categoryIcon(category.key), color: accent, size: 25)),
-                          const SizedBox(height: 12), Text(category.key, style: t.bodyLarge),
-                          const SizedBox(height: 26),
-                          Text(money(category.value), style: BachatBrand.figure(context, size: 18, weight: FontWeight.w500)),
-                          Text(budget == null ? 'No budget set'
-                            : category.value > budget.limitMinor ? '${money(category.value - budget.limitMinor)} over'
-                            : '${money(budget.limitMinor - category.value)} left', style: t.bodySmall),
-                        ])))));
-                  }).toList())),
+                    final budget = c.budgets
+                        .where((b) => b.category == category.key)
+                        .firstOrNull;
+                    final accent = [
+                      BachatBrand.categoryOrange,
+                      BachatBrand.categoryGreen,
+                      BachatBrand.cobalt,
+                    ][index % 3];
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: SizedBox(
+                        width: 164,
+                        child: Surface(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: accent.withValues(alpha: .16),
+                                  border: Border.all(color: accent, width: 3),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: accent.withValues(alpha: .15),
+                                      blurRadius: 20,
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  categoryIcon(category.key),
+                                  color: accent,
+                                  size: 25,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(category.key, style: t.bodyLarge),
+                              const SizedBox(height: 26),
+                              Text(
+                                money(category.value),
+                                style: BachatBrand.figure(
+                                  context,
+                                  size: 18,
+                                  weight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                budget == null
+                                    ? 'No budget set'
+                                    : category.value > budget.limitMinor
+                                    ? '${money(category.value - budget.limitMinor)} over'
+                                    : '${money(budget.limitMinor - category.value)} left',
+                                style: t.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
             const SizedBox(height: 24),
             if (!c.isParent) MoneyActions(c),
             SectionHeading(
@@ -519,7 +622,9 @@ class MoneyActions extends StatelessWidget {
 
       Widget spendBtn = FilledButton.icon(
         style: FilledButton.styleFrom(
-          backgroundColor: dark ? colors.surfaceContainer : BachatBrand.obsidian,
+          backgroundColor: dark
+              ? colors.surfaceContainer
+              : BachatBrand.obsidian,
           foregroundColor: colors.onSurface,
           minimumSize: const Size(48, 54),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -1222,7 +1327,11 @@ class LearnPage extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.lock_clock_outlined, size: 20, color: colors.onSurfaceVariant),
+                  Icon(
+                    Icons.lock_clock_outlined,
+                    size: 20,
+                    color: colors.onSurfaceVariant,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1240,7 +1349,9 @@ class LearnPage extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 'Interactive lessons are currently being crafted. Keep recording expenses to prepare your streak!',
-                style: textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+                style: textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
               ),
             ],
           ),
