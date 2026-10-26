@@ -91,12 +91,15 @@ class MoneyEntry {
     required this.occurredAt,
     this.note = '',
     this.customCategory = '',
+    this.savingsGoalId,
+    this.savingsAmountMinor = 0,
     this.deleted = false,
   });
   final String id, ownerId, merchant, category, note, customCategory;
   String get categoryLabel =>
       customCategory.isEmpty ? category : customCategory;
-  final int amountMinor;
+  final int amountMinor, savingsAmountMinor;
+  final String? savingsGoalId;
   final EntryDirection direction;
   final DateTime occurredAt;
   final bool deleted;
@@ -110,6 +113,8 @@ class MoneyEntry {
     occurredAt: DateTime.parse(j['occurred_at'] as String).toLocal(),
     note: j['note'] as String? ?? '',
     customCategory: j['custom_category'] as String? ?? '',
+    savingsGoalId: j['savings_goal_id'] as String?,
+    savingsAmountMinor: (j['savings_amount_minor'] as num?)?.toInt() ?? 0,
     deleted: j['deleted'] as bool? ?? false,
   );
   Map<String, dynamic> toJson() => {
@@ -122,6 +127,8 @@ class MoneyEntry {
     'occurred_at': occurredAt.toUtc().toIso8601String(),
     'note': note,
     'custom_category': customCategory,
+    'savings_goal_id': savingsGoalId,
+    'savings_amount_minor': savingsAmountMinor,
     'deleted': deleted,
   };
 }
@@ -177,12 +184,14 @@ class SavingsGoal {
     required this.title,
     required this.targetMinor,
     this.savedMinor = 0,
+    this.receivedMinor = 0,
     this.deleted = false,
   });
   final String id, ownerId, title;
-  final int targetMinor, savedMinor;
+  final int targetMinor, savedMinor, receivedMinor;
+  int get totalSavedMinor => savedMinor + receivedMinor;
   final bool deleted;
-  double get progress => (savedMinor / targetMinor).clamp(0, 1).toDouble();
+  double get progress => (totalSavedMinor / targetMinor).clamp(0, 1).toDouble();
   factory SavingsGoal.fromJson(Map<String, dynamic> j) => SavingsGoal(
     id: j['id'] as String,
     ownerId: j['owner_id'] as String,
@@ -247,6 +256,7 @@ class MoneySummary {
     )) {
       if (e.direction == EntryDirection.income) {
         incomeMinor += e.amountMinor;
+        savedMinor += e.savingsAmountMinor;
       } else if (e.direction == EntryDirection.savings) {
         savedMinor += e.amountMinor;
       } else {

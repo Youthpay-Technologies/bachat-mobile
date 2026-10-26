@@ -66,8 +66,9 @@ class BachatRepository {
     String account,
     String table,
     Map<String, dynamic> row,
-    Map<String, dynamic> snapshot,
-  ) async {
+    Map<String, dynamic> snapshot, {
+    bool atomicMoneySync = false,
+  }) async {
     if (![
       'transactions',
       'budgets',
@@ -78,11 +79,16 @@ class BachatRepository {
     }
     await database.transaction((txn) async {
       await _snapshots.record(account).put(txn, snapshot);
+      final previous = await _outbox
+          .record('$account:$table:${row['id']}')
+          .get(txn);
       await _outbox.record('$account:$table:${row['id']}').put(txn, {
         'account': account,
         'table': table,
         'row': row,
         'operation': const Uuid().v4(),
+        'atomic_money_sync':
+            atomicMoneySync || previous?['atomic_money_sync'] == true,
       });
     });
   }

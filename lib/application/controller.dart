@@ -91,8 +91,34 @@ class AppController extends ChangeNotifier {
             b.month == monthKey(DateTime.now()),
       )
       .toList();
-  List<SavingsGoal> get goals =>
-      allGoals.where((g) => g.ownerId == viewingId && !g.deleted).toList();
+  int receiptSavingsFor(String goalId, {String? excludingEntryId}) => allEntries
+      .where(
+        (e) =>
+            e.ownerId == viewingId &&
+            !e.deleted &&
+            e.direction == EntryDirection.income &&
+            e.savingsGoalId == goalId &&
+            e.id != excludingEntryId,
+      )
+      .fold<int>(0, (sum, e) => sum + e.savingsAmountMinor);
+  List<SavingsGoal> get goals => allGoals
+      .where((g) => g.ownerId == viewingId && !g.deleted)
+      .map(
+        (g) => SavingsGoal(
+          id: g.id,
+          ownerId: g.ownerId,
+          title: g.title,
+          targetMinor: g.targetMinor,
+          savedMinor: g.savedMinor,
+          receivedMinor: receiptSavingsFor(g.id),
+        ),
+      )
+      .toList();
+  int get totalSetAsideMinor =>
+      entries
+          .where((e) => e.direction == EntryDirection.savings)
+          .fold<int>(0, (sum, e) => sum + e.amountMinor) +
+      goals.fold<int>(0, (sum, g) => sum + g.totalSavedMinor);
   CashBalance? get cashBalance =>
       allCashBalances.where((b) => b.ownerId == viewingId).firstOrNull;
   int get ledgerNetMinor => spendingLedgerNet(entries, goals);
@@ -471,7 +497,9 @@ class AppController extends ChangeNotifier {
       if (generation != _generation) return;
       offline = e is! PostgrestException;
       error = e is PostgrestException
-          ? (e.code == '23505'
+          ? (e.code == '23514' && e.message.toLowerCase().contains('goal')
+                ? 'A savings goal changed on another device. Review received allocations and goal targets, then retry sync.'
+                : e.code == '23505'
                 ? 'A budget category already exists on another device. Review it before retrying sync.'
                 : 'Unable to sync your changes. Try again.')
           : 'You are offline. Your saved changes will sync when you reconnect.';
@@ -513,6 +541,7 @@ class AppController extends ChangeNotifier {
     List<CategoryBudget>? budgets,
     List<SavingsGoal>? goals,
     List<CashBalance>? cashBalances,
+    bool atomicMoneySync = false,
   }) async {
     final id = profile!.id;
     final generation = _generation;
@@ -531,7 +560,13 @@ class AppController extends ChangeNotifier {
     if (preview) {
       await repository.save(demoKey, next);
     } else {
-      await repository.queue(id, table, row, next);
+      await repository.queue(
+        id,
+        table,
+        row,
+        next,
+        atomicMoneySync: atomicMoneySync,
+      );
     }
     if (generation != _generation || accountId != id) return;
     if (entries != null) allEntries = entries;
@@ -590,9 +625,36 @@ class AppController extends ChangeNotifier {
         'Check the amount, category, date and transaction details.',
       );
     }
+    if (entry.savingsAmountMinor < 0 ||
+        entry.savingsAmountMinor > entry.amountMinor ||
+        (entry.savingsGoalId == null) != (entry.savingsAmountMinor == 0) ||
+        (entry.direction != EntryDirection.income &&
+            entry.savingsGoalId != null)) {
+      throw const FormatException(
+        'Savings must be part of the received amount and linked to a goal.',
+      );
+    }
+    if (!entry.deleted && entry.savingsGoalId != null) {
+      final goal = goals.where((g) => g.id == entry.savingsGoalId).firstOrNull;
+      if (goal == null)
+        throw const FormatException('Choose an available savings goal.');
+      final remaining =
+          goal.targetMinor -
+          goal.savedMinor -
+          receiptSavingsFor(goal.id, excludingEntryId: entry.id);
+      if (entry.savingsAmountMinor > remaining) {
+        throw FormatException(
+          'This goal has ${money(remaining)} left. Reduce the savings amount or choose another goal.',
+        );
+      }
+    }
+    final previous = allEntries.where((e) => e.id == entry.id).firstOrNull;
     await _commitRecord(
       'transactions',
       entry.toJson(),
+      atomicMoneySync:
+          entry.savingsAmountMinor > 0 ||
+          (previous?.savingsAmountMinor ?? 0) > 0,
       entries: [...allEntries.where((e) => e.id != entry.id), entry],
     );
   });
@@ -630,14 +692,20 @@ class AppController extends ChangeNotifier {
   Future<void> saveGoal(SavingsGoal goal) => _serialize(() => _saveGoal(goal));
   Future<void> _saveGoal(SavingsGoal goal) async {
     _validateOwner(goal.ownerId);
+    final received = receiptSavingsFor(goal.id);
+    if (goal.deleted && received > 0) {
+      throw const FormatException(
+        'Move or remove savings allocated from received entries before removing this goal.',
+      );
+    }
     if (goal.targetMinor <= 0 ||
         goal.targetMinor > 999999999999 ||
         goal.savedMinor < 0 ||
-        goal.savedMinor > goal.targetMinor ||
+        goal.savedMinor + received > goal.targetMinor ||
         goal.title.trim().isEmpty ||
         goal.title.length > 80) {
       throw const FormatException(
-        'Use a goal name, positive target and a saved amount between zero and the target.',
+        'Use a goal name and a target that covers saved money and received allocations.',
       );
     }
     await _commitRecord(
@@ -657,12 +725,14 @@ class AppController extends ChangeNotifier {
     if (goal == null) {
       throw const FormatException('This goal is no longer available.');
     }
-    if (goal.savedMinor >= goal.targetMinor) {
+    if ((goal.savedMinor + receiptSavingsFor(goal.id)) >= goal.targetMinor) {
       throw const FormatException('This goal has already reached its target.');
     }
-    if (amountMinor <= 0 || amountMinor > goal.targetMinor - goal.savedMinor) {
+    if (amountMinor <= 0 ||
+        amountMinor >
+            goal.targetMinor - (goal.savedMinor + receiptSavingsFor(goal.id))) {
       throw FormatException(
-        'Enter an amount between Rs 0.01 and ${money(goal.targetMinor - goal.savedMinor)}.',
+        'Enter an amount between Rs 0.01 and ${money(goal.targetMinor - (goal.savedMinor + receiptSavingsFor(goal.id)))}.',
       );
     }
     await _saveGoal(
