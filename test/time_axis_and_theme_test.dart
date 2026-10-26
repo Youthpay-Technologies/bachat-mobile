@@ -59,6 +59,29 @@ void main() {
     expect(theme.colorScheme.error, const Color(0xFFFFB4AB));
   });
 
+  test(
+    'frosted navigation text stays legible over the lightest and darkest content',
+    () {
+      for (final brightness in Brightness.values) {
+        final c = BachatTheme.build(brightness).colorScheme;
+        for (final behind in [Colors.black, Colors.white]) {
+          final glass = Color.alphaBlend(
+            c.surface.withValues(alpha: .88),
+            behind,
+          );
+          expect(
+            contrast(c.onSurfaceVariant, glass),
+            greaterThanOrEqualTo(4.5),
+          );
+          expect(
+            contrast(c.onPrimaryContainer, glass),
+            greaterThanOrEqualTo(4.5),
+          );
+        }
+      }
+    },
+  );
+
   testWidgets('hour ticks scale to 24 hours and stay readable at 200 percent', (
     tester,
   ) async {
