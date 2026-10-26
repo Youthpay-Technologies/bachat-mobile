@@ -6,6 +6,48 @@ import 'package:sembast/sembast_memory.dart';
 
 void main() {
   test(
+    'spending timeline adapts to first activity, one day, gaps and removed entries',
+    () {
+      final now = DateTime(2026, 10, 26);
+      MoneyEntry expense(
+        String id,
+        int day,
+        int amount, {
+        bool deleted = false,
+      }) => MoneyEntry(
+        id: id,
+        ownerId: 'teen',
+        merchant: 'Lunch',
+        amountMinor: amount,
+        direction: EntryDirection.expense,
+        category: 'Food & dining',
+        occurredAt: DateTime(2026, 10, day),
+        deleted: deleted,
+      );
+      final empty = SpendingTimeline([], now);
+      expect(empty.hasExpenses, isFalse);
+      expect(empty.dailyTotals, [0]);
+      final firstDay = SpendingTimeline([expense('today', 26, 12500)], now);
+      expect(firstDay.start, now);
+      expect(firstDay.dailyTotals, [12500]);
+      final active = SpendingTimeline([
+        expense('first', 24, 10000),
+        expense('last', 26, 12500),
+        expense('deleted', 1, 99900, deleted: true),
+      ], now);
+      expect(active.start, DateTime(2026, 10, 24));
+      expect(active.dailyTotals, [10000, 10000, 22500]);
+      expect(
+        SpendingTimeline([
+          expense('first', 1, 10),
+          expense('last', 26, 20),
+        ], now).dailyTotals.length,
+        26,
+      );
+    },
+  );
+
+  test(
     'available money accepts zero and exact paisa but rejects invalid amounts',
     () {
       expect(parseAvailableMoney('0'), 0);
