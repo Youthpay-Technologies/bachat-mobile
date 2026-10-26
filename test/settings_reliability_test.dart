@@ -25,8 +25,8 @@ void main() {
     () async {
       final c = await controller();
       addTearDown(c.dispose);
-      await expectLater(c.setTheme('dark'), throwsFormatException);
-      expect(c.theme, 'system');
+      await expectLater(c.setTheme('light'), throwsFormatException);
+      expect(c.theme, 'dark');
     },
   );
 
@@ -34,7 +34,7 @@ void main() {
     final c = await controller();
     addTearDown(c.dispose);
     await expectLater(c.setTheme('unknown'), throwsFormatException);
-    expect(c.theme, 'system');
+    expect(c.theme, 'dark');
   });
 
   testWidgets(
@@ -53,10 +53,10 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Appearance'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Dark'));
+      await tester.tap(find.text('Light').last);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      expect(c.theme, 'system');
+      expect(c.theme, 'dark');
       expect(
         find.text(
           'Unable to save your appearance. Check available storage and try again.',

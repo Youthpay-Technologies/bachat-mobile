@@ -203,7 +203,7 @@ void main() {
     final c = await controller();
     c.startPreview(UserRole.teen);
     await mount(tester, c);
-    expect(find.textContaining('Demo'), findsNothing);
+    expect(find.text('Demo'), findsOneWidget);
     expect(find.textContaining('Saved on this device'), findsNothing);
     expect(find.text('Rs 3,665'), findsOneWidget);
     await tester.tap(find.text('Activity').last);
@@ -426,7 +426,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Appearance'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Dark'));
+    await tester.tap(find.text('Dark').last);
     await tester.pumpAndSettle();
     expect(c.themeMode, ThemeMode.dark);
     expect(find.text('Appearance'), findsOneWidget);

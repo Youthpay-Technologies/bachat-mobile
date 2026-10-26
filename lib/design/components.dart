@@ -3,6 +3,31 @@ import 'package:flutter/material.dart';
 import 'theme.dart';
 import 'brand.dart';
 
+/// The reference's cobalt light fades into the app's neutral canvas.
+class BachatBackdrop extends StatelessWidget {
+  const BachatBackdrop({super.key, required this.child});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      gradient: RadialGradient(
+        center: const Alignment(-.9, -1),
+        radius: 1.15,
+        colors: [
+          BachatBrand.cobaltGlow.withValues(
+            alpha: Theme.of(context).brightness == Brightness.dark ? .7 : .1,
+          ),
+          Theme.of(context).brightness == Brightness.dark
+              ? BachatBrand.canvasDark
+              : BachatBrand.canvas,
+        ],
+        stops: const [0, .8],
+      ),
+    ),
+    child: child,
+  );
+}
+
 class BachatMark extends StatelessWidget {
   const BachatMark({super.key, this.large = false});
   final bool large;
@@ -281,9 +306,8 @@ class DashboardSkeleton extends StatelessWidget {
   const DashboardSkeleton({super.key});
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(
-      context,
-    ).colorScheme.outlineVariant.withValues(alpha: .5);
+    final color = Theme.of(context).colorScheme.outlineVariant
+        .withValues(alpha: .5);
     Widget block(double width, double height) => Container(
       width: width,
       height: height,
