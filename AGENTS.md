@@ -2,7 +2,7 @@
 
 ## Product
 
-Develop the Flutter app for Android and iOS as the active Bachat project. The owner requested removal of the former local Next.js app on 2026-10-21; do not recreate it. The current release enables authenticated teen accounts only; parent onboarding is disabled until a later release. Learning is coming soon. Record confirmed product decisions in docs/PRODUCT-BRIEF.md and distinguish proposals from implementation.
+Develop the Flutter app for Android and iOS as the active Bachat project. The owner requested removal of the former local Next.js app on 2026-10-21; do not recreate it. The current release enables authenticated teen accounts only; parent onboarding is disabled until a later release. Learning is not exposed in navigation. The active shell has Home, Activity and Plan; the Home profile icon opens the full profile section. Record confirmed product decisions in docs/PRODUCT-BRIEF.md and distinguish proposals from implementation.
 
 ## Git workflow
 

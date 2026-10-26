@@ -56,3 +56,7 @@ Work is isolated in `bachat-reference-ui` on `feat/reference-ui-complete` becaus
 - [Pull request #17](https://github.com/saim-x/bachat-mobile/pull/17).
 
 The merge from main resolves duplicated floating-action edits without changing the verified implementation tree.
+
+## Subsequent simplification
+
+The owner requested a smaller navigation and expense-first flow after reviewing the device build. The current implementation has three independent circular controls (Home, Activity, Plan), a transparent Home logo and right-aligned profile shortcut, and no floating Spend/Receive duplicates. The chart starts at the first current-month expense rather than at the beginning of an inactive month. The latest implementation and validation supersede the original five-tab details above: see [simplified expense flow](SIMPLIFIED-EXPENSE-FLOW.md).
