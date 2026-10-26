@@ -82,7 +82,7 @@ class PageBody extends StatelessWidget {
       MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
       24,
       MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
-      112,
+      36,
     ),
     child: Center(
       child: ConstrainedBox(
@@ -129,29 +129,25 @@ class _ShellState extends ConsumerState<DashboardShell> {
     final wide = viewport.width >= 840 && viewport.height >= 600;
     const destinations = [
       NavigationDestination(
-        icon: Icon(Icons.grid_view_outlined),
-        selectedIcon: Icon(Icons.grid_view_rounded),
+        icon: _NavigationCircle(Icons.grid_view_outlined),
+        selectedIcon: _NavigationCircle(
+          Icons.grid_view_rounded,
+          selected: true,
+        ),
         label: 'Home',
       ),
       NavigationDestination(
-        icon: Icon(Icons.receipt_long_outlined),
-        selectedIcon: Icon(Icons.receipt_long_rounded),
+        icon: _NavigationCircle(Icons.receipt_long_outlined),
+        selectedIcon: _NavigationCircle(
+          Icons.receipt_long_rounded,
+          selected: true,
+        ),
         label: 'Activity',
       ),
       NavigationDestination(
-        icon: Icon(Icons.savings_outlined),
-        selectedIcon: Icon(Icons.savings_rounded),
+        icon: _NavigationCircle(Icons.savings_outlined),
+        selectedIcon: _NavigationCircle(Icons.savings_rounded, selected: true),
         label: 'Plan',
-      ),
-      NavigationDestination(
-        icon: Icon(Icons.auto_stories_outlined),
-        selectedIcon: Icon(Icons.auto_stories_rounded),
-        label: 'Learn',
-      ),
-      NavigationDestination(
-        icon: Icon(Icons.person_outline),
-        selectedIcon: Icon(Icons.person_rounded),
-        label: 'You',
       ),
     ];
     return Scaffold(
@@ -197,8 +193,6 @@ class _ShellState extends ConsumerState<DashboardShell> {
                           ),
                           const ActivityPage(),
                           const PlanPage(),
-                          const LearnPage(),
-                          const SettingsPage(),
                         ],
                       ),
                     ),
@@ -209,37 +203,17 @@ class _ShellState extends ConsumerState<DashboardShell> {
           ),
         ),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: c.isParent || tab != 0 || wide
-          ? null
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                FloatingActionButton.small(
-                  heroTag: 'receive',
-                  tooltip: 'Receive money',
-                  onPressed: () =>
-                      entryForm(context, c, direction: EntryDirection.income),
-                  child: const Icon(Icons.south_west_rounded),
-                ),
-                const SizedBox(width: 12),
-                FloatingActionButton(
-                  heroTag: 'spend',
-                  tooltip: 'Spend money',
-                  onPressed: () => entryForm(context, c),
-                  child: const Icon(Icons.add_rounded, size: 30),
-                ),
-              ],
-            ),
       bottomNavigationBar: wide
           ? null
           : SafeArea(
               top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(BachatRadii.surface),
+              child: Center(
+                heightFactor: 1,
+                child: SizedBox(
+                  width: 280,
                   child: NavigationBar(
+                    backgroundColor: Colors.transparent,
+                    indicatorColor: Colors.transparent,
                     selectedIndex: tab,
                     animationDuration: MediaQuery.disableAnimationsOf(context)
                         ? Duration.zero
@@ -254,6 +228,43 @@ class _ShellState extends ConsumerState<DashboardShell> {
     );
   }
 }
+
+class _NavigationCircle extends StatelessWidget {
+  const _NavigationCircle(this.icon, {this.selected = false});
+  final IconData icon;
+  final bool selected;
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: selected ? colors.primaryContainer : colors.surfaceContainer,
+        border: Border.all(
+          color: selected
+              ? colors.primary.withValues(alpha: .4)
+              : colors.outline,
+        ),
+      ),
+      child: Icon(
+        icon,
+        size: 22,
+        color: selected ? colors.onPrimaryContainer : colors.onSurfaceVariant,
+      ),
+    );
+  }
+}
+
+Future<void> openProfile(BuildContext context) => Navigator.push<void>(
+  context,
+  MaterialPageRoute(
+    builder: (_) => Scaffold(
+      appBar: AppBar(leading: const BackButton()),
+      body: const BachatBackdrop(child: SafeArea(child: SettingsPage())),
+    ),
+  ),
+);
 
 /// A local save is distinct from a completed server sync on every tab.
 class SyncStatus extends StatelessWidget {
@@ -410,8 +421,8 @@ class HomePage extends ConsumerWidget {
                   foregroundColor: colors.onSurface,
                   side: BorderSide(color: colors.primary.withValues(alpha: .3)),
                 ),
-                onPressed: () => accountSheet(context, c),
-                tooltip: c.preview ? 'Switch profile' : 'Account',
+                onPressed: () => openProfile(context),
+                tooltip: 'Profile',
                 icon: Icon(
                   c.preview ? Icons.swap_horiz_rounded : Icons.person_outline,
                 ),
@@ -1762,7 +1773,7 @@ class SettingsPage extends ConsumerWidget {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
     return PageBody(
       children: [
-        const PageHeading('You'),
+        const PageHeading('Profile'),
         Surface(
           child: ListTile(
             contentPadding: EdgeInsets.zero,
