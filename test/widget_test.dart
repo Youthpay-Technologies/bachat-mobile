@@ -451,9 +451,13 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     final carousel = tester.widget<SingleChildScrollView>(
-      find.byWidgetPredicate(
-        (w) =>
-            w is SingleChildScrollView && w.scrollDirection == Axis.horizontal,
+      find.descendant(
+        of: find.byType(GoalCarousel),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is SingleChildScrollView &&
+              w.scrollDirection == Axis.horizontal,
+        ),
       ),
     );
     expect(carousel.controller!.offset, 0);
