@@ -26,7 +26,7 @@ def main() -> None:
             file.write_text(sql, encoding='utf-8')
             result = subprocess.run([str(args.cli), 'db', 'query', '--linked',
                 '--project-ref', args.project_ref, '--file', str(file)],
-                capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=90)
+                input='', capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=45)
             if result.returncode and not allow_error:
                 raise RuntimeError('Scoped SQL probe failed: ' + (result.stderr or result.stdout))
             return result
