@@ -76,14 +76,39 @@ class _DevicePrivacyGateState extends State<DevicePrivacyGate>
                 child: const Center(child: Icon(Icons.lock_outline)),
               )
             else if (needsLock)
-              _PinSession(
-                key: ValueKey(c.accountId),
-                controller: c,
-                lock: lock,
+              Overlay(
+                initialEntries: [
+                  OverlayEntry(
+                    builder: (_) => _PinSession(
+                      key: ValueKey(c.accountId),
+                      controller: c,
+                      lock: lock,
+                    ),
+                  ),
+                ],
               ),
           ],
         );
       },
+    );
+  }
+}
+
+class PinInputFormatter extends TextInputFormatter {
+  const PinInputFormatter({this.maxLength = 6});
+  final int maxLength;
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digits = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
+    final text = digits.length > maxLength ? digits.substring(0, maxLength) : digits;
+    return TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+      composing: TextRange.empty,
     );
   }
 }
@@ -100,8 +125,9 @@ class _PinSessionState extends State<_PinSession> {
   late final Future<void> initialized;
   final form = GlobalKey<FormState>();
   final pin = TextEditingController(), confirm = TextEditingController();
+  final pinFocus = FocusNode(), confirmFocus = FocusNode();
   late final Timer ticker;
-  bool signingOut = false, confirmSignOut = false;
+  bool signingOut = false, confirmSignOut = false, submitting = false;
   @override
   void initState() {
     super.initState();
@@ -110,7 +136,7 @@ class _PinSessionState extends State<_PinSession> {
         ? Future.value()
         : Future.microtask(() => lock.bind(id));
     ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) {
+      if (mounted && widget.lock.waitSeconds > 0) {
         setState(() {});
       }
     });
@@ -121,23 +147,41 @@ class _PinSessionState extends State<_PinSession> {
     ticker.cancel();
     pin.dispose();
     confirm.dispose();
+    pinFocus.dispose();
+    confirmFocus.dispose();
     super.dispose();
   }
 
   Future<void> submit() async {
     final lock = widget.lock;
-    if (signingOut || lock.busy || !form.currentState!.validate()) return;
-    FocusScope.of(context).unfocus();
-    final wasSetup = lock.needsSetup;
-    if (wasSetup) {
-      await lock.createPin(pin.text);
-    } else {
-      await lock.unlock(pin.text);
+    if (submitting || signingOut || lock.busy || lock.waitSeconds > 0) return;
+    if (!form.currentState!.validate()) {
+      return;
     }
-    if (!mounted) return;
-    pin.clear();
-    confirm.clear();
-    setState(() {});
+    submitting = true;
+    FocusScope.of(context).unfocus();
+    try {
+      final wasSetup = lock.needsSetup;
+      if (wasSetup) {
+        final ok = await lock.createPin(pin.text);
+        if (ok && mounted) {
+          pin.clear();
+          confirm.clear();
+        }
+      } else {
+        final ok = await lock.unlock(pin.text);
+        if (!ok && mounted) {
+          pin.clear();
+          confirm.clear();
+          pinFocus.requestFocus();
+        }
+      }
+    } finally {
+      if (mounted) {
+        submitting = false;
+        setState(() {});
+      }
+    }
   }
 
   Future<void> signOut() async {
@@ -155,6 +199,34 @@ class _PinSessionState extends State<_PinSession> {
       if (mounted) setState(() => signingOut = false);
     }
   }
+
+  Widget _pinDots(TextEditingController controller) => AnimatedBuilder(
+    animation: controller,
+    builder: (context, _) {
+      final len = controller.text.length;
+      final colors = Theme.of(context).colorScheme;
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(6, (i) {
+          final filled = i < len;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            margin: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+            width: filled ? 14 : 12,
+            height: filled ? 14 : 12,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: filled ? colors.primary : colors.surfaceContainerHigh,
+              border: Border.all(
+                color: filled ? colors.primary : colors.outlineVariant,
+                width: 1.5,
+              ),
+            ),
+          );
+        }),
+      );
+    },
+  );
 
   @override
   Widget build(BuildContext context) => FutureBuilder<void>(
@@ -194,20 +266,29 @@ class _PinSessionState extends State<_PinSession> {
                       ),
                       const SizedBox(height: 8),
                       if (!lock.unavailable) ...[
+                        _pinDots(setup && confirmFocus.hasFocus ? confirm : pin),
+                        const SizedBox(height: 12),
                         TextFormField(
-                          key: ValueKey('pin-$setup'),
+                          key: ValueKey('pin-'),
                           controller: pin,
+                          focusNode: pinFocus,
+                          autofocus: true,
                           enabled:
                               !lock.busy &&
                               lock.waitSeconds == 0 &&
-                              !signingOut,
+                              !signingOut &&
+                              !submitting,
                           obscureText: true,
                           autocorrect: false,
                           enableSuggestions: false,
-                          keyboardType: TextInputType.number,
-                          inputFormatters: [
-                            FilteringTextInputFormatter.digitsOnly,
-                            LengthLimitingTextInputFormatter(6),
+                          enableIMEPersonalizedLearning: false,
+                          autofillHints: const [],
+                          keyboardType: const TextInputType.numberWithOptions(
+                            signed: false,
+                            decimal: false,
+                          ),
+                          inputFormatters: const [
+                            PinInputFormatter(maxLength: 6),
                           ],
                           decoration: const InputDecoration(
                             labelText: '6-digit PIN',
@@ -220,28 +301,51 @@ class _PinSessionState extends State<_PinSession> {
                           textInputAction: setup
                               ? TextInputAction.next
                               : TextInputAction.done,
+                          onChanged: (value) {
+                            if (!setup && value.length == 6) {
+                              submit();
+                            } else if (setup && value.length == 6) {
+                              confirmFocus.requestFocus();
+                            }
+                          },
                           onFieldSubmitted: (_) {
-                            if (!setup) submit();
+                            if (setup) {
+                              confirmFocus.requestFocus();
+                            } else {
+                              submit();
+                            }
                           },
                         ),
                         if (setup) ...[
                           const SizedBox(height: 20),
                           TextFormField(
                             controller: confirm,
-                            enabled: !lock.busy && !signingOut,
+                            focusNode: confirmFocus,
+                            enabled:
+                                !lock.busy && !signingOut && !submitting,
                             obscureText: true,
                             autocorrect: false,
                             enableSuggestions: false,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(6),
+                            enableIMEPersonalizedLearning: false,
+                            autofillHints: const [],
+                            keyboardType: const TextInputType.numberWithOptions(
+                              signed: false,
+                              decimal: false,
+                            ),
+                            inputFormatters: const [
+                              PinInputFormatter(maxLength: 6),
                             ],
                             decoration: const InputDecoration(
                               labelText: 'Confirm PIN',
+                              counterText: '',
                             ),
                             validator: (value) =>
                                 value == pin.text ? null : 'PINs do not match.',
+                            onChanged: (value) {
+                              if (value.length == 6) {
+                                submit();
+                              }
+                            },
                             onFieldSubmitted: (_) => submit(),
                           ),
                         ],
@@ -262,18 +366,18 @@ class _PinSessionState extends State<_PinSession> {
                       if (lock.waitSeconds > 0)
                         Padding(
                           padding: const EdgeInsets.only(top: 12),
-                          child: Text('Try again in ${lock.waitSeconds}s'),
+                          child: Text('Try again in s'),
                         ),
                       const SizedBox(height: 28),
                       FilledButton(
                         onPressed:
-                            lock.busy || signingOut || lock.waitSeconds > 0
+                            lock.busy || signingOut || lock.waitSeconds > 0 || submitting
                             ? null
                             : lock.unavailable
                             ? () => lock.bind(widget.controller.accountId!)
                             : submit,
                         child: Text(
-                          lock.busy
+                          lock.busy || submitting
                               ? 'Please wait...'
                               : lock.unavailable
                               ? 'Try again'

@@ -17,11 +17,18 @@ Future<String> _pinDigest(Map<String, String> value) async {
   return base64Encode(await key.extractBytes());
 }
 
+typedef PinHasher = Future<String> Function(Map<String, String> value);
+
 class DeviceLock extends ChangeNotifier {
-  DeviceLock(this.storage, {DateTime Function()? now})
-    : now = now ?? DateTime.now;
+  DeviceLock(
+    this.storage, {
+    DateTime Function()? now,
+    PinHasher? hasher,
+  }) : now = now ?? DateTime.now,
+       _hasher = hasher ?? ((value) => compute(_pinDigest, value));
   final PinStorage storage;
   final DateTime Function() now;
+  final PinHasher _hasher;
   String? account;
   Map<String, dynamic>? _record;
   bool loading = true, locked = true, busy = false, unavailable = false;
@@ -121,7 +128,7 @@ class DeviceLock extends ChangeNotifier {
       final salt = base64Encode(
         List.generate(16, (_) => Random.secure().nextInt(256)),
       );
-      final digest = await compute(_pinDigest, {'pin': pin, 'salt': salt});
+      final digest = await _hasher({'pin': pin, 'salt': salt});
       if (epoch != _epoch || _disposed) return false;
       final record = <String, dynamic>{
         'version': 1,
@@ -162,7 +169,7 @@ class DeviceLock extends ChangeNotifier {
     error = null;
     _notify();
     try {
-      final digest = await compute(_pinDigest, {
+      final digest = await _hasher({
         'pin': pin,
         'salt': _record!['salt'] as String,
       });
