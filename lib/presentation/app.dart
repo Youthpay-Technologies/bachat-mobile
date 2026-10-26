@@ -82,7 +82,7 @@ class PageBody extends StatelessWidget {
       MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
       24,
       MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
-      36,
+      112,
     ),
     child: Center(
       child: ConstrainedBox(
@@ -224,24 +224,46 @@ class _ShellState extends ConsumerState<DashboardShell> {
           ),
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: c.isParent
+          ? null
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton.small(
+                  heroTag: 'receive',
+                  tooltip: 'Receive money',
+                  onPressed: () =>
+                      entryForm(context, c, direction: EntryDirection.income),
+                  child: const Icon(Icons.south_west_rounded),
+                ),
+                const SizedBox(width: 12),
+                FloatingActionButton(
+                  heroTag: 'spend',
+                  tooltip: 'Spend money',
+                  onPressed: () => entryForm(context, c),
+                  child: const Icon(Icons.add_rounded, size: 30),
+                ),
+              ],
+            ),
       bottomNavigationBar: wide
           ? null
-          : DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                border: Border(
-                  top: BorderSide(
-                    color: Theme.of(context).colorScheme.outlineVariant,
+          : SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(BachatRadii.surface),
+                  child: NavigationBar(
+                    selectedIndex: tab,
+                    animationDuration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 150),
+                    onDestinationSelected: (value) =>
+                        setState(() => tab = value),
+                    destinations: destinations,
                   ),
                 ),
-              ),
-              child: NavigationBar(
-                selectedIndex: tab,
-                animationDuration: MediaQuery.disableAnimationsOf(context)
-                    ? Duration.zero
-                    : const Duration(milliseconds: 150),
-                onDestinationSelected: (value) => setState(() => tab = value),
-                destinations: destinations,
               ),
             ),
     );
@@ -625,7 +647,7 @@ class MoneyActions extends StatelessWidget {
           backgroundColor: dark
               ? colors.surfaceContainer
               : BachatBrand.obsidian,
-          foregroundColor: colors.onSurface,
+          foregroundColor: dark ? colors.onSurface : Colors.white,
           minimumSize: const Size(48, 54),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           shape: RoundedRectangleBorder(

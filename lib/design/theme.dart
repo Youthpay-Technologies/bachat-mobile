@@ -76,6 +76,12 @@ abstract final class BachatTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
       ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: scheme.surfaceContainer,
+        foregroundColor: scheme.onSurface,
+        elevation: 0,
+        shape: CircleBorder(side: BorderSide(color: scheme.outline)),
+      ),
       listTileTheme: ListTileThemeData(
         iconColor: scheme.onSurfaceVariant,
         minVerticalPadding: 12,
@@ -248,7 +254,7 @@ abstract final class BachatTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: scheme.surface,
         elevation: 0,
-        height: 74,
+        height: 68,
         indicatorColor: scheme.primaryContainer,
         indicatorShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BachatRadii.pill),

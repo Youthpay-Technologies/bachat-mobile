@@ -13,7 +13,10 @@ class BrandHeadline extends StatelessWidget {
     TextSpan(
       children: [
         TextSpan(text: "$lead\n"),
-        TextSpan(text: accent, style: BachatBrand.editorial(context, size: 52)),
+        TextSpan(
+          text: accent,
+          style: BachatBrand.figure(context, size: 52, weight: FontWeight.w400),
+        ),
       ],
     ),
     style: Theme.of(context).textTheme.displaySmall,
