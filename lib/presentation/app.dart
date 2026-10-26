@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -244,24 +246,46 @@ class _ShellState extends ConsumerState<DashboardShell> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(999),
-                        child: NavigationBar(
-                          height:
-                              MediaQuery.textScalerOf(context).scale(12) > 18
-                              ? 88
-                              : 64,
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.surface,
-                          surfaceTintColor: Colors.transparent,
-                          indicatorColor: Colors.transparent,
-                          selectedIndex: tab,
-                          animationDuration:
-                              MediaQuery.disableAnimationsOf(context)
-                              ? Duration.zero
-                              : const Duration(milliseconds: 150),
-                          onDestinationSelected: (value) =>
-                              setState(() => tab = value),
-                          destinations: destinations,
+                        child: BackdropFilter(
+                          enabled: !MediaQuery.highContrastOf(context),
+                          filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.surface
+                                  .withValues(
+                                    alpha: MediaQuery.highContrastOf(context)
+                                        ? 1
+                                        : .88,
+                                  ),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .outlineVariant
+                                    .withValues(alpha: .6),
+                              ),
+                            ),
+                            child: NavigationBar(
+                              height:
+                                  MediaQuery.textScalerOf(context).scale(12) >
+                                      18
+                                  ? 88
+                                  : 64,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.surface,
+                              surfaceTintColor: Colors.transparent,
+                              indicatorColor: Colors.transparent,
+                              selectedIndex: tab,
+                              animationDuration:
+                                  MediaQuery.disableAnimationsOf(context)
+                                  ? Duration.zero
+                                  : const Duration(milliseconds: 150),
+                              onDestinationSelected: (value) =>
+                                  setState(() => tab = value),
+                              destinations: destinations,
+                            ),
+                          ),
                         ),
                       ),
                     ),
