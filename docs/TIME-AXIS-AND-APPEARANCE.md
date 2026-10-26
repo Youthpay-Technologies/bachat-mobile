@@ -49,3 +49,7 @@ The pill's normal maximum width is reduced from 440 to 280 logical pixels, bring
 Regression tests measure the actual content viewport overlapping the pill on every destination and scroll to the final Plan action to verify that it remains visible and tappable, both normally and at 200% system text size.
 
 Floating-pill verification: all 114 combined unit, widget and visual-capture checks pass; Flutter analysis reports no issues, formatting and diff checks pass, and the Android debug APK builds successfully. Updated captures show full-height content beneath the narrower pill in both appearances. The connected NOTE 23 is updated in place without clearing app data; iOS remains unverified on Windows.
+
+## Tester-release spacing
+
+The owner requested a small visual gap below the floating pill. The pill now sits 12 logical pixels above the bottom safe area. Content still extends behind it, and the existing overlay-aware scroll padding automatically accounts for the extra inset. Tests verify the gap, full-height content and reachable final actions at normal and 200% text sizes.
