@@ -369,7 +369,12 @@ abstract final class BachatTheme {
           borderRadius: BorderRadius.circular(BachatRadii.control),
         ),
         backgroundColor: text,
-        contentTextStyle: TextStyle(color: scheme.surface),
+        contentTextStyle: TextStyle(
+          fontFamily: BachatBrand.interfaceFont,
+          fontSize: 14,
+          height: 1.4,
+          color: scheme.surface,
+        ),
       ),
     );
   }

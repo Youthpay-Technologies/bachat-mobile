@@ -94,6 +94,8 @@ void main() {
           }
         });
         await tester.pumpAndSettle();
+        await tester.pump(const Duration(seconds: 4));
+        await tester.ensureVisible(find.byType(MoneySetupCard).first);
         await capture('plan-with-available-money');
         await tester.tap(find.text('Home').last);
         await tester.pumpAndSettle();
