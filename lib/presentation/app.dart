@@ -271,9 +271,7 @@ class _ShellState extends ConsumerState<DashboardShell> {
                                       18
                                   ? 88
                                   : 64,
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.surface,
+                              backgroundColor: Colors.transparent,
                               surfaceTintColor: Colors.transparent,
                               indicatorColor: Colors.transparent,
                               selectedIndex: tab,
