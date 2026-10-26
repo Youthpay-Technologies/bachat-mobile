@@ -196,6 +196,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   const SizedBox(height: 16),
                 ],
                 AppError(c),
+                if (create && (c.error?.contains('already registered') ?? false)) ...[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () => mode(signUp: false),
+                      icon: const Icon(Icons.login),
+                      label: const Text('Sign in with this email instead'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 if (create)
                   TextButton.icon(
                     onPressed: () => Navigator.push<void>(

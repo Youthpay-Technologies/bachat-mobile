@@ -98,6 +98,36 @@ void main() {
     },
   );
   test(
+    'already registered email returns clear user-friendly error without network confusion',
+    () async {
+      final c1 = await setup(
+        (_) async => json({
+          'code': 'user_already_exists',
+          'msg': 'User already registered',
+        }, 400),
+      );
+      expect(await c1.signUp('teen@example.com', 'a long passphrase'), isFalse);
+      expect(c1.error, contains('already registered'));
+
+      final c2 = await setup(
+        (_) async => json({
+          'msg': 'User already registered',
+        }, 422),
+      );
+      expect(await c2.signUp('teen@example.com', 'a long passphrase'), isFalse);
+      expect(c2.error, contains('already registered'));
+
+      final c3 = await setup(
+        (_) async => json({
+          ...fixtureUser(),
+          'identities': <dynamic>[],
+        }, 200),
+      );
+      expect(await c3.signUp('teen@example.com', 'a long passphrase'), isFalse);
+      expect(c3.error, contains('already registered'));
+    },
+  );
+  test(
     'successful sign-in opens profile setup without sample money data',
     () async {
       final c = await setup((r) async {

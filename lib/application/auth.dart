@@ -15,28 +15,57 @@ String? validatePassword(String? value) {
   return null;
 }
 
-String authMessage(AuthException error) => switch (error.code) {
-  'invalid_credentials' =>
-    'Email or password is incorrect. Try again or reset your password.',
-  'email_not_confirmed' =>
-    'Verify your email before signing in. You can resend the confirmation below.',
-  'over_email_send_rate_limit' || 'over_request_rate_limit' =>
-    'Too many requests. Wait a few minutes and try again.',
-  'email_address_not_authorized' =>
-    'Email delivery is not configured for this address yet. Please contact Bachat support.',
-  'weak_password' => 'Choose a stronger password with at least 10 characters.',
-  'user_already_exists' =>
-    'Check your email, or sign in if you already have an account.',
-  'signup_disabled' =>
-    'New accounts are temporarily unavailable. Try again later.',
-  'otp_expired' => 'This email link has expired. Request a new one.',
-  'session_not_found' ||
-  'refresh_token_not_found' ||
-  'refresh_token_already_used' =>
-    'Your session has expired. Please sign in again.',
-  _ =>
-    'We could not complete this request. Check your connection and try again.',
-};
+String authMessage(AuthException error) {
+  final code = error.code?.toLowerCase();
+  final msg = error.message.toLowerCase();
+  if (code == 'user_already_exists' ||
+      code == 'email_exists' ||
+      code == 'user_already_registered' ||
+      msg.contains('already registered') ||
+      msg.contains('already exists') ||
+      msg.contains('user with this email') ||
+      msg.contains('email already in use')) {
+    return 'This email is already registered. Please sign in or reset your password.';
+  }
+  if (code == 'invalid_credentials' ||
+      msg.contains('invalid login credentials') ||
+      msg.contains('invalid credentials')) {
+    return 'Email or password is incorrect. Try again or reset your password.';
+  }
+  if (code == 'email_not_confirmed' || msg.contains('email not confirmed')) {
+    return 'Verify your email before signing in. You can resend the confirmation below.';
+  }
+  if (code == 'over_email_send_rate_limit' ||
+      code == 'over_request_rate_limit' ||
+      msg.contains('rate limit')) {
+    return 'Too many requests. Wait a few minutes and try again.';
+  }
+  if (code == 'email_address_not_authorized' ||
+      msg.contains('not authorized')) {
+    return 'Email delivery is not configured for this address yet. Please contact Bachat support.';
+  }
+  if (code == 'weak_password' || msg.contains('password should be at least')) {
+    return 'Choose a stronger password with at least 10 characters.';
+  }
+  if (code == 'signup_disabled' || msg.contains('signups not allowed')) {
+    return 'New accounts are temporarily unavailable. Try again later.';
+  }
+  if (code == 'otp_expired' || msg.contains('expired')) {
+    return 'This email link has expired. Request a new one.';
+  }
+  if (code == 'session_not_found' ||
+      code == 'refresh_token_not_found' ||
+      code == 'refresh_token_already_used') {
+    return 'Your session has expired. Please sign in again.';
+  }
+  if (error.message.isNotEmpty &&
+      !error.message.startsWith('{') &&
+      !error.message.toLowerCase().contains('unexpected') &&
+      !error.message.toLowerCase().contains('null')) {
+    return error.message;
+  }
+  return 'We could not complete this request. Check your connection and try again.';
+}
 
 extension TeenAuthentication on AppController {
   String get authRedirect => kIsWeb
@@ -141,6 +170,15 @@ extension TeenAuthentication on AppController {
       password: password,
       emailRedirectTo: authRedirect,
     );
+    if (result.user != null &&
+        result.user!.identities != null &&
+        result.user!.identities!.isEmpty) {
+      throw const AuthException(
+        'This email is already registered. Please sign in or reset your password.',
+        statusCode: '400',
+        code: 'user_already_exists',
+      );
+    }
     pendingEmail = email.trim();
     await repository.savePendingEmail(pendingEmail);
     authNotice =

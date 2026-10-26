@@ -310,7 +310,14 @@ class AppController extends ChangeNotifier {
           ? 'A record already exists for this category. Refresh and edit the existing record.'
           : 'Unable to save your changes. Refresh and try again.';
       return false;
-    } catch (_) {
+    } catch (e) {
+      final msg = e.toString().toLowerCase();
+      if (msg.contains('already registered') ||
+          msg.contains('already exists') ||
+          msg.contains('user_already_exists')) {
+        error = 'This email is already registered. Please sign in or reset your password.';
+        return false;
+      }
       error = 'Unable to connect. Check your connection and try again.';
       return false;
     } finally {
