@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'brand.dart';
 
-/// Editorial type is reserved for short, non-financial brand messages.
+/// Brand statements pair the workhorse font with the existing display face.
 class BrandHeadline extends StatelessWidget {
   const BrandHeadline({super.key, required this.lead, required this.accent});
   final String lead, accent;
