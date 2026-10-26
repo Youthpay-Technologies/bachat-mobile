@@ -335,9 +335,14 @@ class HomePage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerLow,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
@@ -388,7 +393,9 @@ class HomePage extends ConsumerWidget {
                   : (summary.spentMinor > 0 ? 'Rs 5,000' : 'Rs 0'),
               categoryName: c.budgets.isNotEmpty
                   ? c.budgets.first.category
-                  : (summary.byCategory.isNotEmpty ? summary.byCategory.keys.first : 'Bills & Utilities'),
+                  : (summary.byCategory.isNotEmpty
+                        ? summary.byCategory.keys.first
+                        : 'Bills & Utilities'),
               progress: summary.spentMinor > 0 ? 0.65 : 0.25,
             ),
             const SizedBox(height: 16),
@@ -549,7 +556,9 @@ class MoneyActions extends StatelessWidget {
 
       Widget spendBtn = FilledButton.icon(
         style: FilledButton.styleFrom(
-          backgroundColor: dark ? colors.surfaceContainer : BachatBrand.obsidian,
+          backgroundColor: dark
+              ? colors.surfaceContainer
+              : BachatBrand.obsidian,
           foregroundColor: Colors.white,
           minimumSize: const Size(48, 54),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -1252,7 +1261,11 @@ class LearnPage extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.lock_clock_outlined, size: 20, color: colors.onSurfaceVariant),
+                  Icon(
+                    Icons.lock_clock_outlined,
+                    size: 20,
+                    color: colors.onSurfaceVariant,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1270,7 +1283,9 @@ class LearnPage extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 'Interactive lessons are currently being crafted. Keep recording expenses to prepare your streak!',
-                style: textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+                style: textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
               ),
             ],
           ),
