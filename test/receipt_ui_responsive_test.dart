@@ -163,6 +163,26 @@ void main() {
     },
   );
 
+  testWidgets(
+    'receipt save stays reachable above the keyboard on a small phone',
+    (tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await mount(tester, Brightness.dark, 2, keyboard: 220);
+      await tester.ensureVisible(find.text('Receive').first);
+      await tester.tap(find.text('Receive').first);
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Save transaction'));
+      expect(tester.takeException(), isNull);
+      expect(
+        tester.getRect(find.text('Save transaction')).bottom,
+        lessThanOrEqualTo(348),
+      );
+    },
+  );
+
   for (final brightness in Brightness.values) {
     for (final size in [
       const Size(320, 568),
