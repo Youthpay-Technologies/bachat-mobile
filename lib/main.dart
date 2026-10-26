@@ -96,8 +96,9 @@ class BachatApp extends ConsumerWidget {
         child: Theme(
           data: Theme.of(context).copyWith(
             scaffoldBackgroundColor: Colors.transparent,
-            appBarTheme: Theme.of(context).appBarTheme
-                .copyWith(backgroundColor: Colors.transparent),
+            appBarTheme: Theme.of(
+              context,
+            ).appBarTheme.copyWith(backgroundColor: Colors.transparent),
           ),
           child: DevicePrivacyGate(controller: controller, child: child!),
         ),

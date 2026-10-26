@@ -306,8 +306,9 @@ class DashboardSkeleton extends StatelessWidget {
   const DashboardSkeleton({super.key});
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.outlineVariant
-        .withValues(alpha: .5);
+    final color = Theme.of(
+      context,
+    ).colorScheme.outlineVariant.withValues(alpha: .5);
     Widget block(double width, double height) => Container(
       width: width,
       height: height,
