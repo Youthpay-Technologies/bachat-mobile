@@ -39,3 +39,11 @@ Tests enforce text/control contrast and pin the approved dark palette values. Re
 - iOS build/device verification remains unavailable on this Windows host.
 
 Current screenshots are under `docs/screenshots/ux/aesthetics-*` and `docs/screenshots/ux/simplify-*`. Changes continue [PR #17](https://github.com/saim-x/bachat-mobile/pull/17), with a separate commit for each coherent change.
+
+## Floating-content refinement
+
+The owner clarified that the pill must overlay the screens rather than reserve a separate footer band. The mobile shell now extends its body behind the bar and preserves that full-height viewport through its SafeArea. Home, Activity and Plan paint and scroll underneath the navigation pill. Their scroll padding includes the overlay and device inset so the final content and actions can still be moved completely above it.
+
+The pill's normal maximum width is reduced from 440 to 280 logical pixels, bringing the three destinations closer together. Large text can use up to 344 pixels, constrained by the screen margins. The 64-pixel normal height, rounded corners, colors and plain icons are retained. Wide-screen navigation keeps its existing rail layout.
+
+Regression tests measure the actual content viewport overlapping the pill on every destination and scroll to the final Plan action to verify that it remains visible and tappable, both normally and at 200% system text size.
