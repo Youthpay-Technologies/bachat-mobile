@@ -82,6 +82,68 @@ void main() {
     },
   );
 
+  for (final large in [false, true]) {
+    testWidgets(
+      'screens scroll behind the compact pill and final controls remain reachable ${large ? "at 200 percent" : "normally"}',
+      (tester) async {
+        tester.view.physicalSize = Size(large ? 320 : 390, 844);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final c = await mount(tester);
+        if (large) {
+          await tester.pumpWidget(
+            ProviderScope(
+              overrides: [controllerProvider.overrideWith((ref) => c)],
+              child: MaterialApp(
+                theme: ThemeData(),
+                home: MediaQuery(
+                  data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+                  child: const DashboardShell(),
+                ),
+              ),
+            ),
+          );
+          await tester.pumpAndSettle();
+        }
+        for (final label in ['Home', 'Activity', 'Plan']) {
+          await tester.tap(
+            find.descendant(
+              of: find.byType(NavigationBar),
+              matching: find.text(label),
+            ),
+          );
+          await tester.pumpAndSettle();
+          final content = tester.getRect(find.byType(IndexedStack));
+          final navigation = tester.getRect(find.byType(NavigationBar));
+          expect(content.bottom, 844);
+          expect(content.contains(navigation.center), isTrue);
+          expect(navigation.width, lessThanOrEqualTo(large ? 296 : 280));
+          expect(tester.takeException(), isNull);
+        }
+        final scrollable = tester.state<ScrollableState>(
+          find
+              .descendant(
+                of: find.byType(PlanPage),
+                matching: find.byType(Scrollable),
+              )
+              .first,
+        );
+        scrollable.position.jumpTo(scrollable.position.maxScrollExtent);
+        await tester.pumpAndSettle();
+        final action = find.text('Add savings').first;
+        expect(
+          tester.getRect(action).bottom,
+          lessThan(tester.getRect(find.byType(NavigationBar)).top),
+        );
+        await tester.tap(action);
+        await tester.pumpAndSettle();
+        expect(find.byType(AddSavingsSheet), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
   testWidgets('signing out from profile returns to the welcome screen safely', (
     tester,
   ) async {
