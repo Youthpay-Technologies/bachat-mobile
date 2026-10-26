@@ -10,7 +10,12 @@ abstract final class BachatBrand {
   static const coral = Color(0xFFFF5252);
   static const coralLight = Color(0xFFFFEBEB);
   static const ink = Color(0xFF0E1217);
-  static const canvas = Color(0xFFF6F8F7);
+  static const canvas = Color(0xFFF5F7FB);
+  static const canvasGlowLight = Color(0xFFEAF0FF);
+  static const cobaltOnLight = Color(0xFF244ECB);
+  static const greenOnLight = Color(0xFF137A43);
+  static const orangeOnLight = Color(0xFFA45B00);
+  static const errorOnLight = Color(0xFFBD2C2C);
   static const canvasDark = Color(0xFF08090D);
   static const trackGrey = Color(0xFFE8ECEF);
 

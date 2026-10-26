@@ -17,13 +17,15 @@ abstract final class BachatTheme {
     final canvas = dark ? BachatBrand.canvasDark : BachatBrand.canvas;
     final scheme = ColorScheme(
       brightness: brightness,
-      primary: dark ? const Color(0xFF8CA9FF) : BachatBrand.cobalt,
+      primary: dark ? const Color(0xFF8CA9FF) : BachatBrand.cobaltOnLight,
       onPrimary: dark ? const Color(0xFF071438) : Colors.white,
       primaryContainer: dark
           ? const Color(0xFF172758)
           : const Color(0xFFE7EDFF),
-      onPrimaryContainer: dark ? const Color(0xFFCBD7FF) : BachatBrand.cobalt,
-      secondary: BachatBrand.mint,
+      onPrimaryContainer: dark
+          ? const Color(0xFFCBD7FF)
+          : BachatBrand.cobaltOnLight,
+      secondary: dark ? BachatBrand.mint : BachatBrand.greenOnLight,
       onSecondary: dark ? Colors.black : const Color(0xFF062010),
       secondaryContainer: dark
           ? const Color(0xFF133621)
@@ -31,7 +33,7 @@ abstract final class BachatTheme {
       onSecondaryContainer: dark
           ? const Color(0xFF7DF6B4)
           : const Color(0xFF09582D),
-      tertiary: BachatBrand.coral,
+      tertiary: dark ? BachatBrand.coral : BachatBrand.errorOnLight,
       onTertiary: Colors.white,
       tertiaryContainer: dark
           ? const Color(0xFF381515)
@@ -39,7 +41,7 @@ abstract final class BachatTheme {
       onTertiaryContainer: dark
           ? const Color(0xFFFFB4B4)
           : const Color(0xFF8C1B1B),
-      error: dark ? const Color(0xFFFFB4AB) : BachatBrand.coral,
+      error: dark ? const Color(0xFFFFB4AB) : BachatBrand.errorOnLight,
       onError: dark ? const Color(0xFF690005) : Colors.white,
       errorContainer: dark ? const Color(0xFF381515) : BachatBrand.coralLight,
       onErrorContainer: dark
@@ -48,19 +50,19 @@ abstract final class BachatTheme {
       surface: dark ? BachatBrand.darkCard : Colors.white,
       surfaceContainerLow: dark
           ? const Color(0xFF111216)
-          : const Color(0xFFF7F8FA),
+          : const Color(0xFFEEF2F8),
       surfaceContainer: dark
           ? const Color(0xFF202126)
-          : const Color(0xFFEDF0F3),
+          : const Color(0xFFE8EDF5),
       surfaceContainerHigh: dark
           ? const Color(0xFF2C2D33)
-          : const Color(0xFFE2E6EC),
+          : const Color(0xFFDCE3EE),
       onSurface: text,
       onSurfaceVariant: dark
           ? const Color(0xFF9AA2B1)
-          : const Color(0xFF6B7280),
-      outline: dark ? const Color(0xFF2E333E) : const Color(0xFFE2E5EB),
-      outlineVariant: dark ? const Color(0xFF20232B) : const Color(0xFFEEF1F4),
+          : const Color(0xFF536178),
+      outline: dark ? const Color(0xFF2E333E) : const Color(0xFF8290A8),
+      outlineVariant: dark ? const Color(0xFF20232B) : const Color(0xFFE0E6EF),
     );
     final base = ThemeData(
       useMaterial3: true,
@@ -318,6 +320,7 @@ abstract final class BachatTheme {
         backgroundColor: scheme.surface,
         selectedColor: scheme.primaryContainer,
         showCheckmark: true,
+        checkmarkColor: dark ? null : scheme.onPrimaryContainer,
         side: BorderSide(color: scheme.outlineVariant),
         labelStyle: TextStyle(
           fontFamily: BachatBrand.interfaceFont,

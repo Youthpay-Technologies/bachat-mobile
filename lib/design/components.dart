@@ -14,9 +14,9 @@ class BachatBackdrop extends StatelessWidget {
         center: const Alignment(-.9, -1),
         radius: 1.15,
         colors: [
-          BachatBrand.cobaltGlow.withValues(
-            alpha: Theme.of(context).brightness == Brightness.dark ? .7 : .1,
-          ),
+          Theme.of(context).brightness == Brightness.dark
+              ? BachatBrand.cobaltGlow.withValues(alpha: .7)
+              : BachatBrand.canvasGlowLight,
           Theme.of(context).brightness == Brightness.dark
               ? BachatBrand.canvasDark
               : BachatBrand.canvas,
