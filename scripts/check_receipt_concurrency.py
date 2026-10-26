@@ -22,11 +22,15 @@ def main() -> None:
     owner, goal, first, second = (str(uuid.uuid4()) for _ in range(4))
     with tempfile.TemporaryDirectory(prefix='receipt-capacity-') as directory:
         def query(sql: str, *, allow_error: bool = False):
-            file = Path(directory) / f'{uuid.uuid4()}.sql'
+            workdir = Path(directory) / str(uuid.uuid4())
+            (workdir / 'supabase' / '.temp').mkdir(parents=True)
+            (workdir / 'supabase' / 'config.toml').write_text(Path('supabase/config.toml').read_text(), encoding='utf-8')
+            (workdir / 'supabase' / '.temp' / 'project-ref').write_text(args.project_ref, encoding='utf-8')
+            file = workdir / 'probe.sql'
             file.write_text(sql, encoding='utf-8')
             try:
                 result = subprocess.run([str(args.cli), '--yes', 'db', 'query', '--linked',
-                    '--project-ref', args.project_ref, '--file', str(file)],
+                    '--project-ref', args.project_ref, '--workdir', str(workdir), '--file', str(file)],
                     input='', capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=30)
             except subprocess.TimeoutExpired as error:
                 raise RuntimeError('CLI timed out: ' + str(error.stdout) + str(error.stderr)) from error
