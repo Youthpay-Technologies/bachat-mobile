@@ -379,6 +379,7 @@ class HomePage extends ConsumerWidget {
                   ),
                 ),
                 child: const Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     BachatSymbol(size: 30),
                     SizedBox(width: 8),
@@ -393,12 +394,22 @@ class HomePage extends ConsumerWidget {
                   child: Text('Demo', style: TextStyle(fontSize: 12)),
                 ),
               IconButton.outlined(
+                style: IconButton.styleFrom(
+                  shape: const CircleBorder(),
+                  foregroundColor: colors.onSurface,
+                  side: BorderSide(color: colors.primary.withValues(alpha: .3)),
+                ),
                 onPressed: onPlan,
                 tooltip: 'Your plan',
                 icon: const Icon(Icons.account_balance_wallet_outlined),
               ),
               const SizedBox(width: 8),
               IconButton.outlined(
+                style: IconButton.styleFrom(
+                  shape: const CircleBorder(),
+                  foregroundColor: colors.onSurface,
+                  side: BorderSide(color: colors.primary.withValues(alpha: .3)),
+                ),
                 onPressed: () => accountSheet(context, c),
                 tooltip: c.preview ? 'Switch profile' : 'Account',
                 icon: Icon(
@@ -528,7 +539,8 @@ class HomePage extends ConsumerWidget {
               EmptyState(
                 icon: Icons.receipt_long_outlined,
                 title: 'Your story starts with one entry',
-                body: 'Add a purchase or allowance. Your recent activity will appear here.',
+                body:
+                    'Add a purchase or allowance. Your recent activity will appear here.',
                 action: c.isParent ? null : 'Add your first expense',
                 onAction: () => entryForm(context, c),
               )
@@ -579,7 +591,8 @@ class HomePage extends ConsumerWidget {
               EmptyState(
                 icon: Icons.flag_outlined,
                 title: 'Give your savings a purpose',
-                body: 'Create a goal in Plan and take it one small step at a time.',
+                body:
+                    'Create a goal in Plan and take it one small step at a time.',
                 action: c.isParent ? null : 'Create a savings goal',
                 onAction: () => goalForm(context, c),
               )
@@ -1046,7 +1059,8 @@ class PlanPage extends ConsumerWidget {
           EmptyState(
             icon: Icons.donut_large_outlined,
             title: 'Make a little room',
-            body: 'Set a monthly category limit to keep everyday spending in perspective.',
+            body:
+                'Set a monthly category limit to keep everyday spending in perspective.',
             action: c.isParent ? null : 'Set your first budget',
             onAction: () => budgetForm(context, c),
           ),
@@ -1111,7 +1125,8 @@ class PlanPage extends ConsumerWidget {
           const EmptyState(
             icon: Icons.savings_outlined,
             title: 'What are you saving for?',
-            body: 'Pick something that matters to you. Start with a target, then record what you put aside.',
+            body:
+                'Pick something that matters to you. Start with a target, then record what you put aside.',
           ),
         ...c.goals.map(
           (g) => Padding(
@@ -1597,7 +1612,8 @@ class _FamilyState extends ConsumerState<FamilyPage> {
                   if (await confirmAction(
                     context,
                     title: 'Approve this teen’s account?',
-                    body: 'Entering their code approves their use of Bachat. They must confirm you before you can see their records.',
+                    body:
+                        'Entering their code approves their use of Bachat. They must confirm you before you can see their records.',
                     action: 'Approve and request access',
                   )) {
                     await c.claimCode(code.text);
@@ -1660,7 +1676,9 @@ class _FamilyState extends ConsumerState<FamilyPage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  c.isParent ? 'Ayesha needs to confirm this request.' : 'Only confirm someone you know is your parent. They will be able to read your transactions, budgets, and goals.',
+                  c.isParent
+                      ? 'Ayesha needs to confirm this request.'
+                      : 'Only confirm someone you know is your parent. They will be able to read your transactions, budgets, and goals.',
                 ),
                 if (!c.isParent)
                   Wrap(
@@ -1673,7 +1691,8 @@ class _FamilyState extends ConsumerState<FamilyPage> {
                                 if (await confirmAction(
                                   context,
                                   title: 'Confirm ${l.parentName}?',
-                                  body: 'This parent will be able to read your transactions, budgets, and savings goals. They cannot edit them.',
+                                  body:
+                                      'This parent will be able to read your transactions, budgets, and savings goals. They cannot edit them.',
                                   action: 'Confirm parent',
                                 )) {
                                   await c.decideLink(l, true);
@@ -1709,7 +1728,8 @@ class _FamilyState extends ConsumerState<FamilyPage> {
                   if (await confirmAction(
                     context,
                     title: 'Remove this connection?',
-                    body: 'The parent will lose access. If this is the last approved parent, the teen dashboard locks until a parent is approved again.',
+                    body:
+                        'The parent will lose access. If this is the last approved parent, the teen dashboard locks until a parent is approved again.',
                     action: 'Remove connection',
                   )) {
                     await c.revokeLink(l);
@@ -1831,7 +1851,8 @@ class SettingsPage extends ConsumerWidget {
               if (await confirmAction(
                 context,
                 title: 'Reset sample data?',
-                body: 'Your changes will be replaced with the original transactions, budgets, goals and family connection.',
+                body:
+                    'Your changes will be replaced with the original transactions, budgets, goals and family connection.',
                 action: 'Reset data',
               )) {
                 await c.resetDemo();
