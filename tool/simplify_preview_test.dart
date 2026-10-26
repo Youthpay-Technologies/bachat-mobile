@@ -74,7 +74,13 @@ void main() {
         );
         await tester.ensureVisible(find.text('Save budget'));
         await tester.tap(find.text('Save budget'));
+        await tester.runAsync(() async {
+          for (var i = 0; i < 100 && c.budgets.isEmpty; i++) {
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+          }
+        });
         await tester.pumpAndSettle();
+        expect(c.budgets, isNotEmpty);
         await tester.enterText(
           find.widgetWithText(TextFormField, 'Available amount'),
           '3500.50',
@@ -82,6 +88,11 @@ void main() {
         await capture('available-money-form');
         await tester.ensureVisible(find.text('Save available money'));
         await tester.tap(find.text('Save available money'));
+        await tester.runAsync(() async {
+          for (var i = 0; i < 100 && c.availableMinor == null; i++) {
+            await Future<void>.delayed(const Duration(milliseconds: 10));
+          }
+        });
         await tester.pumpAndSettle();
         await capture('plan-with-available-money');
         await tester.tap(find.text('Home').last);
