@@ -72,10 +72,16 @@ class _EntryFormState extends State<EntryForm> {
     category = e?.category ?? categoriesFor(direction).first;
     customCategory = TextEditingController(text: e?.customCategory);
     date = e?.occurredAt ?? DateTime.now();
+    widget.c.addListener(_controllerChanged);
+  }
+
+  void _controllerChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
   void dispose() {
+    widget.c.removeListener(_controllerChanged);
     merchant.dispose();
     amount.dispose();
     note.dispose();
