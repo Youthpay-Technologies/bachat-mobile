@@ -210,7 +210,7 @@ class _ShellState extends ConsumerState<DashboardShell> {
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: c.isParent
+      floatingActionButton: c.isParent || tab != 0 || wide
           ? null
           : Row(
               mainAxisSize: MainAxisSize.min,
