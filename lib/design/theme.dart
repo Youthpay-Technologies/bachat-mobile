@@ -3,47 +3,45 @@ import 'package:flutter/material.dart';
 import 'brand.dart';
 
 abstract final class BachatRadii {
-  static const compact = 8.0;
-  static const control = 12.0;
-  static const surface = 20.0;
-  static const sheet = 24.0;
+  static const compact = 10.0;
+  static const control = 16.0;
+  static const surface = 28.0;
+  static const sheet = 32.0;
+  static const pill = 999.0;
 }
 
 abstract final class BachatTheme {
   static ThemeData build(Brightness brightness) {
     final dark = brightness == Brightness.dark;
-    final accent = dark ? const Color(0xFFB5C8FF) : BachatBrand.cobalt;
-    final text = dark ? const Color(0xFFF0F2F6) : BachatBrand.ink;
-    final canvas = dark ? const Color(0xFF101319) : BachatBrand.canvas;
-    final scheme =
-        ColorScheme.fromSeed(
-          seedColor: accent,
-          brightness: brightness,
-        ).copyWith(
-          primary: accent,
-          onPrimary: dark ? const Color(0xFF10275E) : Colors.white,
-          surface: Color(dark ? 0xFF1A1E26 : 0xFFFFFFFF),
-          surfaceContainerLow: Color(dark ? 0xFF161A21 : 0xFFF0F2F6),
-          surfaceContainer: Color(dark ? 0xFF222731 : 0xFFE9EDF3),
-          surfaceContainerHigh: Color(dark ? 0xFF2A303C : 0xFFE2E7EF),
-          onSurface: text,
-          onSurfaceVariant: Color(dark ? 0xFFAFB7C6 : 0xFF596478),
-          outline: Color(dark ? 0xFF7F8A9E : 0xFF788398),
-          outlineVariant: Color(dark ? 0xFF333B49 : 0xFFDDE2EB),
-          primaryContainer: Color(dark ? 0xFF223458 : 0xFFEAF0FD),
-          onPrimaryContainer: dark
-              ? const Color(0xFFDCE5FF)
-              : BachatBrand.cobalt,
-          secondary: BachatBrand.sunshine,
-          onSecondary: BachatBrand.ink,
-          secondaryContainer: Color(dark ? 0xFF40391E : 0xFFFFF5CB),
-          onSecondaryContainer: Color(dark ? 0xFFFFE68B : 0xFF514000),
-          tertiary: BachatBrand.tangerine,
-          onTertiary: BachatBrand.ink,
-          tertiaryContainer: Color(dark ? 0xFF4B2C1D : 0xFFFFEBDD),
-          onTertiaryContainer: Color(dark ? 0xFFFFCBA9 : 0xFF853900),
-          error: Color(dark ? 0xFFFFB4AB : 0xFFA13636),
-        );
+    final text = dark ? const Color(0xFFF5F7FA) : BachatBrand.ink;
+    final canvas = dark ? BachatBrand.canvasDark : BachatBrand.canvas;
+    final scheme = ColorScheme(
+      brightness: brightness,
+      primary: dark ? BachatBrand.mint : BachatBrand.obsidian,
+      onPrimary: dark ? Colors.black : Colors.white,
+      primaryContainer: dark ? const Color(0xFF1A2228) : const Color(0xFFE8ECEF),
+      onPrimaryContainer: dark ? BachatBrand.mint : BachatBrand.obsidian,
+      secondary: BachatBrand.mint,
+      onSecondary: dark ? Colors.black : const Color(0xFF062010),
+      secondaryContainer: dark ? const Color(0xFF133621) : BachatBrand.mintLight,
+      onSecondaryContainer: dark ? const Color(0xFF7DF6B4) : const Color(0xFF09582D),
+      tertiary: BachatBrand.coral,
+      onTertiary: Colors.white,
+      tertiaryContainer: dark ? const Color(0xFF381515) : BachatBrand.coralLight,
+      onTertiaryContainer: dark ? const Color(0xFFFFB4B4) : const Color(0xFF8C1B1B),
+      error: dark ? const Color(0xFFFFB4AB) : BachatBrand.coral,
+      onError: dark ? const Color(0xFF690005) : Colors.white,
+      errorContainer: dark ? const Color(0xFF381515) : BachatBrand.coralLight,
+      onErrorContainer: dark ? const Color(0xFFFFB4B4) : const Color(0xFF8C1B1B),
+      surface: dark ? const Color(0xFF16181D) : Colors.white,
+      surfaceContainerLow: dark ? const Color(0xFF111215) : const Color(0xFFF7F8FA),
+      surfaceContainer: dark ? const Color(0xFF1C1F25) : const Color(0xFFEDF0F3),
+      surfaceContainerHigh: dark ? const Color(0xFF252932) : const Color(0xFFE2E6EC),
+      onSurface: text,
+      onSurfaceVariant: dark ? const Color(0xFF9AA2B1) : const Color(0xFF6B7280),
+      outline: dark ? const Color(0xFF2E333E) : const Color(0xFFE2E5EB),
+      outlineVariant: dark ? const Color(0xFF20232B) : const Color(0xFFEEF1F4),
+    );
     final base = ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
@@ -79,8 +77,8 @@ abstract final class BachatTheme {
           .apply(bodyColor: text, displayColor: text)
           .copyWith(
             displaySmall: TextStyle(
-              fontFamily: BachatBrand.headingFont,
-              fontFamilyFallback: const [BachatBrand.interfaceFont],
+              fontFamily: BachatBrand.figuresFont,
+              fontFamilyFallback: const [BachatBrand.headingFont],
               fontSize: 44,
               fontWeight: FontWeight.w700,
               height: 1.1,
@@ -89,13 +87,14 @@ abstract final class BachatTheme {
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
             headlineLarge: TextStyle(
-              fontFamily: BachatBrand.headingFont,
-              fontFamilyFallback: const [BachatBrand.interfaceFont],
+              fontFamily: BachatBrand.figuresFont,
+              fontFamilyFallback: const [BachatBrand.headingFont],
               fontSize: 32,
               fontWeight: FontWeight.w700,
               height: 1.2,
               letterSpacing: -0.7,
               color: text,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
             headlineMedium: TextStyle(
               fontFamily: BachatBrand.headingFont,
@@ -114,10 +113,10 @@ abstract final class BachatTheme {
               color: text,
             ),
             titleMedium: TextStyle(
-              fontFamily: BachatBrand.headingFont,
-              fontFamilyFallback: const [BachatBrand.interfaceFont],
+              fontFamily: BachatBrand.figuresFont,
+              fontFamilyFallback: const [BachatBrand.headingFont],
               fontSize: 18,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
               height: 1.3,
               color: text,
               fontFeatures: const [FontFeature.tabularFigures()],
@@ -149,7 +148,8 @@ abstract final class BachatTheme {
               color: scheme.onSurfaceVariant,
             ),
             labelLarge: TextStyle(
-              fontFamily: BachatBrand.interfaceFont,
+              fontFamily: BachatBrand.figuresFont,
+              fontFamilyFallback: const [BachatBrand.interfaceFont],
               fontSize: 15,
               fontWeight: FontWeight.w700,
               color: text,

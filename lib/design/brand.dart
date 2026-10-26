@@ -2,16 +2,45 @@ import 'package:flutter/material.dart';
 
 /// Brand primitives. Widgets consume ColorScheme roles for adaptive UI colors.
 abstract final class BachatBrand {
-  static const cobalt = Color(0xFF0C38A9);
-  static const sunshine = Color(0xFFFFDE59);
-  static const tangerine = Color(0xFFFF751E);
-  static const ink = Color(0xFF142344);
-  static const canvas = Color(0xFFF6F7FB);
+  // Vibrant high-contrast fintech palette from design reference
+  static const mint = Color(0xFF22E385);
+  static const mintLight = Color(0xFFE2F9EE);
+  static const obsidian = Color(0xFF111215);
+  static const darkCard = Color(0xFF181A20);
+  static const coral = Color(0xFFFF5252);
+  static const coralLight = Color(0xFFFFEBEB);
+  static const ink = Color(0xFF0E1217);
+  static const canvas = Color(0xFFF6F8F7);
+  static const canvasDark = Color(0xFF0E1013);
+  static const trackGrey = Color(0xFFE8ECEF);
+
+  // Backward compatibility aliases
+  static const cobalt = obsidian;
+  static const sunshine = mint;
+  static const tangerine = coral;
+
   static const headingFont = 'Instrument Sans';
   static const interfaceFont = 'Instrument Sans';
   static const figuresFont = 'FK Grotesk';
   static const figuresMonoFont = 'FK Grotesk Mono';
   static const editorialFont = 'Instrument Serif';
+
+  static TextStyle figure(
+    BuildContext context, {
+    double size = 32,
+    FontWeight weight = FontWeight.w700,
+    Color? color,
+    double? letterSpacing = -0.5,
+  }) =>
+      TextStyle(
+        fontFamily: figuresFont,
+        fontFamilyFallback: const [headingFont, 'sans-serif'],
+        fontSize: size,
+        fontWeight: weight,
+        letterSpacing: letterSpacing,
+        color: color ?? Theme.of(context).colorScheme.onSurface,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      );
 
   static TextStyle editorial(BuildContext context, {double size = 38}) =>
       TextStyle(
@@ -42,7 +71,7 @@ class BachatSymbolPainter extends CustomPainter {
     canvas.drawPath(
       stem,
       Paint()
-        ..color = BachatBrand.sunshine
+        ..color = BachatBrand.mint
         ..style = PaintingStyle.stroke
         ..strokeWidth = 13
         ..strokeCap = StrokeCap.round,
@@ -50,7 +79,7 @@ class BachatSymbolPainter extends CustomPainter {
     canvas.drawCircle(
       const Offset(73, 25),
       8,
-      Paint()..color = BachatBrand.tangerine,
+      Paint()..color = BachatBrand.coral,
     );
     canvas.restore();
   }
@@ -69,7 +98,7 @@ class BachatSymbol extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: BachatBrand.cobalt,
+        color: BachatBrand.obsidian,
         borderRadius: BorderRadius.circular(size * .29),
       ),
       child: const CustomPaint(painter: BachatSymbolPainter()),

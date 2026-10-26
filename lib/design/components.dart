@@ -243,7 +243,7 @@ class StatusBadge extends StatelessWidget {
           : highlight
           ? Theme.of(context).colorScheme.secondaryContainer
           : Theme.of(context).colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(BachatRadii.compact),
+      borderRadius: BorderRadius.circular(999),
     ),
     child: Row(
       mainAxisSize: MainAxisSize.min,

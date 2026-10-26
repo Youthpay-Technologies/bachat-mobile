@@ -328,19 +328,35 @@ class HomePage extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const BachatSymbol(size: 48),
+              const BachatSymbol(size: 40),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Good to see you',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        DateFormat.MMMM().format(now),
+                        style: TextStyle(
+                          fontFamily: BachatBrand.headingFont,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
-                    Text(c.profile!.name, style: t.titleMedium),
+                    const SizedBox(height: 2),
+                    Text(
+                      c.profile!.name,
+                      style: t.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
@@ -353,7 +369,7 @@ class HomePage extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 20),
           ChildPicker(c),
           if (c.isParent && c.children.isEmpty)
             const FamilyPage(embedded: true)
@@ -363,7 +379,17 @@ class HomePage extends ConsumerWidget {
               amount: money(summary.spentMinor),
               contextLabel: expenseCount == 0
                   ? 'Start this month with your first expense.'
-                  : '$expenseCount ${expenseCount == 1 ? 'expense' : 'expenses'} recorded this month.',
+                  : '\ \ recorded this month.',
+            ),
+            const SizedBox(height: 16),
+            BuddyPlannerCard(
+              amount: c.budgets.isNotEmpty
+                  ? money(c.budgets.first.limitMinor)
+                  : (summary.spentMinor > 0 ? 'Rs 5,000' : 'Rs 0'),
+              categoryName: c.budgets.isNotEmpty
+                  ? c.budgets.first.category
+                  : (summary.byCategory.isNotEmpty ? summary.byCategory.keys.first : 'Bills & Utilities'),
+              progress: summary.spentMinor > 0 ? 0.65 : 0.25,
             ),
             const SizedBox(height: 16),
             if (!c.isParent) MoneyActions(c),
@@ -514,34 +540,56 @@ IconData categoryIcon(String category) => switch (category) {
 class MoneyActions extends StatelessWidget {
   const MoneyActions(this.controller, {super.key});
   final AppController controller;
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, size) {
-      final buttons = [
-        FilledButton.icon(
-          onPressed: () => entryForm(context, controller),
-          icon: const Icon(Icons.north_east_rounded),
-          label: const Text('Spend'),
+      final colors = Theme.of(context).colorScheme;
+      final dark = Theme.of(context).brightness == Brightness.dark;
+
+      Widget spendBtn = FilledButton.icon(
+        style: FilledButton.styleFrom(
+          backgroundColor: dark ? colors.surfaceContainer : BachatBrand.obsidian,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(48, 54),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
-        OutlinedButton.icon(
-          onPressed: () =>
-              entryForm(context, controller, direction: EntryDirection.income),
-          icon: const Icon(Icons.south_west_rounded),
-          label: const Text('Receive'),
+        onPressed: () => entryForm(context, controller),
+        icon: const Icon(Icons.north_east_rounded, size: 20),
+        label: const Text('Spend'),
+      );
+
+      Widget receiveBtn = FilledButton.icon(
+        style: FilledButton.styleFrom(
+          backgroundColor: BachatBrand.coral,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(48, 54),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
-      ];
+        onPressed: () =>
+            entryForm(context, controller, direction: EntryDirection.income),
+        icon: const Icon(Icons.south_west_rounded, size: 20),
+        label: const Text('Receive'),
+      );
+
       if (size.maxWidth < 300 ||
           MediaQuery.textScalerOf(context).scale(14) > 21) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [buttons.first, const SizedBox(height: 12), buttons.last],
+          children: [spendBtn, const SizedBox(height: 12), receiveBtn],
         );
       }
       return Row(
         children: [
-          Expanded(child: buttons.first),
+          Expanded(child: spendBtn),
           const SizedBox(width: 12),
-          Expanded(child: buttons.last),
+          Expanded(child: receiveBtn),
         ],
       );
     },
