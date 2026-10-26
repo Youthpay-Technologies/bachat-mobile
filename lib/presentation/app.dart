@@ -122,6 +122,28 @@ class DashboardShell extends ConsumerStatefulWidget {
 
 class _ShellState extends ConsumerState<DashboardShell> {
   int tab = 0;
+  bool exitPromptOpen = false;
+
+  Future<void> handleBack() async {
+    if (tab != 0) {
+      setState(() => tab = 0);
+      return;
+    }
+    if (exitPromptOpen) return;
+    exitPromptOpen = true;
+    try {
+      final exit = await confirmAction(
+        context,
+        title: 'Exit Bachat?',
+        body: 'Your saved records will be here when you return.',
+        action: 'Exit',
+      );
+      if (exit && mounted) await SystemNavigator.pop();
+    } finally {
+      exitPromptOpen = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = ref.watch(controllerProvider);
@@ -150,84 +172,91 @@ class _ShellState extends ConsumerState<DashboardShell> {
         label: 'Plan',
       ),
     ];
-    return Scaffold(
-      body: BachatBackdrop(
-        child: SafeArea(
-          child: Row(
-            children: [
-              if (wide) ...[
-                NavigationRail(
-                  selectedIndex: tab,
-                  onDestinationSelected: (value) => setState(() => tab = value),
-                  minWidth: MediaQuery.textScalerOf(context).scale(12) > 18
-                      ? 160
-                      : 104,
-                  labelType: NavigationRailLabelType.all,
-                  leading: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: BachatSymbol(),
-                  ),
-                  destinations: destinations
-                      .map(
-                        (destination) => NavigationRailDestination(
-                          icon: destination.icon,
-                          selectedIcon: destination.selectedIcon,
-                          label: Text(destination.label),
-                        ),
-                      )
-                      .toList(),
-                ),
-                const VerticalDivider(width: 1),
-              ],
-              Expanded(
-                child: Column(
-                  children: [
-                    SyncStatus(c),
-                    Expanded(
-                      child: IndexedStack(
-                        index: tab,
-                        children: [
-                          HomePage(
-                            onActivity: () => setState(() => tab = 1),
-                            onPlan: () => setState(() => tab = 2),
-                          ),
-                          const ActivityPage(),
-                          const PlanPage(),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: wide
-          ? null
-          : SafeArea(
-              top: false,
-              child: Center(
-                heightFactor: 1,
-                child: SizedBox(
-                  width: 280,
-                  child: NavigationBar(
-                    height: MediaQuery.textScalerOf(context).scale(12) > 18
-                        ? 112
-                        : 80,
-                    backgroundColor: Colors.transparent,
-                    indicatorColor: Colors.transparent,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) handleBack();
+      },
+      child: Scaffold(
+        body: BachatBackdrop(
+          child: SafeArea(
+            child: Row(
+              children: [
+                if (wide) ...[
+                  NavigationRail(
                     selectedIndex: tab,
-                    animationDuration: MediaQuery.disableAnimationsOf(context)
-                        ? Duration.zero
-                        : const Duration(milliseconds: 150),
                     onDestinationSelected: (value) =>
                         setState(() => tab = value),
-                    destinations: destinations,
+                    minWidth: MediaQuery.textScalerOf(context).scale(12) > 18
+                        ? 160
+                        : 104,
+                    labelType: NavigationRailLabelType.all,
+                    leading: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: BachatSymbol(),
+                    ),
+                    destinations: destinations
+                        .map(
+                          (destination) => NavigationRailDestination(
+                            icon: destination.icon,
+                            selectedIcon: destination.selectedIcon,
+                            label: Text(destination.label),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  const VerticalDivider(width: 1),
+                ],
+                Expanded(
+                  child: Column(
+                    children: [
+                      SyncStatus(c),
+                      Expanded(
+                        child: IndexedStack(
+                          index: tab,
+                          children: [
+                            HomePage(
+                              onActivity: () => setState(() => tab = 1),
+                              onPlan: () => setState(() => tab = 2),
+                            ),
+                            const ActivityPage(),
+                            const PlanPage(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        bottomNavigationBar: wide
+            ? null
+            : SafeArea(
+                top: false,
+                child: Center(
+                  heightFactor: 1,
+                  child: SizedBox(
+                    width: 280,
+                    child: NavigationBar(
+                      height: MediaQuery.textScalerOf(context).scale(12) > 18
+                          ? 112
+                          : 80,
+                      backgroundColor: Colors.transparent,
+                      indicatorColor: Colors.transparent,
+                      selectedIndex: tab,
+                      animationDuration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : const Duration(milliseconds: 150),
+                      onDestinationSelected: (value) =>
+                          setState(() => tab = value),
+                      destinations: destinations,
+                    ),
                   ),
                 ),
               ),
-            ),
+      ),
     );
   }
 }
@@ -384,20 +413,7 @@ class HomePage extends ConsumerWidget {
     final summary = MoneySummary(c.entries, now);
     final previous = MoneySummary(c.entries, DateTime(now.year, now.month - 1));
     final difference = summary.spentMinor - previous.spentMinor;
-    final dailyTotals = <int>[];
-    var cumulative = 0;
-    for (var day = 1; day <= now.day; day++) {
-      cumulative += c.entries
-          .where(
-            (e) =>
-                e.direction == EntryDirection.expense &&
-                e.occurredAt.year == now.year &&
-                e.occurredAt.month == now.month &&
-                e.occurredAt.day == day,
-          )
-          .fold<int>(0, (v, e) => v + e.amountMinor);
-      dailyTotals.add(cumulative);
-    }
+    final timeline = SpendingTimeline(c.entries, now);
     final limit = c.budgets.fold<int>(0, (v, b) => v + b.limitMinor);
     final budgetSpent = c.budgets.fold<int>(
       0,
@@ -409,57 +425,24 @@ class HomePage extends ConsumerWidget {
       child: PageBody(
         storageKey: 'home',
         children: [
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            crossAxisAlignment: WrapCrossAlignment.center,
+          Row(
             children: [
-              Container(
-                padding: const EdgeInsets.fromLTRB(5, 5, 14, 5),
-                decoration: BoxDecoration(
-                  color: colors.primaryContainer.withValues(alpha: .7),
-                  borderRadius: BorderRadius.circular(BachatRadii.pill),
-                  border: Border.all(
-                    color: colors.primary.withValues(alpha: .3),
-                  ),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    BachatSymbol(size: 30),
-                    SizedBox(width: 8),
-                    Text('Home'),
-                  ],
-                ),
-              ),
-
+              const BachatSymbol(size: 48, withBackground: false),
+              const Spacer(),
               if (c.preview)
-                const Padding(
-                  padding: EdgeInsets.only(right: 8),
-                  child: Text('Demo', style: TextStyle(fontSize: 12)),
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Text('Demo', style: t.bodySmall),
                 ),
               IconButton.outlined(
-                style: IconButton.styleFrom(
-                  shape: const CircleBorder(),
-                  foregroundColor: colors.onSurface,
-                  side: BorderSide(color: colors.primary.withValues(alpha: .3)),
-                ),
-                onPressed: onPlan,
-                tooltip: 'Your plan',
-                icon: const Icon(Icons.account_balance_wallet_outlined),
-              ),
-              const SizedBox(width: 8),
-              IconButton.outlined(
+                tooltip: 'Profile',
                 style: IconButton.styleFrom(
                   shape: const CircleBorder(),
                   foregroundColor: colors.onSurface,
                   side: BorderSide(color: colors.primary.withValues(alpha: .3)),
                 ),
                 onPressed: () => openProfile(context),
-                tooltip: 'Profile',
-                icon: Icon(
-                  c.preview ? Icons.swap_horiz_rounded : Icons.person_outline,
-                ),
+                icon: const Icon(Icons.person_outline),
               ),
             ],
           ),
@@ -473,7 +456,12 @@ class HomePage extends ConsumerWidget {
               contextLabel: previous.spentMinor == 0
                   ? 'Your recorded spending this month'
                   : '${difference >= 0 ? '+' : '-'}${money(difference.abs())} vs last month',
-              dailyTotals: dailyTotals,
+              dailyTotals: timeline.dailyTotals,
+              timeframe: !timeline.hasExpenses
+                  ? 'Add your first expense to start your graph'
+                  : timeline.start == timeline.end
+                  ? '${DateFormat.MMMd().format(timeline.start)} · One day recorded'
+                  : '${DateFormat.MMMd().format(timeline.start)} - ${DateFormat.MMMd().format(timeline.end)}',
             ),
             const SizedBox(height: 16),
             BudgetSummaryCard(

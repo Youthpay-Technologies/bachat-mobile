@@ -31,8 +31,9 @@ class SpendingHero extends StatelessWidget {
     required this.amount,
     required this.contextLabel,
     required this.dailyTotals,
+    required this.timeframe,
   });
-  final String month, amount, contextLabel;
+  final String month, amount, contextLabel, timeframe;
   final List<int> dailyTotals;
 
   @override
@@ -59,7 +60,7 @@ class SpendingHero extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         Semantics(
-          label: 'Cumulative daily spending for $month. Total $amount.',
+          label: 'Cumulative daily spending. $timeframe. Total $amount.',
           image: true,
           child: SizedBox(
             height: 96,
@@ -68,6 +69,12 @@ class SpendingHero extends StatelessWidget {
               painter: _SpendingPainter(dailyTotals, colors.onSurface),
             ),
           ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          timeframe,
+          style: Theme.of(context).textTheme.bodySmall,
+          textAlign: TextAlign.center,
         ),
       ],
     );
@@ -82,6 +89,16 @@ class _SpendingPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (values.isEmpty) return;
     final maximum = values.reduce(math.max);
+    if (values.length == 1 && maximum > 0) {
+      final point = Offset(size.width / 2, size.height / 2);
+      canvas.drawCircle(
+        point,
+        10,
+        Paint()..color = color.withValues(alpha: .12),
+      );
+      canvas.drawCircle(point, 3.5, Paint()..color = color);
+      return;
+    }
     final path = Path();
     for (var i = 0; i < values.length; i++) {
       final x = size.width * i / math.max(1, values.length - 1);

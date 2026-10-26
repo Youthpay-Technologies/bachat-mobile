@@ -91,8 +91,9 @@ class BachatSymbolPainter extends CustomPainter {
 }
 
 class BachatSymbol extends StatelessWidget {
-  const BachatSymbol({super.key, this.size = 44});
+  const BachatSymbol({super.key, this.size = 44, this.withBackground = true});
   final double size;
+  final bool withBackground;
 
   @override
   Widget build(BuildContext context) => ExcludeSemantics(
@@ -100,7 +101,7 @@ class BachatSymbol extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: BachatBrand.obsidian,
+        color: withBackground ? BachatBrand.obsidian : Colors.transparent,
         borderRadius: BorderRadius.circular(size * .29),
       ),
       child: const CustomPaint(painter: BachatSymbolPainter()),

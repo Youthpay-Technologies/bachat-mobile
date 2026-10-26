@@ -591,6 +591,8 @@ void main() {
     await mount(tester, c);
     await tester.tap(find.text('Plan').last);
     await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Reuse last month’s budgets'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Reuse last month’s budgets'));
     await tester.pumpAndSettle();
     expect(c.budgets.length, 2);

@@ -306,3 +306,41 @@ int parseAvailableMoney(String input) {
   if (RegExp(r'^0+(\.0{1,2})?$').hasMatch(clean)) return 0;
   return parseMoney(input);
 }
+
+/// The current-month series starts with the first expense, not an artificial month of zeros.
+class SpendingTimeline {
+  SpendingTimeline(List<MoneyEntry> entries, DateTime now) {
+    final expenses = entries
+        .where(
+          (e) =>
+              !e.deleted &&
+              e.direction == EntryDirection.expense &&
+              e.occurredAt.year == now.year &&
+              e.occurredAt.month == now.month &&
+              e.occurredAt.day <= now.day,
+        )
+        .toList();
+    final byDay = <int, int>{};
+    for (final entry in expenses) {
+      byDay.update(
+        entry.occurredAt.day,
+        (v) => v + entry.amountMinor,
+        ifAbsent: () => entry.amountMinor,
+      );
+    }
+    final firstDay = byDay.isEmpty
+        ? now.day
+        : byDay.keys.reduce((a, b) => a < b ? a : b);
+    start = DateTime(now.year, now.month, firstDay);
+    end = DateTime(now.year, now.month, now.day);
+    var total = 0;
+    for (var day = firstDay; day <= now.day; day++) {
+      total += byDay[day] ?? 0;
+      dailyTotals.add(total);
+    }
+    hasExpenses = expenses.isNotEmpty;
+  }
+  late final DateTime start, end;
+  late final bool hasExpenses;
+  final dailyTotals = <int>[];
+}
