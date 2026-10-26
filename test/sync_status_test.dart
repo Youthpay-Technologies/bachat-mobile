@@ -65,7 +65,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       await mount(tester);
-      for (final tab in ['Home', 'Activity', 'Plan', 'Learn', 'You']) {
+      for (final tab in ['Home', 'Activity', 'Plan']) {
         await tester.tap(
           find.descendant(
             of: find.byType(NavigationBar),

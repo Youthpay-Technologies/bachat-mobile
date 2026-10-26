@@ -3,6 +3,31 @@ import 'package:flutter/material.dart';
 import 'theme.dart';
 import 'brand.dart';
 
+/// The reference's cobalt light fades into the app's neutral canvas.
+class BachatBackdrop extends StatelessWidget {
+  const BachatBackdrop({super.key, required this.child});
+  final Widget child;
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+    decoration: BoxDecoration(
+      gradient: RadialGradient(
+        center: const Alignment(-.9, -1),
+        radius: 1.15,
+        colors: [
+          Theme.of(context).brightness == Brightness.dark
+              ? BachatBrand.cobaltGlow.withValues(alpha: .7)
+              : BachatBrand.canvasGlowLight,
+          Theme.of(context).brightness == Brightness.dark
+              ? BachatBrand.canvasDark
+              : BachatBrand.canvas,
+        ],
+        stops: const [0, .8],
+      ),
+    ),
+    child: child,
+  );
+}
+
 class BachatMark extends StatelessWidget {
   const BachatMark({super.key, this.large = false});
   final bool large;
@@ -73,10 +98,16 @@ class Surface extends StatelessWidget {
 
 /// One reading order for page titles, supporting context and optional actions.
 class PageHeading extends StatelessWidget {
-  const PageHeading(this.title, {super.key, this.subtitle, this.action});
+  const PageHeading(
+    this.title, {
+    super.key,
+    this.subtitle,
+    this.action,
+    this.leading,
+  });
   final String title;
   final String? subtitle;
-  final Widget? action;
+  final Widget? action, leading;
 
   @override
   Widget build(BuildContext context) => Padding(
@@ -86,6 +117,8 @@ class PageHeading extends StatelessWidget {
       children: [
         Row(
           children: [
+            ?leading,
+            if (leading != null) const SizedBox(width: 8),
             Expanded(
               child: Semantics(
                 header: true,

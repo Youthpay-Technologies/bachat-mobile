@@ -27,6 +27,7 @@ class AppController extends ChangeNotifier {
   List<MoneyEntry> allEntries = [];
   List<CategoryBudget> allBudgets = [];
   List<SavingsGoal> allGoals = [];
+  List<CashBalance> allCashBalances = [];
   String? selectedChildId;
   UserRole chosenRole = UserRole.teen;
   String theme = 'dark';
@@ -92,6 +93,11 @@ class AppController extends ChangeNotifier {
       .toList();
   List<SavingsGoal> get goals =>
       allGoals.where((g) => g.ownerId == viewingId && !g.deleted).toList();
+  CashBalance? get cashBalance =>
+      allCashBalances.where((b) => b.ownerId == viewingId).firstOrNull;
+  int get ledgerNetMinor => spendingLedgerNet(entries, goals);
+  int? get availableMinor => cashBalance?.availableMinor(ledgerNetMinor);
+
   ThemeMode get themeMode => switch (theme) {
     'light' => ThemeMode.light,
     'dark' => ThemeMode.dark,
@@ -132,6 +138,9 @@ class AppController extends ChangeNotifier {
         .toList();
     allGoals = (saved['goals'] as List)
         .map((j) => SavingsGoal.fromJson(Map<String, dynamic>.from(j as Map)))
+        .toList();
+    allCashBalances = (saved['cash_balances'] as List? ?? [])
+        .map((j) => CashBalance.fromJson(Map<String, dynamic>.from(j as Map)))
         .toList();
     selectedChildId = saved['selected_child'] as String?;
     familyCode = saved['family_code'] as String?;
@@ -246,6 +255,7 @@ class AppController extends ChangeNotifier {
     'entries': allEntries.map((e) => e.toJson()).toList(),
     'budgets': allBudgets.map((b) => b.toJson()).toList(),
     'goals': allGoals.map((g) => g.toJson()).toList(),
+    'cash_balances': allCashBalances.map((b) => b.toJson()).toList(),
     'selected_child': selectedChildId,
     'family_code': familyCode,
   };
@@ -281,6 +291,9 @@ class AppController extends ChangeNotifier {
           .toList();
       allGoals = (cached['goals'] as List? ?? [])
           .map((j) => SavingsGoal.fromJson(Map<String, dynamic>.from(j as Map)))
+          .toList();
+      allCashBalances = (cached['cash_balances'] as List? ?? [])
+          .map((j) => CashBalance.fromJson(Map<String, dynamic>.from(j as Map)))
           .toList();
       selectedChildId = cached['selected_child'] as String?;
       profileChecked = profile != null;
@@ -402,6 +415,7 @@ class AppController extends ChangeNotifier {
       allEntries.removeWhere((e) => !visible.contains(e.ownerId));
       allBudgets.removeWhere((b) => !visible.contains(b.ownerId));
       allGoals.removeWhere((g) => !visible.contains(g.ownerId));
+      allCashBalances.removeWhere((b) => !visible.contains(b.ownerId));
       if (!isParent) await repository.synchronize(id);
       pendingCount = (await repository.pending(id)).length;
       if (visible.isNotEmpty) {
@@ -409,6 +423,7 @@ class AppController extends ChangeNotifier {
           repository.fetchRows('transactions', id),
           repository.fetchRows('budgets', id),
           repository.fetchRows('savings_goals', id),
+          repository.fetchRows('cash_balances', id),
         ]);
         if (generation != _generation) return;
         final pending = await repository.pending(id);
@@ -440,6 +455,10 @@ class AppController extends ChangeNotifier {
             'savings_goals',
             data[2],
           ).map(SavingsGoal.fromJson).toList();
+          allCashBalances = overlay(
+            'cash_balances',
+            data[3],
+          ).map(CashBalance.fromJson).toList();
         }
       }
       if (generation != _generation) return;
@@ -493,6 +512,7 @@ class AppController extends ChangeNotifier {
     List<MoneyEntry>? entries,
     List<CategoryBudget>? budgets,
     List<SavingsGoal>? goals,
+    List<CashBalance>? cashBalances,
   }) async {
     final id = profile!.id;
     final generation = _generation;
@@ -504,6 +524,9 @@ class AppController extends ChangeNotifier {
       next['budgets'] = budgets.map((e) => e.toJson()).toList();
     }
     if (goals != null) next['goals'] = goals.map((e) => e.toJson()).toList();
+    if (cashBalances != null) {
+      next['cash_balances'] = cashBalances.map((b) => b.toJson()).toList();
+    }
     _localRevision++;
     if (preview) {
       await repository.save(demoKey, next);
@@ -514,6 +537,7 @@ class AppController extends ChangeNotifier {
     if (entries != null) allEntries = entries;
     if (budgets != null) allBudgets = budgets;
     if (goals != null) allGoals = goals;
+    if (cashBalances != null) allCashBalances = cashBalances;
     pendingCount = preview ? 0 : (await repository.pending(id)).length;
     notifyListeners();
     if (!preview) unawaited(refresh());
@@ -524,6 +548,27 @@ class AppController extends ChangeNotifier {
       throw const FormatException('You can only edit your own records.');
     }
   }
+
+  Future<void> setAvailableMoney(int amountMinor) => _serialize(() async {
+    if (amountMinor < 0 || amountMinor > 999999999999) {
+      throw const FormatException(
+        'Enter an available amount between Rs 0 and Rs 9,999,999,999.99.',
+      );
+    }
+    final balance = CashBalance(
+      ownerId: profile!.id,
+      amountMinor: amountMinor,
+      ledgerNetMinor: ledgerNetMinor,
+    );
+    await _commitRecord(
+      'cash_balances',
+      balance.toJson(),
+      cashBalances: [
+        ...allCashBalances.where((b) => b.ownerId != balance.ownerId),
+        balance,
+      ],
+    );
+  });
 
   Future<void> saveEntry(MoneyEntry value) => _serialize(() async {
     final entry = normalizeEntry(value);
@@ -829,6 +874,7 @@ class AppController extends ChangeNotifier {
     allEntries = [];
     allBudgets = [];
     allGoals = [];
+    allCashBalances = [];
     selectedChildId = null;
     preview = false;
     familyCode = null;

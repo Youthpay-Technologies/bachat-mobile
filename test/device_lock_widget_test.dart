@@ -101,46 +101,49 @@ void main() {
     },
   );
 
-  test('PinInputFormatter only accepts digits up to 6 and clears composing', () {
-    const formatter = PinInputFormatter(maxLength: 6);
+  test(
+    'PinInputFormatter only accepts digits up to 6 and clears composing',
+    () {
+      const formatter = PinInputFormatter(maxLength: 6);
 
-    // Single digit input
-    final single = formatter.formatEditUpdate(
-      TextEditingValue.empty,
-      const TextEditingValue(
-        text: '1',
-        selection: TextSelection.collapsed(offset: 1),
-        composing: TextRange(start: 0, end: 1),
-      ),
-    );
-    expect(single.text, '1');
-    expect(single.selection.baseOffset, 1);
-    expect(single.composing, TextRange.empty);
+      // Single digit input
+      final single = formatter.formatEditUpdate(
+        TextEditingValue.empty,
+        const TextEditingValue(
+          text: '1',
+          selection: TextSelection.collapsed(offset: 1),
+          composing: TextRange(start: 0, end: 1),
+        ),
+      );
+      expect(single.text, '1');
+      expect(single.selection.baseOffset, 1);
+      expect(single.composing, TextRange.empty);
 
-    // Strips letters and special characters
-    final filtered = formatter.formatEditUpdate(
-      const TextEditingValue(text: '1'),
-      const TextEditingValue(
-        text: '1a#2b3c4',
-        selection: TextSelection.collapsed(offset: 8),
-      ),
-    );
-    expect(filtered.text, '1234');
-    expect(filtered.selection.baseOffset, 4);
-    expect(filtered.composing, TextRange.empty);
+      // Strips letters and special characters
+      final filtered = formatter.formatEditUpdate(
+        const TextEditingValue(text: '1'),
+        const TextEditingValue(
+          text: '1a#2b3c4',
+          selection: TextSelection.collapsed(offset: 8),
+        ),
+      );
+      expect(filtered.text, '1234');
+      expect(filtered.selection.baseOffset, 4);
+      expect(filtered.composing, TextRange.empty);
 
-    // Clamps to max 6 digits
-    final clamped = formatter.formatEditUpdate(
-      const TextEditingValue(text: '12345'),
-      const TextEditingValue(
-        text: '123456789',
-        selection: TextSelection.collapsed(offset: 9),
-      ),
-    );
-    expect(clamped.text, '123456');
-    expect(clamped.selection.baseOffset, 6);
-    expect(clamped.composing, TextRange.empty);
-  });
+      // Clamps to max 6 digits
+      final clamped = formatter.formatEditUpdate(
+        const TextEditingValue(text: '12345'),
+        const TextEditingValue(
+          text: '123456789',
+          selection: TextSelection.collapsed(offset: 9),
+        ),
+      );
+      expect(clamped.text, '123456');
+      expect(clamped.selection.baseOffset, 6);
+      expect(clamped.composing, TextRange.empty);
+    },
+  );
 
   testWidgets(
     'entering 6 digits auto-submits and unlocks without clicking button',

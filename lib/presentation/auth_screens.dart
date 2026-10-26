@@ -196,7 +196,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   const SizedBox(height: 16),
                 ],
                 AppError(c),
-                if (create && (c.error?.contains('already registered') ?? false)) ...[
+                if (create &&
+                    (c.error?.contains('already registered') ?? false)) ...[
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(

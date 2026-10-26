@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:http/http.dart' as http;
+
 import 'data/backend_http_client.dart';
 import 'data/backend_config.dart';
 import 'data/pin_storage.dart';
@@ -12,6 +13,7 @@ import 'application/controller.dart';
 import 'data/database.dart';
 import 'data/repository.dart';
 import 'design/theme.dart';
+import 'design/components.dart';
 import 'presentation/app.dart';
 
 bool _backendReady = false;
@@ -52,7 +54,7 @@ Future<void> main() async {
     runApp(
       MaterialApp(
         debugShowCheckedModeBanner: false,
-        theme: BachatTheme.build(Brightness.light),
+        theme: BachatTheme.build(Brightness.dark),
         home: Scaffold(
           body: SafeArea(
             child: Padding(
@@ -90,8 +92,17 @@ class BachatApp extends ConsumerWidget {
       darkTheme: BachatTheme.build(Brightness.dark),
       themeMode: controller.themeMode,
       themeAnimationDuration: Duration.zero,
-      builder: (context, child) =>
-          DevicePrivacyGate(controller: controller, child: child!),
+      builder: (context, child) => BachatBackdrop(
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            scaffoldBackgroundColor: Colors.transparent,
+            appBarTheme: Theme.of(
+              context,
+            ).appBarTheme.copyWith(backgroundColor: Colors.transparent),
+          ),
+          child: DevicePrivacyGate(controller: controller, child: child!),
+        ),
+      ),
       home: const AppGate(),
     );
   }

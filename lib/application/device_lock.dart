@@ -20,12 +20,9 @@ Future<String> _pinDigest(Map<String, String> value) async {
 typedef PinHasher = Future<String> Function(Map<String, String> value);
 
 class DeviceLock extends ChangeNotifier {
-  DeviceLock(
-    this.storage, {
-    DateTime Function()? now,
-    PinHasher? hasher,
-  }) : now = now ?? DateTime.now,
-       _hasher = hasher ?? ((value) => compute(_pinDigest, value));
+  DeviceLock(this.storage, {DateTime Function()? now, PinHasher? hasher})
+    : now = now ?? DateTime.now,
+      _hasher = hasher ?? ((value) => compute(_pinDigest, value));
   final PinStorage storage;
   final DateTime Function() now;
   final PinHasher _hasher;

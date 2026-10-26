@@ -68,7 +68,12 @@ class BachatRepository {
     Map<String, dynamic> row,
     Map<String, dynamic> snapshot,
   ) async {
-    if (!['transactions', 'budgets', 'savings_goals'].contains(table)) {
+    if (![
+      'transactions',
+      'budgets',
+      'savings_goals',
+      'cash_balances',
+    ].contains(table)) {
       throw ArgumentError('Unknown sync table');
     }
     await database.transaction((txn) async {

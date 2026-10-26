@@ -203,7 +203,7 @@ void main() {
     final c = await controller();
     c.startPreview(UserRole.teen);
     await mount(tester, c);
-    expect(find.textContaining('Demo'), findsNothing);
+    expect(find.text('Demo'), findsOneWidget);
     expect(find.textContaining('Saved on this device'), findsNothing);
     expect(find.text('Rs 3,665'), findsOneWidget);
     await tester.tap(find.text('Activity').last);
@@ -212,12 +212,13 @@ void main() {
     await tester.tap(find.text('Plan').last);
     await tester.pumpAndSettle();
     expect(find.text('Monthly budgets'), findsOneWidget);
-    await tester.tap(find.text('Learn').last);
+    await tester.tap(find.text('Home').last);
     await tester.pumpAndSettle();
-    expect(find.text('Coming soon'), findsOneWidget);
-    await tester.tap(find.text('You').last);
+    await tester.tap(find.byTooltip('Profile'));
     await tester.pumpAndSettle();
-    expect(find.text('Family connections'), findsOneWidget);
+    expect(find.text('Preferences'), findsOneWidget);
+    expect(find.text('Learn'), findsNothing);
+    expect(find.text('You'), findsNothing);
   });
   testWidgets('parent dashboard is read-only', (tester) async {
     final c = await controller();
@@ -417,16 +418,17 @@ void main() {
     final c = await controller();
     c.startPreview(UserRole.teen);
     await mount(tester, c);
-    await tester.tap(find.byTooltip('Switch profile'));
+    await tester.tap(find.byTooltip('Profile'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Ayesha').last);
     await tester.pumpAndSettle();
     await tester.tap(find.text('Sana'));
     await tester.pumpAndSettle();
     expect(c.isParent, isTrue);
-    await tester.tap(find.text('You').last);
-    await tester.pumpAndSettle();
+
     await tester.tap(find.text('Appearance'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Dark'));
+    await tester.tap(find.text('Dark').last);
     await tester.pumpAndSettle();
     expect(c.themeMode, ThemeMode.dark);
     expect(find.text('Appearance'), findsOneWidget);
@@ -451,9 +453,13 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     final carousel = tester.widget<SingleChildScrollView>(
-      find.byWidgetPredicate(
-        (w) =>
-            w is SingleChildScrollView && w.scrollDirection == Axis.horizontal,
+      find.descendant(
+        of: find.byType(GoalCarousel),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is SingleChildScrollView &&
+              w.scrollDirection == Axis.horizontal,
+        ),
       ),
     );
     expect(carousel.controller!.offset, 0);
@@ -584,6 +590,8 @@ void main() {
     );
     await mount(tester, c);
     await tester.tap(find.text('Plan').last);
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Reuse last month’s budgets'));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Reuse last month’s budgets'));
     await tester.pumpAndSettle();

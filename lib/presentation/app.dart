@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../application/controller.dart';
 import '../design/components.dart';
 import '../design/brand.dart';
-import '../design/theme.dart';
 import '../design/brand_panels.dart';
 import '../domain/models.dart';
 import '../domain/activity_filter.dart';
@@ -82,7 +81,7 @@ class PageBody extends StatelessWidget {
       MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
       24,
       MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
-      112,
+      36 + MediaQuery.paddingOf(context).bottom,
     ),
     child: Center(
       child: ConstrainedBox(
@@ -122,6 +121,28 @@ class DashboardShell extends ConsumerStatefulWidget {
 
 class _ShellState extends ConsumerState<DashboardShell> {
   int tab = 0;
+  bool exitPromptOpen = false;
+
+  Future<void> handleBack() async {
+    if (tab != 0) {
+      setState(() => tab = 0);
+      return;
+    }
+    if (exitPromptOpen) return;
+    exitPromptOpen = true;
+    try {
+      final exit = await confirmAction(
+        context,
+        title: 'Exit Bachat?',
+        body: 'Your saved records will be here when you return.',
+        action: 'Exit',
+      );
+      if (exit && mounted) await SystemNavigator.pop();
+    } finally {
+      exitPromptOpen = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final c = ref.watch(controllerProvider);
@@ -143,112 +164,152 @@ class _ShellState extends ConsumerState<DashboardShell> {
         selectedIcon: Icon(Icons.savings_rounded),
         label: 'Plan',
       ),
-      NavigationDestination(
-        icon: Icon(Icons.auto_stories_outlined),
-        selectedIcon: Icon(Icons.auto_stories_rounded),
-        label: 'Learn',
-      ),
-      NavigationDestination(
-        icon: Icon(Icons.person_outline),
-        selectedIcon: Icon(Icons.person_rounded),
-        label: 'You',
-      ),
     ];
-    return Scaffold(
-      body: SafeArea(
-        child: Row(
-          children: [
-            if (wide) ...[
-              NavigationRail(
-                selectedIndex: tab,
-                onDestinationSelected: (value) => setState(() => tab = value),
-                minWidth: MediaQuery.textScalerOf(context).scale(12) > 18
-                    ? 160
-                    : 104,
-                labelType: NavigationRailLabelType.all,
-                leading: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 24),
-                  child: BachatSymbol(),
-                ),
-                destinations: destinations
-                    .map(
-                      (destination) => NavigationRailDestination(
-                        icon: destination.icon,
-                        selectedIcon: destination.selectedIcon,
-                        label: Text(destination.label),
-                      ),
-                    )
-                    .toList(),
-              ),
-              const VerticalDivider(width: 1),
-            ],
-            Expanded(
-              child: Column(
-                children: [
-                  SyncStatus(c),
-                  Expanded(
-                    child: IndexedStack(
-                      index: tab,
-                      children: [
-                        HomePage(
-                          onActivity: () => setState(() => tab = 1),
-                          onPlan: () => setState(() => tab = 2),
-                        ),
-                        const ActivityPage(),
-                        const PlanPage(),
-                        const LearnPage(),
-                        const SettingsPage(),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: c.isParent
-          ? null
-          : Row(
-              mainAxisSize: MainAxisSize.min,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) handleBack();
+      },
+      child: Scaffold(
+        extendBody: !wide,
+        body: BachatBackdrop(
+          child: SafeArea(
+            bottom: wide,
+            child: Row(
               children: [
-                FloatingActionButton.small(
-                  heroTag: 'receive',
-                  tooltip: 'Receive money',
-                  onPressed: () =>
-                      entryForm(context, c, direction: EntryDirection.income),
-                  child: const Icon(Icons.south_west_rounded),
-                ),
-                const SizedBox(width: 12),
-                FloatingActionButton(
-                  heroTag: 'spend',
-                  tooltip: 'Spend money',
-                  onPressed: () => entryForm(context, c),
-                  child: const Icon(Icons.add_rounded, size: 30),
+                if (wide) ...[
+                  NavigationRail(
+                    selectedIndex: tab,
+                    onDestinationSelected: (value) =>
+                        setState(() => tab = value),
+                    minWidth: MediaQuery.textScalerOf(context).scale(12) > 18
+                        ? 160
+                        : 104,
+                    labelType: NavigationRailLabelType.all,
+                    leading: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 24),
+                      child: BachatSymbol(),
+                    ),
+                    destinations: destinations
+                        .map(
+                          (destination) => NavigationRailDestination(
+                            icon: destination.icon,
+                            selectedIcon: destination.selectedIcon,
+                            label: Text(destination.label),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  const VerticalDivider(width: 1),
+                ],
+                Expanded(
+                  child: Column(
+                    children: [
+                      SyncStatus(c),
+                      Expanded(
+                        child: IndexedStack(
+                          index: tab,
+                          children: [
+                            HomePage(
+                              onActivity: () => setState(() => tab = 1),
+                              onPlan: () => setState(() => tab = 2),
+                            ),
+                            const ActivityPage(),
+                            const PlanPage(),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-      bottomNavigationBar: wide
-          ? null
-          : SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(BachatRadii.surface),
-                  child: NavigationBar(
-                    selectedIndex: tab,
-                    animationDuration: MediaQuery.disableAnimationsOf(context)
-                        ? Duration.zero
-                        : const Duration(milliseconds: 150),
-                    onDestinationSelected: (value) =>
-                        setState(() => tab = value),
-                    destinations: destinations,
+          ),
+        ),
+        bottomNavigationBar: wide
+            ? null
+            : SafeArea(
+                top: false,
+                minimum: const EdgeInsets.symmetric(horizontal: 12),
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Center(
+                    heightFactor: 1,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        maxWidth:
+                            MediaQuery.textScalerOf(context).scale(12) > 18
+                            ? 344
+                            : 280,
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(999),
+                        child: NavigationBar(
+                          height:
+                              MediaQuery.textScalerOf(context).scale(12) > 18
+                              ? 88
+                              : 64,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.surface,
+                          surfaceTintColor: Colors.transparent,
+                          indicatorColor: Colors.transparent,
+                          selectedIndex: tab,
+                          animationDuration:
+                              MediaQuery.disableAnimationsOf(context)
+                              ? Duration.zero
+                              : const Duration(milliseconds: 150),
+                          onDestinationSelected: (value) =>
+                              setState(() => tab = value),
+                          destinations: destinations,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
+      ),
+    );
+  }
+}
+
+Future<void> openProfile(BuildContext context) => Navigator.push<void>(
+  context,
+  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+);
+
+class ProfileScreen extends ConsumerWidget {
+  const ProfileScreen({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.listen<bool>(controllerProvider.select((c) => c.signedIn), (
+      _,
+      signedIn,
+    ) {
+      if (!signedIn) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+        });
+      }
+    });
+    final c = ref.watch(controllerProvider);
+    return Scaffold(
+      body: BachatBackdrop(
+        child: SafeArea(
+          child: Column(
+            children: [
+              SyncStatus(c),
+              Expanded(
+                child: c.profile == null
+                    ? const SizedBox.shrink()
+                    : const SettingsPage(),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -335,14 +396,15 @@ class HomePage extends ConsumerWidget {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
     final now = DateTime.now();
     final summary = MoneySummary(c.entries, now);
-    final expenseCount = c.entries
-        .where(
-          (entry) =>
-              entry.direction == EntryDirection.expense &&
-              entry.occurredAt.year == now.year &&
-              entry.occurredAt.month == now.month,
-        )
-        .length;
+    final previous = MoneySummary(c.entries, DateTime(now.year, now.month - 1));
+    final difference = summary.spentMinor - previous.spentMinor;
+    final timeline = SpendingTimeline(c.entries, now);
+    final limit = c.budgets.fold<int>(0, (v, b) => v + b.limitMinor);
+    final budgetSpent = c.budgets.fold<int>(
+      0,
+      (v, b) => v + (summary.byCategory[b.category] ?? 0),
+    );
+    final colors = Theme.of(context).colorScheme;
     return RefreshIndicator(
       onRefresh: c.refresh,
       child: PageBody(
@@ -350,53 +412,25 @@ class HomePage extends ConsumerWidget {
         children: [
           Row(
             children: [
-              const BachatSymbol(size: 40),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        DateFormat.MMMM().format(now),
-                        style: TextStyle(
-                          fontFamily: BachatBrand.headingFont,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      c.profile!.name,
-                      style: t.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+              const BachatSymbol(size: 48, withBackground: false),
+              const Spacer(),
+              if (c.preview)
+                Padding(
+                  padding: const EdgeInsets.only(right: 12),
+                  child: Text('Demo', style: t.bodySmall),
                 ),
-              ),
-              IconButton(
-                onPressed: () => accountSheet(context, c),
-                tooltip: c.preview ? 'Switch profile' : 'Account',
-                icon: Icon(
-                  c.preview ? Icons.swap_horiz_rounded : Icons.person_outline,
+              IconButton.outlined(
+                tooltip: 'Profile',
+                style: IconButton.styleFrom(
+                  shape: const CircleBorder(),
+                  foregroundColor: colors.onSurface,
+                  side: BorderSide(color: colors.primary.withValues(alpha: .3)),
                 ),
+                onPressed: () => openProfile(context),
+                icon: const Icon(Icons.person_outline),
               ),
             ],
           ),
-          const SizedBox(height: 20),
           ChildPicker(c),
           if (c.isParent && c.children.isEmpty)
             const FamilyPage(embedded: true)
@@ -404,22 +438,117 @@ class HomePage extends ConsumerWidget {
             SpendingHero(
               month: DateFormat.MMMM().format(now),
               amount: money(summary.spentMinor),
-              contextLabel: expenseCount == 0
-                  ? 'Start this month with your first expense.'
-                  : '\ \ recorded this month.',
+              contextLabel: previous.spentMinor == 0
+                  ? 'Your recorded spending this month'
+                  : '${difference >= 0 ? '+' : '-'}${money(difference.abs())} vs last month',
+              timeline: timeline,
             ),
             const SizedBox(height: 16),
-            BuddyPlannerCard(
-              amount: c.budgets.isNotEmpty
-                  ? money(c.budgets.first.limitMinor)
-                  : (summary.spentMinor > 0 ? 'Rs 5,000' : 'Rs 0'),
-              categoryName: c.budgets.isNotEmpty
-                  ? c.budgets.first.category
-                  : (summary.byCategory.isNotEmpty
-                        ? summary.byCategory.keys.first
-                        : 'Bills & Utilities'),
-              progress: summary.spentMinor > 0 ? 0.65 : 0.25,
+            BudgetSummaryCard(
+              progress: limit == 0 ? 0 : (budgetSpent / limit).clamp(0, 1),
+              overBudget: budgetSpent > limit,
+              title: limit == 0
+                  ? 'Make room for what matters'
+                  : budgetSpent > limit
+                  ? '${money(budgetSpent - limit)} over budget'
+                  : '${money(limit - budgetSpent)} left in budget',
+              subtitle: limit == 0
+                  ? 'Set your first category budget in Plan.'
+                  : 'Across your monthly category budgets.',
+              onTap: onPlan,
             ),
+            SectionHeading(
+              'Spending by category',
+              action: 'View all',
+              onAction: onActivity,
+            ),
+            if (summary.byCategory.isEmpty)
+              EmptyState(
+                icon: Icons.pie_chart_outline,
+                title: 'A clearer picture starts here',
+                body: 'Record an expense to see your spending by category.',
+                action: c.isParent ? null : 'Record an expense',
+                onAction: () => entryForm(context, c),
+              )
+            else
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: summary.byCategory.entries.indexed.map((item) {
+                    final (index, category) = item;
+                    final budget = c.budgets
+                        .where((b) => b.category == category.key)
+                        .firstOrNull;
+                    final dark =
+                        Theme.of(context).brightness == Brightness.dark;
+                    final accent = [
+                      dark
+                          ? BachatBrand.categoryOrange
+                          : BachatBrand.orangeOnLight,
+                      dark
+                          ? BachatBrand.categoryGreen
+                          : BachatBrand.greenOnLight,
+                      dark ? BachatBrand.cobalt : BachatBrand.cobaltOnLight,
+                    ][index % 3];
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: SizedBox(
+                        width: 164,
+                        child: Surface(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: accent.withValues(alpha: .16),
+                                  border: Border.all(color: accent, width: 3),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: accent.withValues(alpha: .15),
+                                      blurRadius: 20,
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  categoryIcon(category.key),
+                                  color: accent,
+                                  size: 25,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(category.key, style: t.bodyLarge),
+                              const SizedBox(height: 26),
+                              Text(
+                                money(category.value),
+                                style: BachatBrand.figure(
+                                  context,
+                                  size: 18,
+                                  weight: FontWeight.w500,
+                                ),
+                              ),
+                              Text(
+                                budget == null
+                                    ? 'No budget set'
+                                    : category.value > budget.limitMinor
+                                    ? '${money(category.value - budget.limitMinor)} over'
+                                    : '${money(budget.limitMinor - category.value)} left',
+                                style: t.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+            const SizedBox(height: 24),
+            MoneySetupCard(c),
             const SizedBox(height: 16),
             if (!c.isParent) MoneyActions(c),
             SectionHeading(
@@ -474,49 +603,6 @@ class HomePage extends ConsumerWidget {
               'Net flow is money in minus spending and money set aside.',
               style: t.bodySmall,
             ),
-            const SectionHeading('Spending breakdown'),
-            if (summary.byCategory.isEmpty)
-              EmptyState(
-                icon: Icons.pie_chart_outline,
-                title: 'A clearer picture starts here',
-                body: 'Record an expense to see your spending by category.',
-                action: c.isParent ? null : 'Record an expense',
-                onAction: () => entryForm(context, c),
-              )
-            else
-              Surface(
-                child: Column(
-                  children: summary.byCategory.entries
-                      .map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Column(
-                            children: [
-                              Wrap(
-                                alignment: WrapAlignment.spaceBetween,
-                                spacing: 16,
-                                runSpacing: 4,
-                                children: [
-                                  Text(e.key),
-                                  Text(money(e.value), style: t.titleSmall),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Semantics(
-                                label: '${e.key}: ${money(e.value)}',
-                                child: LinearProgressIndicator(
-                                  value: e.value / summary.spentMinor,
-                                  minHeight: 5,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
             SectionHeading(
               'Savings goals',
               action: 'Your plan',
@@ -535,6 +621,107 @@ class HomePage extends ConsumerWidget {
               GoalCarousel(c),
           ],
           AppError(c),
+        ],
+      ),
+    );
+  }
+}
+
+/// Optional setup keeps the expense actions available at every stage.
+class MoneySetupCard extends StatelessWidget {
+  const MoneySetupCard(this.c, {super.key});
+  final AppController c;
+
+  Future<void> choosePlan(BuildContext context, bool budget) async {
+    if (budget) {
+      await budgetForm(context, c);
+    } else {
+      await goalForm(context, c);
+    }
+    if (context.mounted &&
+        c.cashBalance == null &&
+        (c.budgets.isNotEmpty || c.goals.isNotEmpty)) {
+      await availableMoneyForm(context, c);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    final available = c.availableMinor;
+    if (available != null) {
+      return Surface(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(child: Text('Available to spend', style: t.bodySmall)),
+                if (!c.isParent)
+                  IconButton(
+                    tooltip: 'Update available money',
+                    onPressed: () => availableMoneyForm(context, c),
+                    icon: const Icon(Icons.edit_outlined),
+                  ),
+              ],
+            ),
+            Text(
+              money(available),
+              style: BachatBrand.figure(
+                context,
+                size: 28,
+                weight: FontWeight.w400,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              available < 0
+                  ? 'Recorded spending exceeds your available money. Review your entries or update this amount.'
+                  : 'Tracked from your entered amount, expenses, savings and received money.',
+              style: t.bodySmall,
+            ),
+          ],
+        ),
+      );
+    }
+    if (c.isParent) return const SizedBox.shrink();
+    final hasPlan = c.budgets.isNotEmpty || c.goals.isNotEmpty;
+    return Surface(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            hasPlan ? 'Add your available money' : 'Start with a simple plan',
+            style: t.titleLarge,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hasPlan
+                ? 'Your plan is ready. Enter what you can spend now, then track expenses as you go.'
+                : 'Choose a budget or savings goal, add your available money, then track everyday expenses. You can also start tracking right away.',
+            style: t.bodySmall,
+          ),
+          const SizedBox(height: 16),
+          if (hasPlan)
+            OutlinedButton(
+              onPressed: () => availableMoneyForm(context, c),
+              child: const Text('Add available money'),
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton(
+                  onPressed: () => choosePlan(context, true),
+                  child: const Text('Set a budget'),
+                ),
+                OutlinedButton(
+                  onPressed: () => choosePlan(context, false),
+                  child: const Text('Set a savings goal'),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -581,7 +768,7 @@ class MoneyActions extends StatelessWidget {
           backgroundColor: dark
               ? colors.surfaceContainer
               : BachatBrand.obsidian,
-          foregroundColor: Colors.white,
+          foregroundColor: dark ? colors.onSurface : Colors.white,
           minimumSize: const Size(48, 54),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           shape: RoundedRectangleBorder(
@@ -595,8 +782,8 @@ class MoneyActions extends StatelessWidget {
 
       Widget receiveBtn = FilledButton.icon(
         style: FilledButton.styleFrom(
-          backgroundColor: BachatBrand.coral,
-          foregroundColor: Colors.white,
+          backgroundColor: colors.primaryContainer,
+          foregroundColor: colors.onSurface,
           minimumSize: const Size(48, 54),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           shape: RoundedRectangleBorder(
@@ -960,6 +1147,7 @@ class PlanPage extends ConsumerWidget {
               '${DateFormat.yMMMM().format(DateTime.now())} · Your monthly plan',
         ),
         ChildPicker(c),
+        MoneySetupCard(c),
         const SectionHeading('Set aside'),
         Surface(
           child: Row(
@@ -1697,7 +1885,7 @@ class SettingsPage extends ConsumerWidget {
     final c = ref.watch(controllerProvider), t = Theme.of(context).textTheme;
     return PageBody(
       children: [
-        const PageHeading('You'),
+        const PageHeading('Profile', leading: BackButton()),
         Surface(
           child: ListTile(
             contentPadding: EdgeInsets.zero,

@@ -104,7 +104,9 @@ class PinInputFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     final digits = newValue.text.replaceAll(RegExp(r'[^\d]'), '');
-    final text = digits.length > maxLength ? digits.substring(0, maxLength) : digits;
+    final text = digits.length > maxLength
+        ? digits.substring(0, maxLength)
+        : digits;
     return TextEditingValue(
       text: text,
       selection: TextSelection.collapsed(offset: text.length),
@@ -266,7 +268,9 @@ class _PinSessionState extends State<_PinSession> {
                       ),
                       const SizedBox(height: 8),
                       if (!lock.unavailable) ...[
-                        _pinDots(setup && confirmFocus.hasFocus ? confirm : pin),
+                        _pinDots(
+                          setup && confirmFocus.hasFocus ? confirm : pin,
+                        ),
                         const SizedBox(height: 12),
                         TextFormField(
                           key: ValueKey('pin-'),
@@ -321,8 +325,7 @@ class _PinSessionState extends State<_PinSession> {
                           TextFormField(
                             controller: confirm,
                             focusNode: confirmFocus,
-                            enabled:
-                                !lock.busy && !signingOut && !submitting,
+                            enabled: !lock.busy && !signingOut && !submitting,
                             obscureText: true,
                             autocorrect: false,
                             enableSuggestions: false,
@@ -371,7 +374,10 @@ class _PinSessionState extends State<_PinSession> {
                       const SizedBox(height: 28),
                       FilledButton(
                         onPressed:
-                            lock.busy || signingOut || lock.waitSeconds > 0 || submitting
+                            lock.busy ||
+                                signingOut ||
+                                lock.waitSeconds > 0 ||
+                                submitting
                             ? null
                             : lock.unavailable
                             ? () => lock.bind(widget.controller.accountId!)

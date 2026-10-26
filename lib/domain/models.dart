@@ -262,3 +262,99 @@ class MoneySummary {
   int incomeMinor = 0, spentMinor = 0, savedMinor = 0;
   final Map<String, int> byCategory = {};
 }
+
+/// A user-entered cash checkpoint, independent of budgets and monthly totals.
+class CashBalance {
+  const CashBalance({
+    required this.ownerId,
+    required this.amountMinor,
+    required this.ledgerNetMinor,
+  });
+  final String ownerId;
+  final int amountMinor, ledgerNetMinor;
+  factory CashBalance.fromJson(Map<String, dynamic> json) => CashBalance(
+    ownerId: json['owner_id'] as String,
+    amountMinor: (json['amount_minor'] as num).toInt(),
+    ledgerNetMinor: (json['ledger_net_minor'] as num).toInt(),
+  );
+  Map<String, dynamic> toJson() => {
+    'id': ownerId,
+    'owner_id': ownerId,
+    'amount_minor': amountMinor,
+    'ledger_net_minor': ledgerNetMinor,
+  };
+  int availableMinor(int currentLedgerNetMinor) =>
+      amountMinor + currentLedgerNetMinor - ledgerNetMinor;
+}
+
+/// Recorded money received less expenses and both forms of recorded savings.
+int spendingLedgerNet(List<MoneyEntry> entries, List<SavingsGoal> goals) =>
+    entries
+        .where((e) => !e.deleted)
+        .fold<int>(
+          0,
+          (sum, e) =>
+              sum +
+              (e.direction == EntryDirection.income
+                  ? e.amountMinor
+                  : -e.amountMinor),
+        ) -
+    goals.where((g) => !g.deleted).fold<int>(0, (sum, g) => sum + g.savedMinor);
+
+int parseAvailableMoney(String input) {
+  final clean = input.trim().replaceAll(',', '');
+  if (RegExp(r'^0+(\.0{1,2})?$').hasMatch(clean)) return 0;
+  return parseMoney(input);
+}
+
+/// A real time axis: at least 24 hours, expanding with current-month activity.
+class SpendingTimeline {
+  SpendingTimeline(List<MoneyEntry> entries, DateTime now) {
+    final expenses =
+        entries
+            .where(
+              (e) =>
+                  !e.deleted &&
+                  e.direction == EntryDirection.expense &&
+                  e.occurredAt.toLocal().year == now.year &&
+                  e.occurredAt.toLocal().month == now.month &&
+                  !e.occurredAt.isAfter(now),
+            )
+            .toList()
+          ..sort((a, b) => a.occurredAt.compareTo(b.occurredAt));
+    final minimumStart = now.subtract(const Duration(hours: 24));
+    final first = expenses.firstOrNull?.occurredAt.toLocal();
+    start = first != null && first.isBefore(minimumStart)
+        ? first
+        : minimumStart;
+    end = now;
+    hasExpenses = expenses.isNotEmpty;
+    points.add(SpendingPoint(start, 0));
+    var total = 0;
+    for (final expense in expenses) {
+      total += expense.amountMinor;
+      points.add(SpendingPoint(expense.occurredAt.toLocal(), total));
+    }
+    if (points.last.at != end) points.add(SpendingPoint(end, total));
+  }
+  late final DateTime start, end;
+  late final bool hasExpenses;
+  final points = <SpendingPoint>[];
+  bool get isHourly => end.difference(start) <= const Duration(hours: 24);
+  List<DateTime> tickTimes(int count) => List.generate(
+    count,
+    (index) => start.add(
+      Duration(
+        microseconds:
+            (end.difference(start).inMicroseconds * index / (count - 1))
+                .round(),
+      ),
+    ),
+  );
+}
+
+class SpendingPoint {
+  const SpendingPoint(this.at, this.totalMinor);
+  final DateTime at;
+  final int totalMinor;
+}
