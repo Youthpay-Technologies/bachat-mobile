@@ -28,6 +28,7 @@ extension DeviceSynchronization on AppController {
       'transactions',
       'budgets',
       'savings_goals',
+      'cash_balances',
     ]) {
       channel.onPostgresChanges(
         event: PostgresChangeEvent.all,

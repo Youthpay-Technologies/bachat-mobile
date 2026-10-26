@@ -262,3 +262,41 @@ class MoneySummary {
   int incomeMinor = 0, spentMinor = 0, savedMinor = 0;
   final Map<String, int> byCategory = {};
 }
+
+/// A user-entered cash checkpoint, independent of budgets and monthly totals.
+class CashBalance {
+  const CashBalance({
+    required this.ownerId,
+    required this.amountMinor,
+    required this.ledgerNetMinor,
+  });
+  final String ownerId;
+  final int amountMinor, ledgerNetMinor;
+  factory CashBalance.fromJson(Map<String, dynamic> json) => CashBalance(
+    ownerId: json['owner_id'] as String,
+    amountMinor: (json['amount_minor'] as num).toInt(),
+    ledgerNetMinor: (json['ledger_net_minor'] as num).toInt(),
+  );
+  Map<String, dynamic> toJson() => {
+    'id': ownerId,
+    'owner_id': ownerId,
+    'amount_minor': amountMinor,
+    'ledger_net_minor': ledgerNetMinor,
+  };
+  int availableMinor(int currentLedgerNetMinor) =>
+      amountMinor + currentLedgerNetMinor - ledgerNetMinor;
+}
+
+/// Recorded money received less expenses and both forms of recorded savings.
+int spendingLedgerNet(List<MoneyEntry> entries, List<SavingsGoal> goals) =>
+    entries
+        .where((e) => !e.deleted)
+        .fold<int>(
+          0,
+          (sum, e) =>
+              sum +
+              (e.direction == EntryDirection.income
+                  ? e.amountMinor
+                  : -e.amountMinor),
+        ) -
+    goals.where((g) => !g.deleted).fold<int>(0, (sum, g) => sum + g.savedMinor);
