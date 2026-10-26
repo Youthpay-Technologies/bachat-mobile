@@ -29,7 +29,7 @@ class AppController extends ChangeNotifier {
   List<SavingsGoal> allGoals = [];
   String? selectedChildId;
   UserRole chosenRole = UserRole.teen;
-  String theme = 'system';
+  String theme = 'dark';
   String? error;
   String? familyCode;
   String? pendingEmail;
@@ -315,7 +315,8 @@ class AppController extends ChangeNotifier {
       if (msg.contains('already registered') ||
           msg.contains('already exists') ||
           msg.contains('user_already_exists')) {
-        error = 'This email is already registered. Please sign in or reset your password.';
+        error =
+            'This email is already registered. Please sign in or reset your password.';
         return false;
       }
       error = 'Unable to connect. Check your connection and try again.';

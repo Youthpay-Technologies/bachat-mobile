@@ -14,7 +14,10 @@ class BrandHeadline extends StatelessWidget {
     TextSpan(
       children: [
         TextSpan(text: "$lead\n"),
-        TextSpan(text: accent, style: BachatBrand.editorial(context, size: 52)),
+        TextSpan(
+          text: accent,
+          style: BachatBrand.figure(context, size: 52, weight: FontWeight.w400),
+        ),
       ],
     ),
     style: Theme.of(context).textTheme.displaySmall,
@@ -43,7 +46,11 @@ class HatchedPatternPainter extends CustomPainter {
     final total = size.width + size.height;
     final step = stripeWidth + gap;
     for (double x = -size.height; x < total; x += step) {
-      canvas.drawLine(Offset(x, size.height), Offset(x + size.height, 0), paint);
+      canvas.drawLine(
+        Offset(x, size.height),
+        Offset(x + size.height, 0),
+        paint,
+      );
     }
     canvas.restore();
   }
@@ -223,14 +230,22 @@ class BuddyPlannerCard extends StatelessWidget {
                     CircleAvatar(
                       radius: 14,
                       backgroundColor: colors.surfaceContainerLow,
-                      child: Icon(Icons.person, size: 16, color: colors.onSurfaceVariant),
+                      child: Icon(
+                        Icons.person,
+                        size: 16,
+                        color: colors.onSurfaceVariant,
+                      ),
                     ),
                     Positioned(
                       left: 14,
                       child: CircleAvatar(
                         radius: 14,
                         backgroundColor: BachatBrand.mint,
-                        child: const Icon(Icons.bolt_rounded, size: 16, color: Colors.black),
+                        child: const Icon(
+                          Icons.bolt_rounded,
+                          size: 16,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
                   ],
@@ -252,11 +267,7 @@ class BuddyPlannerCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          RadialArcGauge(
-            progress: progress,
-            amountLabel: amount,
-            size: 220,
-          ),
+          RadialArcGauge(progress: progress, amountLabel: amount, size: 220),
           const SizedBox(height: 16),
           // Category selector capsule in dark black
           Container(
@@ -349,7 +360,10 @@ class SpendingHero extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(999),
@@ -371,7 +385,8 @@ class SpendingHero extends StatelessWidget {
             const SizedBox(height: 16),
             LayoutBuilder(
               builder: (context, constraints) {
-                final largeText = MediaQuery.textScalerOf(context).scale(14) > 20 ||
+                final largeText =
+                    MediaQuery.textScalerOf(context).scale(14) > 20 ||
                     constraints.maxWidth < 280;
                 final amountWidget = Text(
                   amount,
@@ -395,13 +410,20 @@ class SpendingHero extends StatelessWidget {
                 if (largeText) {
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [amountWidget, const SizedBox(height: 4), labelWidget],
+                    children: [
+                      amountWidget,
+                      const SizedBox(height: 4),
+                      labelWidget,
+                    ],
                   );
                 }
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
-                  children: [Expanded(child: amountWidget), labelWidget],
+                  children: [
+                    Expanded(child: amountWidget),
+                    labelWidget,
+                  ],
                 );
               },
             ),
@@ -417,12 +439,7 @@ class SpendingHero extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(999),
                 child: Row(
-                  children: [
-                    Container(
-                      width: 120,
-                      color: Colors.white,
-                    ),
-                  ],
+                  children: [Container(width: 120, color: Colors.white)],
                 ),
               ),
             ),
@@ -462,7 +479,8 @@ class SpendingHero extends StatelessWidget {
         children: [
           LayoutBuilder(
             builder: (context, constraints) {
-              final largeText = MediaQuery.textScalerOf(context).scale(14) > 20 ||
+              final largeText =
+                  MediaQuery.textScalerOf(context).scale(14) > 20 ||
                   constraints.maxWidth < 280;
               final amountWidget = Text(
                 amount,
@@ -486,13 +504,20 @@ class SpendingHero extends StatelessWidget {
               if (largeText) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [amountWidget, const SizedBox(height: 4), labelWidget],
+                  children: [
+                    amountWidget,
+                    const SizedBox(height: 4),
+                    labelWidget,
+                  ],
                 );
               }
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.baseline,
                 textBaseline: TextBaseline.alphabetic,
-                children: [Expanded(child: amountWidget), labelWidget],
+                children: [
+                  Expanded(child: amountWidget),
+                  labelWidget,
+                ],
               );
             },
           ),
@@ -509,10 +534,7 @@ class SpendingHero extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
               child: Align(
                 alignment: Alignment.centerLeft,
-                child: Container(
-                  width: 90,
-                  color: BachatBrand.obsidian,
-                ),
+                child: Container(width: 90, color: BachatBrand.obsidian),
               ),
             ),
           ),
@@ -532,7 +554,10 @@ class SpendingHero extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: colors.secondaryContainer,
                   borderRadius: BorderRadius.circular(999),

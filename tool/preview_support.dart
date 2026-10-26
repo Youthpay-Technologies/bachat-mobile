@@ -15,6 +15,7 @@ Future<void> loadPreviewFonts(WidgetTester tester) async {
     )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
     for (final font in {
       'Instrument Sans': 'InstrumentSans.ttf',
+      'FK Grotesk': 'FKGrotesk-Regular.otf',
       'Instrument Serif': 'InstrumentSerif-Italic.ttf',
       'Inter': 'Inter-Regular.ttf',
     }.entries) {

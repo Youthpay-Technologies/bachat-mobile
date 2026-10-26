@@ -82,7 +82,7 @@ class PageBody extends StatelessWidget {
       MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
       24,
       MediaQuery.sizeOf(context).width < 360 ? 16 : 24,
-      36,
+      112,
     ),
     child: Center(
       child: ConstrainedBox(
@@ -207,24 +207,46 @@ class _ShellState extends ConsumerState<DashboardShell> {
           ],
         ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: c.isParent
+          ? null
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FloatingActionButton.small(
+                  heroTag: 'receive',
+                  tooltip: 'Receive money',
+                  onPressed: () =>
+                      entryForm(context, c, direction: EntryDirection.income),
+                  child: const Icon(Icons.south_west_rounded),
+                ),
+                const SizedBox(width: 12),
+                FloatingActionButton(
+                  heroTag: 'spend',
+                  tooltip: 'Spend money',
+                  onPressed: () => entryForm(context, c),
+                  child: const Icon(Icons.add_rounded, size: 30),
+                ),
+              ],
+            ),
       bottomNavigationBar: wide
           ? null
-          : DecoratedBox(
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                border: Border(
-                  top: BorderSide(
-                    color: Theme.of(context).colorScheme.outlineVariant,
+          : SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(BachatRadii.surface),
+                  child: NavigationBar(
+                    selectedIndex: tab,
+                    animationDuration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : const Duration(milliseconds: 150),
+                    onDestinationSelected: (value) =>
+                        setState(() => tab = value),
+                    destinations: destinations,
                   ),
                 ),
-              ),
-              child: NavigationBar(
-                selectedIndex: tab,
-                animationDuration: MediaQuery.disableAnimationsOf(context)
-                    ? Duration.zero
-                    : const Duration(milliseconds: 150),
-                onDestinationSelected: (value) => setState(() => tab = value),
-                destinations: destinations,
               ),
             ),
     );
@@ -335,9 +357,14 @@ class HomePage extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surfaceContainerLow,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
@@ -388,7 +415,9 @@ class HomePage extends ConsumerWidget {
                   : (summary.spentMinor > 0 ? 'Rs 5,000' : 'Rs 0'),
               categoryName: c.budgets.isNotEmpty
                   ? c.budgets.first.category
-                  : (summary.byCategory.isNotEmpty ? summary.byCategory.keys.first : 'Bills & Utilities'),
+                  : (summary.byCategory.isNotEmpty
+                        ? summary.byCategory.keys.first
+                        : 'Bills & Utilities'),
               progress: summary.spentMinor > 0 ? 0.65 : 0.25,
             ),
             const SizedBox(height: 16),
@@ -549,7 +578,9 @@ class MoneyActions extends StatelessWidget {
 
       Widget spendBtn = FilledButton.icon(
         style: FilledButton.styleFrom(
-          backgroundColor: dark ? colors.surfaceContainer : BachatBrand.obsidian,
+          backgroundColor: dark
+              ? colors.surfaceContainer
+              : BachatBrand.obsidian,
           foregroundColor: Colors.white,
           minimumSize: const Size(48, 54),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -1252,7 +1283,11 @@ class LearnPage extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.lock_clock_outlined, size: 20, color: colors.onSurfaceVariant),
+                  Icon(
+                    Icons.lock_clock_outlined,
+                    size: 20,
+                    color: colors.onSurfaceVariant,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -1270,7 +1305,9 @@ class LearnPage extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 'Interactive lessons are currently being crafted. Keep recording expenses to prepare your streak!',
-                style: textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+                style: textTheme.bodySmall?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
               ),
             ],
           ),

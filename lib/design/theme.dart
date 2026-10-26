@@ -19,26 +19,46 @@ abstract final class BachatTheme {
       brightness: brightness,
       primary: dark ? BachatBrand.mint : BachatBrand.obsidian,
       onPrimary: dark ? Colors.black : Colors.white,
-      primaryContainer: dark ? const Color(0xFF1A2228) : const Color(0xFFE8ECEF),
+      primaryContainer: dark
+          ? const Color(0xFF1A2228)
+          : const Color(0xFFE8ECEF),
       onPrimaryContainer: dark ? BachatBrand.mint : BachatBrand.obsidian,
       secondary: BachatBrand.mint,
       onSecondary: dark ? Colors.black : const Color(0xFF062010),
-      secondaryContainer: dark ? const Color(0xFF133621) : BachatBrand.mintLight,
-      onSecondaryContainer: dark ? const Color(0xFF7DF6B4) : const Color(0xFF09582D),
+      secondaryContainer: dark
+          ? const Color(0xFF133621)
+          : BachatBrand.mintLight,
+      onSecondaryContainer: dark
+          ? const Color(0xFF7DF6B4)
+          : const Color(0xFF09582D),
       tertiary: BachatBrand.coral,
       onTertiary: Colors.white,
-      tertiaryContainer: dark ? const Color(0xFF381515) : BachatBrand.coralLight,
-      onTertiaryContainer: dark ? const Color(0xFFFFB4B4) : const Color(0xFF8C1B1B),
+      tertiaryContainer: dark
+          ? const Color(0xFF381515)
+          : BachatBrand.coralLight,
+      onTertiaryContainer: dark
+          ? const Color(0xFFFFB4B4)
+          : const Color(0xFF8C1B1B),
       error: dark ? const Color(0xFFFFB4AB) : BachatBrand.coral,
       onError: dark ? const Color(0xFF690005) : Colors.white,
       errorContainer: dark ? const Color(0xFF381515) : BachatBrand.coralLight,
-      onErrorContainer: dark ? const Color(0xFFFFB4B4) : const Color(0xFF8C1B1B),
+      onErrorContainer: dark
+          ? const Color(0xFFFFB4B4)
+          : const Color(0xFF8C1B1B),
       surface: dark ? const Color(0xFF16181D) : Colors.white,
-      surfaceContainerLow: dark ? const Color(0xFF111215) : const Color(0xFFF7F8FA),
-      surfaceContainer: dark ? const Color(0xFF1C1F25) : const Color(0xFFEDF0F3),
-      surfaceContainerHigh: dark ? const Color(0xFF252932) : const Color(0xFFE2E6EC),
+      surfaceContainerLow: dark
+          ? const Color(0xFF111215)
+          : const Color(0xFFF7F8FA),
+      surfaceContainer: dark
+          ? const Color(0xFF1C1F25)
+          : const Color(0xFFEDF0F3),
+      surfaceContainerHigh: dark
+          ? const Color(0xFF252932)
+          : const Color(0xFFE2E6EC),
       onSurface: text,
-      onSurfaceVariant: dark ? const Color(0xFF9AA2B1) : const Color(0xFF6B7280),
+      onSurfaceVariant: dark
+          ? const Color(0xFF9AA2B1)
+          : const Color(0xFF6B7280),
       outline: dark ? const Color(0xFF2E333E) : const Color(0xFFE2E5EB),
       outlineVariant: dark ? const Color(0xFF20232B) : const Color(0xFFEEF1F4),
     );
@@ -55,6 +75,12 @@ abstract final class BachatTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        backgroundColor: scheme.surfaceContainer,
+        foregroundColor: scheme.onSurface,
+        elevation: 0,
+        shape: CircleBorder(side: BorderSide(color: scheme.outline)),
       ),
       listTileTheme: ListTileThemeData(
         iconColor: scheme.onSurfaceVariant,
@@ -229,7 +255,7 @@ abstract final class BachatTheme {
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: scheme.surface,
         elevation: 0,
-        height: 74,
+        height: 68,
         indicatorColor: scheme.primaryContainer,
         indicatorShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(BachatRadii.pill),

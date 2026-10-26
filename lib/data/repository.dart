@@ -49,7 +49,7 @@ class BachatRepository {
   Future<String> loadTheme() async =>
       (await _preferences.record('appearance').get(database))?['theme']
           as String? ??
-      'system';
+      'dark';
   Future<void> saveTheme(String theme) async {
     await _preferences.record('appearance').put(database, {'theme': theme});
   }
