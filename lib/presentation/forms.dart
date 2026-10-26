@@ -40,7 +40,12 @@ class EntryForm extends StatefulWidget {
 
 class _EntryFormState extends State<EntryForm> {
   final form = GlobalKey<FormState>();
-  late final TextEditingController merchant, amount, note, customCategory;
+  late final TextEditingController merchant,
+      amount,
+      note,
+      customCategory,
+      savingsAmount;
+  String? savingsGoalId;
   late String category;
   late EntryDirection direction;
   late DateTime date;
@@ -55,6 +60,12 @@ class _EntryFormState extends State<EntryForm> {
       text: e == null ? '' : (e.amountMinor / 100).toStringAsFixed(2),
     );
     note = TextEditingController(text: e?.note);
+    savingsGoalId = e?.savingsGoalId;
+    savingsAmount = TextEditingController(
+      text: (e?.savingsAmountMinor ?? 0) == 0
+          ? ''
+          : (e!.savingsAmountMinor / 100).toStringAsFixed(2),
+    );
     direction = e?.direction == EntryDirection.savings
         ? EntryDirection.expense
         : e?.direction ?? widget.direction;
@@ -69,12 +80,46 @@ class _EntryFormState extends State<EntryForm> {
     amount.dispose();
     note.dispose();
     customCategory.dispose();
+    savingsAmount.dispose();
     super.dispose();
+  }
+
+  String? validateSavings(String? input) {
+    final invalid = validateAmount(input);
+    if (invalid != null) return invalid;
+    try {
+      final received = parseMoney(amount.text);
+      final allocated = parseMoney(input!);
+      if (allocated > received)
+        return 'Savings cannot exceed the received amount.';
+      final goal = widget.c.goals
+          .where((g) => g.id == savingsGoalId)
+          .firstOrNull;
+      if (goal == null) return 'Choose an available savings goal.';
+      final remaining =
+          goal.targetMinor -
+          goal.savedMinor -
+          widget.c.receiptSavingsFor(
+            goal.id,
+            excludingEntryId: widget.existing?.id,
+          );
+      if (allocated > remaining)
+        return '${money(remaining)} left in this goal.';
+      return null;
+    } on FormatException {
+      return 'Enter valid received and savings amounts.';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final readOnly = widget.c.isParent;
+    final savingsGoals = widget.c.goals
+        .where(
+          (g) => g.totalSavedMinor < g.targetMinor || g.id == savingsGoalId,
+        )
+        .toList();
+
     return SheetBody(
       children: [
         Text(
@@ -135,6 +180,64 @@ class _EntryFormState extends State<EntryForm> {
                     ? null
                     : (v) => setState(() => category = v!),
               ),
+              if (direction == EntryDirection.income) ...[
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue: savingsGoalId ?? '',
+                  isExpanded: true,
+                  itemHeight: null,
+                  decoration: const InputDecoration(
+                    labelText: 'Save to a goal (optional)',
+                  ),
+                  items: [
+                    const DropdownMenuItem(
+                      value: '',
+                      child: Text('Available to spend'),
+                    ),
+                    ...savingsGoals.map(
+                      (g) =>
+                          DropdownMenuItem(value: g.id, child: Text(g.title)),
+                    ),
+                    if (savingsGoalId != null &&
+                        !savingsGoals.any((g) => g.id == savingsGoalId))
+                      DropdownMenuItem(
+                        value: savingsGoalId,
+                        enabled: false,
+                        child: const Text('Unavailable goal'),
+                      ),
+                  ],
+                  onChanged: readOnly
+                      ? null
+                      : (value) => setState(
+                          () => savingsGoalId = value == '' ? null : value,
+                        ),
+                ),
+                if (savingsGoalId != null) ...[
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: savingsAmount,
+                    readOnly: readOnly,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textInputAction: TextInputAction.next,
+                    decoration: const InputDecoration(
+                      labelText: 'Amount to save',
+                      prefixText: 'Rs ',
+                    ),
+                    validator: validateSavings,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'This part goes to your goal. The remainder stays available to spend.',
+                  ),
+                ] else if (savingsGoals.isEmpty) ...[
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Create a savings goal in Plan to set aside part of received money.',
+                  ),
+                ],
+              ],
               if (category == 'Other') ...[
                 const SizedBox(height: 16),
                 TextFormField(
@@ -210,6 +313,14 @@ class _EntryFormState extends State<EntryForm> {
                           direction: direction,
                           category: category,
                           occurredAt: date,
+                          savingsGoalId: direction == EntryDirection.income
+                              ? savingsGoalId
+                              : null,
+                          savingsAmountMinor:
+                              direction == EntryDirection.income &&
+                                  savingsGoalId != null
+                              ? parseMoney(savingsAmount.text)
+                              : 0,
                           note: note.text.trim(),
                           customCategory: category == 'Other'
                               ? customCategory.text.trim()
@@ -219,12 +330,13 @@ class _EntryFormState extends State<EntryForm> {
                       if (context.mounted) {
                         Navigator.pop(context, 'Transaction saved');
                       }
-                    } catch (_) {
+                    } catch (e) {
                       if (mounted) {
                         setState(() {
                           saving = false;
-                          error =
-                              'Unable to save this entry. Check the details and try again.';
+                          error = e is FormatException
+                              ? e.message
+                              : 'Unable to save this entry. Check the details and try again.';
                         });
                       }
                     }
@@ -393,9 +505,7 @@ class _PlanFormState extends State<PlanForm> {
     super.dispose();
   }
 
-  int savedValue() => saved.text.trim() == '0' || saved.text.trim() == '0.00'
-      ? 0
-      : parseMoney(saved.text);
+  int savedValue() => parseAvailableMoney(saved.text);
   Future<void> save({bool deleted = false}) async {
     if (saving) return;
     if (!deleted && !form.currentState!.validate()) return;
@@ -423,9 +533,9 @@ class _PlanFormState extends State<PlanForm> {
             ? widget.goal!.targetMinor
             : parseMoney(amount.text);
         final savedMinor = deleted ? widget.goal!.savedMinor : savedValue();
-        if (savedMinor > target) {
+        if (savedMinor + (widget.goal?.receivedMinor ?? 0) > target) {
           throw const FormatException(
-            'Saved amount cannot be greater than the goal target.',
+            'The target must cover saved money and received allocations.',
           );
         }
         await c.saveGoal(
@@ -526,8 +636,10 @@ class _PlanFormState extends State<PlanForm> {
                 keyboardType: const TextInputType.numberWithOptions(
                   decimal: true,
                 ),
-                decoration: const InputDecoration(
-                  labelText: 'Total saved so far',
+                decoration: InputDecoration(
+                  labelText: (widget.goal?.receivedMinor ?? 0) > 0
+                      ? 'Saved separately'
+                      : 'Total saved so far',
                   prefixText: 'Rs ',
                 ),
                 validator: (v) {
@@ -644,11 +756,11 @@ class _AddSavingsSheetState extends State<AddSavingsSheet> {
       Text(widget.goal.title),
       const SizedBox(height: 12),
       const Text(
-        'Adding savings reduces your available money. Record each savings addition once; this does not transfer money.',
+        'Add money from what is available to spend. Received money assigned to this goal is already included; record each saving once.',
       ),
       const SizedBox(height: 24),
       Text(
-        '${money(widget.goal.targetMinor - widget.goal.savedMinor)} to reach your goal',
+        '${money(widget.goal.targetMinor - widget.goal.totalSavedMinor)} to reach your goal',
         style: Theme.of(context).textTheme.titleMedium,
       ),
       const SizedBox(height: 24),
@@ -667,7 +779,7 @@ class _AddSavingsSheetState extends State<AddSavingsSheet> {
             final invalid = validateAmount(value);
             if (invalid != null) return invalid;
             if (parseMoney(value!) >
-                widget.goal.targetMinor - widget.goal.savedMinor) {
+                widget.goal.targetMinor - widget.goal.totalSavedMinor) {
               return 'This exceeds the remaining goal amount.';
             }
             return null;
