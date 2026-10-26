@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../application/controller.dart';
 import '../design/components.dart';
 import '../design/brand.dart';
+import '../design/theme.dart';
 import '../design/brand_panels.dart';
 import '../domain/models.dart';
 import '../domain/activity_filter.dart';
@@ -1126,28 +1127,181 @@ class GoalCard extends StatelessWidget {
 
 class LearnPage extends StatelessWidget {
   const LearnPage({super.key});
+
   @override
-  Widget build(BuildContext context) => PageBody(
-    children: [
-      const PageHeading('Learn'),
-      Surface(
-        tone: Theme.of(context).colorScheme.surfaceContainerLow,
-        padding: const EdgeInsets.all(24),
-        child: const HabitIllustration(),
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return PageBody(
+      children: [
+        const PageHeading('Learn'),
+        Surface(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const StatusBadge(
+                'Coming soon',
+                icon: Icons.schedule_rounded,
+                highlight: true,
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Smart money habits, curated for teens.',
+                style: textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  height: 1.2,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Bite-sized interactive lessons on budgeting, compound savings, and smart everyday spending.',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colors.onSurfaceVariant,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'UPCOMING MODULES',
+          style: TextStyle(
+            fontFamily: BachatBrand.interfaceFont,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.1,
+            color: colors.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 12),
+        const _LearnModuleTile(
+          number: '01',
+          title: 'The Smart Budgeting Formula',
+          subtitle: 'A simple guide to setting limits without missing out',
+        ),
+        const SizedBox(height: 10),
+        const _LearnModuleTile(
+          number: '02',
+          title: 'The Magic of Early Savings',
+          subtitle: 'How small habits compound into big financial freedom',
+        ),
+        const SizedBox(height: 10),
+        const _LearnModuleTile(
+          number: '03',
+          title: 'Needs vs. Wants in Practice',
+          subtitle: 'Spotting impulsive buys and saving with clarity',
+        ),
+        const SizedBox(height: 20),
+        Surface(
+          tone: colors.surfaceContainerLow,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.lock_clock_outlined, size: 20, color: colors.onSurfaceVariant),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Early Access Coming Soon',
+                      style: TextStyle(
+                        fontFamily: BachatBrand.headingFont,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: colors.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Interactive lessons are currently being crafted. Keep recording expenses to prepare your streak!',
+                style: textTheme.bodySmall?.copyWith(color: colors.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LearnModuleTile extends StatelessWidget {
+  const _LearnModuleTile({
+    required this.number,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final String number;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
+    return Surface(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: colors.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  number,
+                  style: TextStyle(
+                    fontFamily: BachatBrand.figuresFont,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                    color: colors.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.lock_outline_rounded,
+                size: 16,
+                color: colors.onSurfaceVariant.withValues(alpha: 0.6),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            title,
+            style: TextStyle(
+              fontFamily: BachatBrand.headingFont,
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+              color: colors.onSurface,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(
+              fontFamily: BachatBrand.interfaceFont,
+              fontSize: 13,
+              color: colors.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+        ],
       ),
-      const SizedBox(height: 28),
-      const StatusBadge('Coming soon', icon: Icons.schedule_rounded),
-      const SizedBox(height: 24),
-      const BrandHeadline(
-        lead: 'A little knowledge.',
-        accent: 'Better money habits.',
-      ),
-      const SizedBox(height: 16),
-      const Text(
-        'Short lessons on spending, saving and making your money go further.',
-      ),
-    ],
-  );
+    );
+  }
 }
 
 class GoalCarousel extends StatefulWidget {
