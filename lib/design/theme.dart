@@ -13,56 +13,53 @@ abstract final class BachatRadii {
 abstract final class BachatTheme {
   static ThemeData build(Brightness brightness) {
     final dark = brightness == Brightness.dark;
-    final text = dark ? const Color(0xFFF5F7FA) : BachatBrand.ink;
-    final canvas = dark ? BachatBrand.canvasDark : BachatBrand.canvas;
+    final text = dark ? BachatBrand.cream : BachatBrand.navy;
+    final canvas = dark ? BachatBrand.navy : BachatBrand.cream;
+    final surface = dark ? BachatBrand.navy : BachatBrand.cream;
     final scheme = ColorScheme(
       brightness: brightness,
-      primary: dark ? const Color(0xFF8CA9FF) : BachatBrand.cobaltOnLight,
-      onPrimary: dark ? const Color(0xFF071438) : Colors.white,
+      primary: BachatBrand.red,
+      onPrimary: BachatBrand.cream,
       primaryContainer: dark
-          ? const Color(0xFF172758)
-          : const Color(0xFFE7EDFF),
-      onPrimaryContainer: dark
-          ? const Color(0xFFCBD7FF)
-          : BachatBrand.cobaltOnLight,
-      secondary: dark ? BachatBrand.mint : BachatBrand.greenOnLight,
-      onSecondary: dark ? Colors.black : Colors.white,
+          ? BachatBrand.red.withValues(alpha: .22)
+          : BachatBrand.red.withValues(alpha: .12),
+      onPrimaryContainer: dark ? BachatBrand.cream : BachatBrand.navy,
+      secondary: BachatBrand.gold,
+      onSecondary: BachatBrand.navy,
       secondaryContainer: dark
-          ? const Color(0xFF133621)
-          : BachatBrand.mintLight,
-      onSecondaryContainer: dark
-          ? const Color(0xFF7DF6B4)
-          : const Color(0xFF09582D),
-      tertiary: dark ? BachatBrand.coral : BachatBrand.errorOnLight,
-      onTertiary: Colors.white,
+          ? BachatBrand.gold.withValues(alpha: .22)
+          : BachatBrand.gold.withValues(alpha: .18),
+      onSecondaryContainer: BachatBrand.navy,
+      tertiary: BachatBrand.green,
+      onTertiary: BachatBrand.cream,
       tertiaryContainer: dark
-          ? const Color(0xFF381515)
-          : BachatBrand.coralLight,
-      onTertiaryContainer: dark
-          ? const Color(0xFFFFB4B4)
-          : const Color(0xFF8C1B1B),
-      error: dark ? const Color(0xFFFFB4AB) : BachatBrand.errorOnLight,
-      onError: dark ? const Color(0xFF690005) : Colors.white,
-      errorContainer: dark ? const Color(0xFF381515) : BachatBrand.coralLight,
-      onErrorContainer: dark
-          ? const Color(0xFFFFB4B4)
-          : const Color(0xFF8C1B1B),
-      surface: dark ? BachatBrand.darkCard : Colors.white,
+          ? BachatBrand.green.withValues(alpha: .22)
+          : BachatBrand.green.withValues(alpha: .18),
+      onTertiaryContainer: dark ? BachatBrand.cream : BachatBrand.navy,
+      error: BachatBrand.red,
+      onError: BachatBrand.cream,
+      errorContainer: BachatBrand.red.withValues(alpha: .12),
+      onErrorContainer: BachatBrand.red,
+      surface: surface,
       surfaceContainerLow: dark
-          ? const Color(0xFF111216)
-          : const Color(0xFFEEF2F8),
+          ? BachatBrand.navy.withValues(alpha: .98)
+          : BachatBrand.cream,
       surfaceContainer: dark
-          ? const Color(0xFF202126)
-          : const Color(0xFFE8EDF5),
+          ? BachatBrand.navy.withValues(alpha: .92)
+          : BachatBrand.cream,
       surfaceContainerHigh: dark
-          ? const Color(0xFF2C2D33)
-          : const Color(0xFFDCE3EE),
+          ? BachatBrand.navy.withValues(alpha: .84)
+          : BachatBrand.cream,
       onSurface: text,
       onSurfaceVariant: dark
-          ? const Color(0xFF9AA2B1)
-          : const Color(0xFF536178),
-      outline: dark ? const Color(0xFF2E333E) : const Color(0xFF8290A8),
-      outlineVariant: dark ? const Color(0xFF20232B) : const Color(0xFFE0E6EF),
+          ? BachatBrand.gold.withValues(alpha: .9)
+          : BachatBrand.navy.withValues(alpha: .7),
+      outline: dark
+          ? BachatBrand.cream.withValues(alpha: .42)
+          : BachatBrand.navy.withValues(alpha: .36),
+      outlineVariant: dark
+          ? BachatBrand.cream.withValues(alpha: .16)
+          : BachatBrand.navy.withValues(alpha: .12),
     );
     final base = ThemeData(
       useMaterial3: true,

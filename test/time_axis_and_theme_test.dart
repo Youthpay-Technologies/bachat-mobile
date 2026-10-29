@@ -48,15 +48,27 @@ void main() {
     },
   );
 
-  test('dark palette retains the approved existing color values', () {
+  test('dark palette retains the approved brief values', () {
     final theme = BachatTheme.build(Brightness.dark);
-    expect(theme.scaffoldBackgroundColor, const Color(0xFF08090D));
-    expect(theme.colorScheme.surface, const Color(0xFF18191D));
-    expect(theme.colorScheme.primary, const Color(0xFF8CA9FF));
-    expect(theme.colorScheme.onSurface, const Color(0xFFF5F7FA));
-    expect(theme.colorScheme.onSurfaceVariant, const Color(0xFF9AA2B1));
-    expect(theme.colorScheme.secondary, const Color(0xFF22E385));
-    expect(theme.colorScheme.error, const Color(0xFFFFB4AB));
+    expect(theme.scaffoldBackgroundColor, const Color(0xFF1B2A4A));
+    expect(theme.colorScheme.surface, const Color(0xFF1B2A4A));
+    expect(theme.colorScheme.primary, const Color(0xFFD62828));
+    expect(theme.colorScheme.onPrimary, const Color(0xFFFAF7EF));
+    expect(theme.colorScheme.onSurface, const Color(0xFFFAF7EF));
+    expect(theme.colorScheme.onSurfaceVariant, const Color(0xFFF7C948).withValues(alpha: .9));
+    expect(theme.colorScheme.secondary, const Color(0xFFF7C948));
+    expect(theme.colorScheme.error, const Color(0xFFD62828));
+  });
+
+  test('light palette retains the approved brief values', () {
+    final theme = BachatTheme.build(Brightness.light);
+    expect(theme.scaffoldBackgroundColor, const Color(0xFFFAF7EF));
+    expect(theme.colorScheme.surface, const Color(0xFFFAF7EF));
+    expect(theme.colorScheme.primary, const Color(0xFFD62828));
+    expect(theme.colorScheme.onPrimary, const Color(0xFFFAF7EF));
+    expect(theme.colorScheme.onSurface, const Color(0xFF1B2A4A));
+    expect(theme.colorScheme.secondary, const Color(0xFFF7C948));
+    expect(theme.colorScheme.tertiary, const Color(0xFF2D7D46));
   });
 
   test(

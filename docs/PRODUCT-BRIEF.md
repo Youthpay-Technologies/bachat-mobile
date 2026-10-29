@@ -25,13 +25,29 @@ The earlier mutual-confirmation design remains a future requirement: a teen crea
 
 Google sign-in, bank/SMS/Gmail imports, squads, rewards and parent personal spending are deferred. The learning module remains coming soon.
 
+## Confirmed design decisions
+
+The active visual direction uses a five-colour system only: Red #D62828, Gold #F7C948, Navy #1B2A4A, Cream #FAF7EF, and Green #2D7D46. No additional colour values are introduced for chart fills, badges, or seasonal moments. This design is the confirmed implementation target for the current app shell and not a proposal.
+
+Approved text/background pairs are the only ones used for readable content:
+
+- Navy on Cream: default content, forms, cards, navigation, and page backgrounds.
+- Gold on Navy: insight cards, reward numbers, and highlighted values on dark containers.
+- Cream on Navy: dark cards, dark sections, secondary buttons, and high-contrast labels.
+- Cream on Red: primary actions and destructive emphasis.
+- Red on Cream: section headings and money-out emphasis.
+- Green on Cream: positive amounts and success states.
+- Cream on Green: success fills and compliance badges.
+
+No gradients, glass effects, or soft shadows are used. Hard shadows are navy, offset, and zero blur on cards, buttons, and chips. The app defaults to a cream background with navy text, then uses navy for dark sections and gold for insight cards only.
+
+Poppins is the default interface and display family, with Lora reserved for short human moments or editorial notes. The lowercase-b symbol remains the core mark, and the app keeps a flat, hard-edged visual system that prioritises clarity over decorative effects.
+
 ## Interface and architecture
 
 The expense experience now includes an interactive three-step introduction with explicitly labeled examples, direct sign-in, Back and Skip. Example selections never create transactions, budgets or goals. Home prioritizes monthly spending, budget remaining and category cards; Activity shows totals for the filtered results; first-expense, budget and goal actions are available in empty states. All motion respects the device's reduced-motion preference. See [the UX improvement plan](UX-REVAMP.md).
 
-The October 26 reference revamp uses the supplied dark mobile screenshot: cobalt light fading into a near-black canvas, rounded charcoal surfaces, a large monthly spending figure, a white cumulative spending chart, a budget progress ring and horizontal category cards. Instrument Sans is the workhorse interface font; the bundled FK Grotesk displays primary figures and selected brand statements. New installations default to dark mode; saved light, dark and system preferences remain available. The lowercase-b symbol and YouthPay endorsement remain. See [reference implementation and verification](REFERENCE-UI-REVAMP.md).
-
-Flutter uses Riverpod, native navigation, an account-gated tab shell, and separate domain, application, data and presentation layers. Sembast/IndexedDB stores account snapshots and queued edits; Supabase provides Auth and PostgreSQL with RLS. Amounts use integer paisa. Cross-device conflicts use the last successfully uploaded record; savings changes on different devices are not merged additively.
+This brief is the current confirmed app implementation. The earlier cobalt/charcoal reference remains historical context and is not the active UI direction. Flutter uses Riverpod, native navigation, an account-gated tab shell, and separate domain, application, data and presentation layers. Sembast/IndexedDB stores account snapshots and queued edits; Supabase provides Auth and PostgreSQL with RLS. Amounts use integer paisa. Cross-device conflicts use the last successfully uploaded record; savings changes on different devices are not merged additively.
 
 ## Delivery
 

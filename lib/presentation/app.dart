@@ -777,7 +777,7 @@ class MoneyActions extends StatelessWidget {
           backgroundColor: dark
               ? colors.surfaceContainer
               : BachatBrand.obsidian,
-          foregroundColor: dark ? colors.onSurface : Colors.white,
+          foregroundColor: dark ? colors.onSurface : BachatBrand.cream,
           minimumSize: const Size(48, 54),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           shape: RoundedRectangleBorder(

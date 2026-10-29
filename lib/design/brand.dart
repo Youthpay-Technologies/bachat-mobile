@@ -2,36 +2,42 @@ import 'package:flutter/material.dart';
 
 /// Brand primitives. Widgets consume ColorScheme roles for adaptive UI colors.
 abstract final class BachatBrand {
-  // Vibrant high-contrast fintech palette from design reference
-  static const mint = Color(0xFF22E385);
-  static const mintLight = Color(0xFFE2F9EE);
-  static const obsidian = Color(0xFF111215);
-  static const darkCard = Color(0xFF18191D);
-  static const coral = Color(0xFFFF5252);
-  static const coralLight = Color(0xFFFFEBEB);
-  static const ink = Color(0xFF0E1217);
-  static const canvas = Color(0xFFF5F7FB);
-  static const canvasGlowLight = Color(0xFFEAF0FF);
-  static const cobaltOnLight = Color(0xFF244ECB);
-  static const greenOnLight = Color(0xFF137A43);
-  static const orangeOnLight = Color(0xFFA45B00);
-  static const errorOnLight = Color(0xFFBD2C2C);
-  static const canvasDark = Color(0xFF08090D);
-  static const trackGrey = Color(0xFFE8ECEF);
+  // Approved YouthPay palette: five colours only.
+  static const red = Color(0xFFD62828);
+  static const gold = Color(0xFFF7C948);
+  static const navy = Color(0xFF1B2A4A);
+  static const cream = Color(0xFFFAF7EF);
+  static const green = Color(0xFF2D7D46);
 
-  // Backward compatibility aliases
-  static const cobalt = Color(0xFF3567FF);
-  static const cobaltGlow = Color(0xFF183BA8);
-  static const categoryOrange = Color(0xFFFFA010);
-  static const categoryGreen = Color(0xFF32D447);
-  static const sunshine = mint;
-  static const tangerine = coral;
+  // Backward-compatible semantic aliases without adding new colour values.
+  static const mint = green;
+  static const mintLight = green;
+  static const obsidian = navy;
+  static const darkCard = navy;
+  static const coral = red;
+  static const coralLight = red;
+  static const ink = navy;
+  static const canvas = cream;
+  static const canvasGlowLight = cream;
+  static const cobaltOnLight = navy;
+  static const greenOnLight = green;
+  static const orangeOnLight = red;
+  static const errorOnLight = red;
+  static const canvasDark = navy;
+  static const trackGrey = navy;
 
-  static const headingFont = 'Instrument Sans';
-  static const interfaceFont = 'Instrument Sans';
-  static const figuresFont = 'FK Grotesk';
-  static const figuresMonoFont = 'FK Grotesk Mono';
-  static const editorialFont = 'Instrument Serif';
+  static const cobalt = navy;
+  static const cobaltGlow = navy;
+  static const categoryOrange = red;
+  static const categoryGreen = green;
+  static const sunshine = gold;
+  static const tangerine = red;
+
+  static const headingFont = 'Poppins';
+  static const interfaceFont = 'Poppins';
+  static const figuresFont = 'Poppins';
+  static const figuresMonoFont = 'Poppins';
+  static const editorialFont = 'Lora';
 
   static TextStyle figure(
     BuildContext context, {
@@ -78,7 +84,7 @@ class BachatSymbolPainter extends CustomPainter {
     canvas.drawPath(
       stem,
       Paint()
-        ..color = BachatBrand.mint
+        ..color = BachatBrand.navy
         ..style = PaintingStyle.stroke
         ..strokeWidth = 13
         ..strokeCap = StrokeCap.round,
@@ -86,7 +92,7 @@ class BachatSymbolPainter extends CustomPainter {
     canvas.drawCircle(
       const Offset(73, 25),
       8,
-      Paint()..color = BachatBrand.coral,
+      Paint()..color = BachatBrand.red,
     );
     canvas.restore();
   }
